@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'codigo_vendedor',
+        'image', // Adicione aqui para permitir preenchimento em massa
     ];
 
     /**
@@ -45,4 +47,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function contratos()
+    {
+        return $this->hasMany(ContratoEmpresarial::class, 'user_id', 'id');
+    }
+
+
 }
