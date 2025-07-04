@@ -48,6 +48,7 @@ function inicializarEmpresarial(corretora_id = null) {
             {data:"quantidade_vidas",name:"vidas",width:"5%"},
             {data:"valor_plano",name:"valor_plano",width:"8%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
             {data:"comissao",name:"comissao",width:"8%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
+            {data:"porcentagem",name:"porcentagem",width:"8%"},
             {data:"plano",name:"plano",width:"10%"},
             {data:"vencimento",name:"vencimento",width:"9%"},
             {data:"status",name:"status",width:"10%",
@@ -79,7 +80,7 @@ function inicializarEmpresarial(corretora_id = null) {
                 text: 'Exportar',
                 className: 'btn-exportar', // Classe personalizada para estilo
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5,6] // Define as colunas a serem exportadas (ajuste conforme necessário)
+                    columns: [0,1,2,3,4,5,6] // Define as colunas a serem exportadas (ajuste conforme necessário)
                 },
                 filename: 'vivaz-empresarial'
             }
@@ -87,7 +88,7 @@ function inicializarEmpresarial(corretora_id = null) {
         "columnDefs": [
 
             {
-                "targets": 11,
+                "targets": 12,
                 "createdCell": function (td, cellData, rowData, row, col) {
                     let id = cellData;
                     let corretor = rowData['usuario'];
@@ -160,7 +161,7 @@ function inicializarEmpresarial(corretora_id = null) {
                 selectUsuarioIndividual.append(`<option value="${d}" style="color:black;">${d}</option>`);
             });
 
-            let planos = this.api().column(8).data().unique(); // Coluna 2 tem os corretores
+            let planos = this.api().column(9).data().unique(); // Coluna 2 tem os corretores
             let mudarPlanosEmpresarial = $('#mudar_planos_empresarial');
             mudarPlanosEmpresarial.empty(); // Limpa o select
             mudarPlanosEmpresarial.append('<option value="">-- Todos os Planos --</option>'); // Adiciona uma opção para todos
@@ -200,7 +201,7 @@ $("#mudar_user_empresarial").on('change',function(){
 
 $("#mudar_planos_empresarial").on('change',function(){
     let valorSelecionado = $(this).val();
-    tableempresarial.column(8).search(valorSelecionado).draw();
+    tableempresarial.column(9).search(valorSelecionado).draw();
 });
 
 $(document).on('click','.open-modal-empresarial',function(e){

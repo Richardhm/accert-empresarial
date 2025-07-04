@@ -83,6 +83,7 @@
                         <th>Vidas</th>
                         <th>Valor</th>
                         <th>Comissão</th>
+                        <th>%</th>
                         <th>Plano</th>
                         <th>Vencimento</th>
 

@@ -76,12 +76,10 @@ class FinanceiroController extends Controller
                         'contrato_empresarial.valor_plano_odonto as valor_odonto',
                         'contrato_empresarial.codigo_saude as codigo_saude',
                         'contrato_empresarial.codigo_odonto as codigo_odonto',
-
+                        'comissao.valor as porcentagem',
                         'contrato_empresarial.senha_cliente as senha_cliente',
-
                         'contrato_empresarial.pago as status',
                         DB::raw("DATE_FORMAT(contrato_empresarial.vencimento_boleto,'%d/%m/%Y') as vencimento"),
-
                         'contrato_empresarial.data_boleto as data_boleto',
                         'tabela_origens.nome as tabela_origens',
                         'contrato_empresarial.responsavel as responsavel',
@@ -89,16 +87,9 @@ class FinanceiroController extends Controller
                     )
 
                     ->join('users', 'users.id', '=', 'contrato_empresarial.user_id')
-
+                    ->join('comissao', 'users.id', '=', 'comissao.user_id')
                     ->join('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
                     ->join('tabela_origens', 'tabela_origens.id', '=', 'contrato_empresarial.tabela_origens_id');
-
-
-
-
-
-
-
                 return $query->get();
             });
 
