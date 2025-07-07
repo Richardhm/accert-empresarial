@@ -35,4 +35,21 @@ class ContratoEmpresarial extends Model
         'pago',
         'codigo_vendedor'
     ];
+
+    // Associação com o modelo de plano
+    public function plano()
+    {
+        return $this->belongsTo(Plano::class, 'plano_id');
+    }
+
+    // Associação com o modelo de usuário
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+
+
+
+
 }

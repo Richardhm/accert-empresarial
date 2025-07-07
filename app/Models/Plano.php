@@ -12,4 +12,9 @@ class Plano extends Model
         'nome',
         'empresarial',
     ];
+
+    public function contratos()
+    {
+        return $this->hasMany(ContratoEmpresarial::class, 'plano_id');
+    }
 }

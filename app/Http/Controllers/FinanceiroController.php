@@ -79,8 +79,8 @@ class FinanceiroController extends Controller
                         'comissao.valor as porcentagem',
                         'contrato_empresarial.senha_cliente as senha_cliente',
                         'contrato_empresarial.pago as status',
-                        DB::raw("DATE_FORMAT(contrato_empresarial.vencimento_boleto,'%d/%m/%Y') as vencimento"),
-                        'contrato_empresarial.data_boleto as data_boleto',
+                        DB::raw("DATE_FORMAT(contrato_empresarial.vencimento_boleto,'%d/%m/%Y') as vencimento_boleto"),
+                        DB::raw("DATE_FORMAT(contrato_empresarial.data_boleto,'%d/%m/%Y') as data_boleto"),
                         'tabela_origens.nome as tabela_origens',
                         'contrato_empresarial.responsavel as responsavel',
                         'contrato_empresarial.plano_contrado as plano_contrado'
@@ -97,9 +97,41 @@ class FinanceiroController extends Controller
         }
     }
 
+    public function excluir(Request $request)
+    {
+        // Valida se o ID foi enviado na requisição
+        if (!$request->id) {
+            return response()->json(['error' => 'ID não fornecido'], 400);
+        }
+
+        // Busca o contrato pelo ID
+        $contrato = ContratoEmpresarial::find($request->id);
+
+        // Verifica se o contrato existe
+        if (!$contrato) {
+            return response()->json(['error' => 'Contrato não encontrado'], 404);
+        }
+
+        try {
+            // Tenta excluir o contrato
+            $contrato->delete();
+            return response()->json(['success' => 'Contrato excluído com sucesso'], 200);
+        } catch (\Exception $e) {
+            // Em caso de erro, retorna a mensagem de erro
+            return response()->json(['error' => 'Erro ao excluir o contrato: ' . $e->getMessage()], 500);
+        }
+
+
+    }
+
+
+
+
+
 
     public function modalEmpresarial(Request $request)
     {
+
         $id = $request->id;
         $dados = ContratoEmpresarial
             ::where("id", $id)
@@ -107,7 +139,6 @@ class FinanceiroController extends Controller
             ->selectRaw("(select name from users where users.id = contrato_empresarial.user_id) as vendedor")
             ->selectRaw("(select nome from planos where planos.id = contrato_empresarial.plano_id) as plano")
             ->selectRaw("(select nome from tabela_origens where tabela_origens.id = contrato_empresarial.tabela_origens_id) as tabela_origem")
-
             ->first();
 
 
@@ -131,6 +162,8 @@ class FinanceiroController extends Controller
         $cidade = $request->input('cidade');
         $uf = $request->input('uf');
         $plano_contrado = $request->input('plano_contratado');
+        $valor_plano = $request->input('valor_plano');
+
 
         $codigo_corretora = $request->input('codigo_corretora');
         $codigo_saude = $request->input('codigo_saude');
@@ -142,12 +175,11 @@ class FinanceiroController extends Controller
         $valor_total = $request->input('valor_total');
         $taxa_adesao = $request->input('taxa_adesao');
         $data_analise = $request->input('data_analise');
-
+        $data_cadastro = $request->input('data_cadastro');
 
         $valor_boleto = $request->input('valor_boleto');
         $vencimento_boleto = $request->input('vencimento_boleto');
         $data_boleto = $request->input('data_boleto');
-
         $codigo_externo = $request->input('codigo_externo');
 
         $texto_empresarial = "";
@@ -181,7 +213,9 @@ class FinanceiroController extends Controller
             'celular',
             'email',
             'responsavel',
+            'data_cadastro',
             'cidade',
+            'valor_plano',
             'codigo_externo',
             'uf',
             'plano_contrado',

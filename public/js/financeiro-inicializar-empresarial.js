@@ -41,17 +41,21 @@ function inicializarEmpresarial(corretora_id = null) {
         "processing": true,
         columns: [
             {data:"created_at",name:"created_at",width:"8%"},
-            {data:"codigo_externo",name:"codigo_externo",width:"6%"},
-            {data:"usuario",name:"usuario",width:"10%"},
-            {data:"razao_social",name:"razao_social",width:"31%"},
+            {data:"codigo_externo",name:"codigo_externo",width:"8%"},
+            {data:"usuario",name:"usuario",width:"15%"},
+            {data:"razao_social",name:"razao_social",width:"15%"},
             {data:"cnpj",name:"cnpj",width:"14%"},
-            {data:"quantidade_vidas",name:"vidas",width:"5%"},
-            {data:"valor_plano",name:"valor_plano",width:"8%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
-            {data:"comissao",name:"comissao",width:"8%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
-            {data:"porcentagem",name:"porcentagem",width:"8%"},
+            {data:"quantidade_vidas",name:"vidas",width:"8%",className: "text-center"},
+            {data:"valor_plano",name:"valor_plano",width:"11%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
+            {data:"comissao",name:"comissao",width:"10%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
+            {data:"porcentagem",name:"porcentagem",width:"3%",
+                render: function (data, type, row, meta) {
+                     return parseInt(data);
+                }
+            },
             {data:"plano",name:"plano",width:"10%"},
-            {data:"vencimento",name:"vencimento",width:"9%"},
-            {data:"status",name:"status",width:"10%",
+            {data:"vencimento_boleto",name:"vencimento_boleto",width:"10%"},
+            {data:"status",name:"status",width:"8%",
                 render: function (data, type, row, meta) {
                     if (data == 1) {
                         return `<div class="text-center">
@@ -67,11 +71,30 @@ function inicializarEmpresarial(corretora_id = null) {
                         </div>`;
                     }
                 }
-
-
             },
             {data:"id",name:"id",width:"4%"},
-            {data:"id",name:"id",width:"10%",visible:false}
+            {data:"id",name:"id",width:"4%",visible:false},
+            {data:"status",name:"status",width:"8%",
+                render:function(data,type,row,meta) {
+                    if (data == 0) {
+                        return `
+                            <div class="text-center">
+                                <svg data-id="${row['id']}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" style="margin-left:5px;color:red;width:25px;height:25px;text-align:center;cursor: pointer;font-weight:bold;" stroke="currentColor" class="size-6 excluir_contrato">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                        `;
+                    } else {
+                        return `<div class="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" style="margin-left:5px;color:#0d6efd;width:25px;height:25px;text-align:center;font-weight:bolder;" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+
+                        </div>`;
+                    }
+
+                }
+            }
         ],
         buttons: [
             {
@@ -99,7 +122,7 @@ function inicializarEmpresarial(corretora_id = null) {
                     let vidas = rowData['quantidade_vidas'];
                     let cnpj = rowData['cnpj'];
                     let razao_social = rowData['razao_social'];
-                    let data_vencimento = rowData['vencimento'];
+                    let data_vencimento = rowData['vencimento_boleto'];
                     let codigo_corretora = rowData['codigo_corretora'];
                     let codigo_odonto = rowData['codigo_odonto'];
                     let codigo_saude = rowData['codigo_saude'];
@@ -116,20 +139,22 @@ function inicializarEmpresarial(corretora_id = null) {
                     let plano_contratado = rowData['plano_contrado'];
                     let codigo_externo = rowData['codigo_externo'];
                     let valor_total = rowData['valor_total'];
+                    let valor_plano = rowData['valor_plano'];
                     let uf = rowData['uf'];
                     let data_analise = rowData['data_analise'];
 
+                    let data_cadastro = rowData['created_at']
 
 
 
                     $(td).html(`<div class='text-center text-white'>
-                                            <a href="#" data-id="${id}" data-vendedor="${corretor}" data-plano="${plano}" data-origens="${tabela_origens}"
+                                            <a href="#" data-data_cadastro="${data_cadastro}" data-valor_plano="${valor_plano}" data-id="${id}" data-vendedor="${corretor}" data-plano="${plano}" data-origens="${tabela_origens}"
                                               data-razao_social="${razao_social}" data-cnpj="${cnpj}" data-vidas="${vidas}" data-celular="${celular}"
                                               data-email="${email}" data-responsavel="${responsavel}" data-cidade="${cidade}"
                                               data-plano_contrado="${plano_contratado}" data-codigo_corretora="${codigo_corretora}"
                                               data-codigo_saude="${codigo_saude}" data-codigo_odonto="${codigo_odonto}" data-senha_cliente="${senha_cliente}"
                                               data-valor_saude="${valor_saude}" data-valor_odonto="${valor_odonto}" data-valor_total="${valor_total}"
-                                              data-taxa_adesao="${taxa_adesao}" data-valor_boleto="${valor_boleto}" data-vencimento_boleto="${vencimento_boleto}"
+                                              data-taxa_adesao="${taxa_adesao}" data-valor_boleto="${valor_boleto}" data-vencimento_boleto="${data_vencimento}"
                                               data-boleto="${data_boleto}" data-uf="${uf}" data-codigo_externo="${codigo_externo}"
                                               data-analise="${data_analise}"
                                               class="text-white open-modal-empresarial">
@@ -223,6 +248,7 @@ $(document).on('click','.open-modal-empresarial',function(e){
     let codigo_odonto = $(this).data("codigo_odonto");
     let senha_cliente = $(this).data("senha_cliente");
     let valor_saude = $(this).data("valor_saude");
+    let valor_plano = $(this).data("valor_plano");
     let valor_odonto = $(this).data("valor_odonto");
     let valor_total = $(this).data("valor_total");
     let taxa_adesao = $(this).data("taxa_adesao");
@@ -232,6 +258,7 @@ $(document).on('click','.open-modal-empresarial',function(e){
     let id = $(this).data('id');
     let codigo_externo = $(this).data('codigo_externo');
     let data_analise = $(this).data('analise');
+    let data_cadastro = $(this).data('data_cadastro');
 
     $.ajax({
         url:empresarialFinanceiroInicializar,
@@ -246,6 +273,7 @@ $(document).on('click','.open-modal-empresarial',function(e){
             vidas: vidas,
             celular: celular,
             email: email,
+            valor_plano: valor_plano,
             responsavel: responsavel,
             cidade: cidade,
             uf: uf,
@@ -262,7 +290,8 @@ $(document).on('click','.open-modal-empresarial',function(e){
             valor_boleto: valor_boleto,
             vencimento_boleto: vencimento_boleto,
             data_boleto: data_boleto,
-            codigo_externo: codigo_externo
+            codigo_externo: codigo_externo,
+            data_cadastro: data_cadastro
         },
         success:function(res){
             $('#modalLoaderEmpresa').addClass('hidden');

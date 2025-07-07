@@ -88,20 +88,20 @@
         <main id="aba_comissao" class="aba_comissao_container justify-between">
             <section  style="display:flex; flex-wrap:wrap; width:28%;justify-content: space-between;">
                 <div style="display:flex;flex-basis:48%;flex-direction:column;">
-                    <select name="mes_folha" id="mes_folha" class="form-control form-control-sm mb-1 w-full border border-gray-300 text-gray-700 text-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 tamanho_de_25">
+                    <select name="mes_folha" id="mes_folha" class="form-control form-control-sm mb-1 w-full border border-gray-300 text-gray-700 text-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 tamanho_de_25" {{$mes != null && !empty($mes) ? 'disabled' : ''}}>
                         <option value="" class="text-center">---</option>
-                        <option value="01">Janeiro/2025</option>
-                        <option value="02">Fevereiro/2025</option>
-                        <option value="03">Março/2025</option>
-                        <option value="04">Abril/2025</option>
-                        <option value="05">Maio/2025</option>
-                        <option value="06">Junho/2025</option>
-                        <option value="07">Julho/2025</option>
-                        <option value="08">Agosto/2025</option>
-                        <option value="09">Setembro/2025</option>
-                        <option value="10">Outubro/2025</option>
-                        <option value="11">Novembro/2024</option>
-                        <option value="12">Dezembro/2024</option>
+                        <option value="01" {{$mes == '01' ? 'selected' : ''}}>Janeiro/2025</option>
+                        <option value="02" {{$mes == '02' ? 'selected' : ''}}>Fevereiro/2025</option>
+                        <option value="03" {{$mes == '03' ? 'selected' : ''}}>Março/2025</option>
+                        <option value="04" {{$mes == '04' ? 'selected' : ''}}>Abril/2025</option>
+                        <option value="05" {{$mes == '05' ? 'selected' : ''}}>Maio/2025</option>
+                        <option value="06" {{$mes == '06' ? 'selected' : ''}}>Junho/2025</option>
+                        <option value="07" {{$mes == '07' ? 'selected' : ''}}>Julho/2025</option>
+                        <option value="08" {{$mes == '08' ? 'selected' : ''}}>Agosto/2025</option>
+                        <option value="09" {{$mes == '09' ? 'selected' : ''}}>Setembro/2025</option>
+                        <option value="10" {{$mes == '10' ? 'selected' : ''}}>Outubro/2025</option>
+                        <option value="11" {{$mes == '11' ? 'selected' : ''}}>Novembro/2024</option>
+                        <option value="12" {{$mes == '12' ? 'selected' : ''}}>Dezembro/2024</option>
                     </select>
 
                     <ul style="margin:0;padding:0;width:100%;" class="w-full flex flex-col bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px]">
@@ -110,7 +110,7 @@
                                     Salario:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled name="salario" id="salario" value=""
+                                    <input type="text" disabled name="salario" id="salario" value="{{number_format($total_salario,2,",",".")}}"
                                            class="salario_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
@@ -121,7 +121,7 @@
                                     Comissão:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled name="comissao" id="comissao" value=""
+                                    <input type="text" disabled name="comissao" id="comissao" value="{{number_format($total_mes,2,",",".")}}"
                                            class="salario_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
@@ -132,7 +132,7 @@
                                     Premiação:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled name="premiacao" id="premiacao" value=""
+                                    <input type="text" disabled name="premiacao" id="premiacao" value="{{number_format($total_premiacao,2,",",".")}}"
                                            class="salario_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md premiacao_usuario"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
@@ -143,7 +143,7 @@
                                     Estorno:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled value="" name="estorno_geral" id="estorno_geral"
+                                    <input type="text" disabled value="{{number_format($estorno_geral,2,",",".")}}" name="estorno_geral" id="estorno_geral"
                                            class="salario_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md estorno_usuario"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
@@ -154,7 +154,7 @@
                                     Desconto:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled id="valor_total_desconto" value="" name="desconto" id="desconto"
+                                    <input type="text" disabled id="valor_total_desconto" value="{{number_format($total_desconto,2,",",".")}}" name="desconto" id="desconto"
                                            class="desconto_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md estorno_usuario"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
@@ -165,12 +165,11 @@
                                     Total:
                                 </span>
                             <span style="flex-grow: 1; flex-shrink: 1; flex-basis: 50%;">
-                                    <input type="text" disabled name="total_campo" value="" id="total_campo"
+                                    <input type="text" disabled name="total_campo" value="{{number_format($total_mes,2,",",".")}}" id="total_campo"
                                            class="desconto_usuario bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-md total_campo"
                                            style="text-align:right; height:20px; font-size:0.8em; width: 100%;">
                                 </span>
                         </li>
-
 
                     </ul>
 
@@ -186,8 +185,8 @@
                         <ul style="margin:0 0 0 0;padding:0;">
                             <li style="display:flex;justify-content: space-between;" data-plano="0" id="listar_empresarial_apto_total">
                                 <span style="display:flex;flex-basis:50%;font-size:0.68em;margin-left:2px;">Empresarial</span>
-                                <span style="display:flex;flex-basis:10%;font-size:0.68em;" id="total_quantidade_empresarial_total"></span>
-                                <span style="display:flex;flex-basis:40%;justify-content:flex-end;font-size:0.68em;margin-right:2px;"><span id="valor_total_empresarial_total"></span></span>
+                                <span style="display:flex;flex-basis:10%;font-size:0.68em;" id="total_quantidade_empresarial_total">{{$total_empresarial_quantidade}}</span>
+                                <span style="display:flex;flex-basis:40%;justify-content:flex-end;font-size:0.68em;margin-right:2px;"><span id="valor_total_empresarial_total">{{number_format($total_mes,2,",",".")}}</span></span>
                             </li>
                         </ul>
                     </div>
@@ -198,6 +197,17 @@
                             @php
                                 $iix = 0;
                             @endphp
+                            @foreach($users_apto_apagar as $uu)
+                                @php  $iix++; @endphp
+                                <li class="flex justify-between text-white w-100 py-1 {{ $iix % 2 == 0 ? 'user_destaque_impar' : '' }}">
+                                   <span class="user_nome user_destaque" data-id="{{ $uu->user_id }}">
+                                       @php
+                                           echo Illuminate\Support\Str::limit($uu->user,20,"");
+                                       @endphp
+                                   </span>
+                                    <span class="user_total total_pagamento_finalizado user_destaque" data-id="{{ $uu->user_id }}">{{ number_format($uu->total, 2, ",", ".") }}</span>
+                                </li>
+                            @endforeach
 
                         </ul>
 
@@ -211,7 +221,9 @@
                     <select name="escolher_vendedor" id="escolher_vendedor"
                             class="form-control form-control-sm mb-1 w-full border border-gray-300 text-gray-700 text-sm rounded-md tamanho_de_25">
                         <option value="" class="text-center">--Corretores--</option>
-
+                        @foreach($users as $u)
+                            <option value="{{$u->id}}" data-name="{{$u->name}}">{{$u->name}}</option>
+                        @endforeach
                         <option value="00">--Finalizar--</option>
                     </select>
 
@@ -283,6 +295,15 @@
                                 </span>
                         </li>
 
+
+
+
+
+
+
+
+
+
                     </ul>
 
 
@@ -301,7 +322,6 @@
                     <div style="border-radius:5px;margin:2px 0;" class="bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px]">
                         <p class="border-bottom text-center" style="margin:0;padding: 0;color: white;font-size:0.7em">Confirmar(?)</p>
                         <ul style="margin:0 0 0 0;padding:0;list-style:none;" class="listar listar_a_receber_ul">
-
                             <li style="display:flex;font-size:0.68em;color:#FFF;margin-left:2px;display:flex;justify-content: space-between;align-items:center;" class="empresarial_a_receber">
                                 <span>Empresarial</span>
                                 <span class="valor_empresarial_a_receber valores_em_destaque">0</span>
@@ -356,7 +376,35 @@
                         </div>
                     </div>
 
+                    <div style="color:#FFF;border-radius:5px;" id="tabela_aptos_a_pagar" class="dsnone">
+                        <div class="bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] p-2" style="border-radius:5px;">
+                            <table id="tabela_aptos_a_pagar_table" class="table table-sm listaraptosapagar w-100" style="table-layout: fixed;">
+                                <thead>
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>Data</th>
+                                    <th>Cod.</th>
+                                    <th>Cliente</th>
+                                    <th>Parcela</th>
+                                    <th>Valor</th>
+                                    <th align="center">Vencimento</th>
+                                    <th>Baixa</th>
 
+                                    <th>Pagar</th>
+                                    <th>Desc.</th>
+                                    <th>Remover(?)</th>
+                                    <th>Ver</th>
+                                    <th>Plano</th>
+                                    <th>Corretor</th>
+                                    <th>Vidas</th>
+                                    <th>Parcela</th>
+                                    <th>Cod.Externo</th>
+                                </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
 
 
 
@@ -486,38 +534,7 @@
 
 
 
-    <div class="hidden" id="exampleModalTipoPlanosHistoricoCorretora" tabindex="-1" aria-labelledby="exampleModalLabelTipoPlanosHistoricoCorretora" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabelTipoPlanosHistoricoCorretora">Planos</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div>
-                        <input type="checkbox" name="planos_tipo_individual_historico" id="planos_tipo_individual_historico" checked> Individual
-                    </div>
-                    <div>
-                        <input type="checkbox" name="planos_tipo_coletivo_historico" id="planos_tipo_coletivo_historico" checked> Coletivo
-                        <div class="w-75 ml-4">
 
-                        </div>
-                    </div>
-                    <div>
-                        <input type="checkbox" name="planos_tipo_empresarial_historico" id="planos_tipo_empresarial_historico" checked> Empresarial
-                        <div class="w-75 ml-4">
-
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 gerar_pdf_corretora_link_historico">Gerar PDF</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
 
@@ -537,22 +554,11 @@
                 <button type="button" class="text-gray-600 hover:text-gray-800" id="closeModalTipoPlanos">&times;</button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <div>
-                    <input type="checkbox" name="planos_tipo_individual" id="planos_tipo_individual" checked> Individual
-                </div>
-                <div>
-                    <input type="checkbox" name="planos_tipo_coletivo" id="planos_tipo_coletivo" checked> Coletivo
-                </div>
-                <div>
-                    <input type="checkbox" name="planos_tipo_empresarial" id="planos_tipo_empresarial" checked> Empresarial
-                </div>
-            </div>
+
 
             <!-- Modal Footer -->
             <div class="flex justify-end mt-4">
-                <button type="button" class="bg-blue-500 text-white px-4 py-2 rounded-md gerar_pdf_corretor_link hover:bg-blue-700">Gerar PDF</button>
+                <button type="button" class="bg-blue-500 w-full text-white px-4 py-2 rounded-md gerar_pdf_corretor_link hover:bg-blue-700">Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -564,6 +570,7 @@
 
     <!-- Modal -->
     <!-- Overlay e Modal -->
+
     <div class="fixed inset-0 items-center justify-center bg-black bg-opacity-50 hidden" id="exampleModalTipoPlanosCorretora">
         <!-- Modal -->
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
@@ -575,20 +582,13 @@
 
             <!-- Modal Body -->
             <div class="modal-body">
-                <div>
-                    <input type="checkbox" name="planos_tipo_individual_corretora" id="planos_tipo_individual_corretora" checked> Individual
-                </div>
-                <div>
-                    <input type="checkbox" name="planos_tipo_coletivo_corretora" id="planos_tipo_coletivo_corretora" checked> Coletivo
-                </div>
-                <div>
-                    <input type="checkbox" name="planos_tipo_empresarial_corretora" id="planos_tipo_empresarial_corretora" checked> Empresarial
-                </div>
+
+
             </div>
 
             <!-- Modal Footer -->
             <div class="flex justify-end mt-4">
-                <button type="button" class="bg-blue-500 text-white px-4 py-2 rounded-md gerar_pdf_corretora_link hover:bg-blue-700">Gerar PDF</button>
+                <button type="button" class="bg-blue-500 w-full text-white px-4 py-2 rounded-md gerar_pdf_corretora_link hover:bg-blue-700">Gerar PDF</button>
             </div>
         </div>
     </div>
@@ -604,7 +604,7 @@
 
 
 
-    @section('scripts')
+@section('scripts')
         <script src="{{asset('js/jquery.mask.min.js')}}"></script>
 
         <script>
@@ -648,7 +648,7 @@
                                 "&total=" + total +
                                 "&salario=" + salario,
                             success: function (res) {
-                                console.log(res);
+
 
                                 $(".valor_empresarial_a_receber").text(res.valor_empresarial_a_receber);
 
@@ -657,10 +657,11 @@
                                 $("#comissao_vendedor").val(res.total_comissao);
                                 {{--$("#valores_confirmados").val(res.id_confirmados);--}}
                                 $("#salario_vendedor").val(res.total_salario);
-                                {{--$("#premiacao_vendedor").val(res.total_premiacao);--}}
+                                $("#premiacao_vendedor").val(res.total_premiacao);
+                                $("#valor_total_estorno_vendedor").val("0,00");
+                                $("#valor_total_desconto_vendedor").val("0,00");
 
-
-                                {{--$("#total_campo_vendedor").val(res.total);--}}
+                                $("#total_campo_vendedor").val(res.total);
 
                                 {{--$(".empresarial_a_receber").removeClass('ativo');--}}
 
@@ -735,11 +736,194 @@
                             }
                         });
                     }
-                })
+                });
+
+                $("#closeModalTipoPlanos").on('click', function() {
+                    $("#exampleModalTipoPlanos").removeClass('flex').addClass('hidden');
+                });
+
+                $("body").on('click','.gerar_pdf_corretora_link',function(){
+
+                    let dados = {
+                        "individual": 0,
+                        "coletivo": 0,
+                        "empresarial": 1,
+                        "user_id": $("#corretor_escolhido").val(),
+                        "mes": $("#mes_folha option:selected").val(),
+                        "ano": $("#mes_folha option:selected").text().split("/")[1],
+                        "tipo":"corretora"
+                    };
+
+                    let queryString = $.param(dados);
+
+                    let url = "{{ route('gerente.finalizar.criarpdf') }}";
+                    url += "?" + queryString;
+                    window.open(url, '_blank');
+
+
+                });
 
 
 
 
+
+                $("body").on('change',".comissao_paga_change",function(){
+
+
+
+
+                    let id = $("#escolher_vendedor").val();
+                    let valor = $(this).val();
+                    let valor_plano = $(this).attr('data-valor-plano');
+                    let default_corretor = $(this).attr('data-id');
+                    let self = $(this);
+
+                    if(valor == 0) {
+                        self.closest('tr').find('.porcentagem_change').val(0);
+                    }
+
+
+                    $.ajax({
+                        url:"{{route('gerente.mudar.valor.corretor')}}",
+                        method:"POST",
+                        data:"id="+id+"&valor="+valor+"&valor_plano="+valor_plano+"&default_corretor="+default_corretor+"&acao=porcentagem",
+                        success:function(res) {
+                            //console.log(res);
+                            // console.log("valor ",res.valor);
+                            // console.log("porcentagem ",res.porcentagem);
+                            self.closest('tr').find('.comissao_pagando').val(res.valor)
+                            //self.closest('tr').find('.comissao_paga_change').val(res.porcentagem);
+                            listarcomissaomesrecebidas.ajax.reload();
+                        }
+                    });
+                });
+
+
+
+
+
+                $("body").on('click', '.gerar_pdf_corretor_link', function () {
+                    let dados = {
+                        "individual": 0,
+                        "coletivo": 0,
+                        "empresarial": 1,
+                        "user_id": $("#corretor_escolhido").val(),
+                        "mes": $("#mes_folha option:selected").val(),
+                        "ano": $("#mes_folha option:selected").text().split("/")[1],
+                        "tipo":"corretor"
+                    };
+
+
+
+                    let empresarialSelecionado = [];
+
+                        empresarialSelecionado.push($(this).data("planos"));
+
+
+                    if (empresarialSelecionado.length > 0) {
+                        dados["empresarial_valores"] = empresarialSelecionado;
+                    }
+
+                    let queryString = $.param(dados);
+                    let url = "{{ route('gerente.finalizar.criarpdf') }}";
+                    url += "?" + queryString;
+                    window.open(url, '_blank');
+                    $("#exampleModalTipoPlanos").modal('hide');
+                });
+
+
+                $("body").on('click','.user_destaque',function(){
+                    $("#loading-overlay").removeClass('ocultar');
+                    let id = $(this).attr("data-id");
+                    let nome_corretor = $(this).text();
+                    $("#escolher_vendedor").find("option:eq(0)").prop("selected", true);
+                    $(this).closest("ul").find('.total_pagamento_finalizado').removeClass('valor_total_change');
+                    $(this).closest("li").find('.total_pagamento_finalizado').addClass('valor_total_change');
+                    $("#corretor_escolhido").val(id);
+                    $("#list_user ul li").removeClass('user_destaque_ativo');
+                    $(this).closest("li").addClass('user_destaque_ativo');
+                    $("#container_btns").removeClass('hidden').addClass("flex flex-col");
+                    $("#container_btns").html(`
+
+                    <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 criar_pdf_corretor" data-id="${id}" style="font-size:0.8em;"  target="_blank">PDF Corretor</button>
+                    <button class="py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 criar_pdf" data-id="${id}" style="font-size:0.8em;"  target="_blank">PDF Corretora</button>
+                `).addClass('flex')
+                    $(".listar_estorno_ul li").removeClass("ativo");
+                    $(".listar li").removeClass("ativo");
+                    if($("#tabela_estorno_table").is(':visible')) {
+                        $("#tabela_estorno").slideUp('fast',function(){
+                            $("#tabela_principal").slideDown(1000,function(){
+                                $('#title_recebidas').html("<h4>Recebidas - Individual</h4>");
+                                listarcomissaomesrecebidas.ajax.url(`{{ url('gerente/listagem/comissao_mes_atual/${id}') }}`).load();
+                                $(".individual_recebidas").addClass("ativo");
+                            });
+                        });
+                    }
+
+                    if($("#listar_a_receber").is(':visible')) {
+                        $("#listar_a_receber").slideUp('slow',function(){
+                            $("#tabela_principal").slideDown(1000,function(){
+                                $('#title_recebidas').html("<h4>Recebidas - Individual</h4>");
+                                listarcomissaomesrecebidas.ajax.url(`{{ url('gerente/listagem/comissao_mes_atual/${id}') }}`).load();
+                                $(".individual_recebidas").addClass("ativo");
+                            });
+                        })
+                    }
+
+                    if($("#tabela_aptos_a_pagar").is(":visible")) {
+                        $("#tabela_aptos_a_pagar").slideUp(1000,function(){
+                            $("#tabela_principal").slideDown(1000,function(){
+                                $('#title_recebidas').html("<h4>Recebidas - Individual</h4>");
+                                listarcomissaomesrecebidas.ajax.url(`{{ url('/gerente/listagem/comissao_mes_atual/${id}') }}`).load();
+                                $(".individual_recebidas").addClass("ativo");
+                            });
+                        });
+                    }
+
+
+                    $("#list_user").css({"height":"293px","max-height":"293px","overflow":"auto"})
+
+                    //if($("#mes_folha").val() != "") {
+
+                    let mes = $("#mes_folha").val();
+                    let ano = $("#mes_folha").find('option:selected').text().split("/")[1];
+                    $.ajax({
+                        url:"{{route('gerente.listagem.confirmadas.especifica')}}",
+                        data:"mes="+mes+"&id="+id+"&ano="+ano,
+                        method:"POST",
+                        success:function(res) {
+                            $(".valor_empresarial_a_receber").text(res.valor_empresarial_a_receber);
+
+                            $("#salario_vendedor").val(res.salario);
+                            $("#comissao_vendedor").val(res.comissao);
+                            $("#premiacao_vendedor").val(res.premiacao);
+
+                            $("#total_campo_vendedor").val(res.total);
+
+                            $("#total_quantidade_empresarial").text(res.total_empresarial_quantidade);
+                            $("#valor_total_empresarial").text(res.comissao);
+
+                            $("#valores_confirmados").val(res.id_confirmados);
+
+                            $(".total_a_pagar").text(res.total);
+
+
+                            listaraptosapagar.ajax.reload(function() {
+                                listaraptosapagar.clear().draw();
+                            });
+                        },
+                        complete: function () {
+                            // Esconder o overlay de loading
+                            $("#loading-overlay").addClass('ocultar');
+                        }
+                    });
+                    //}
+                });
+
+
+                $("body").on('click','.criar_pdf_corretor',function(){
+                    $("#exampleModalTipoPlanos").removeClass('hidden').addClass('flex');
+                });
 
 
 
@@ -920,12 +1104,452 @@
                             'fixed': false
                         }
                     }
+                });
+
+
+                $("#listar_empresarial_apto").on('click',function(){
+                    let id = $("#corretor_escolhido").val();
+                    let mes = $("#mes_folha").val();
+                    let ano = $("#mes_folha option:selected").text().split("/")[1];
+                    if(id) {
+                        $("#listar_coletivo_apto").removeClass("ativo");
+                        $(".listar li").removeClass("ativo");
+                        $("#listar_individual_apto").removeClass("ativo");
+                        $(".listar_estorno_ul li").removeClass("ativo");
+                        $("#listar_empresarial_apto").addClass("ativo");
+                        if($("#tabela_principal").is(':visible')) {
+                            $("#tabela_principal").slideUp('fast',function(){
+                                if(mes == "") {
+                                    listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}') }}`).load();
+                                    $("#tabela_aptos_a_pagar").slideDown('slow');
+                                } else {
+                                    listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                                    $("#tabela_aptos_a_pagar").slideDown('slow');
+                                }
+                            });
+                        }
+                        if($("#listar_a_receber").is(':visible')) {
+                            $("#listar_a_receber").slideUp('fast',function(){
+                                listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                                $("#tabela_aptos_a_pagar").slideDown('slow');
+                            });
+                        } else {
+                            $("#title_individual_confirmados").html("<h4>Recebidas - Empresarial</h4>");
+                            listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                        }
+
+                        if($("#tabela_estorno_table").is(':visible')) {
+                            $("#tabela_estorno").slideUp('fast',function(){
+                                $("#title_individual_confirmados").html("<h4>Recebidas - Empresarial</h4>");
+                                listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                                $("#tabela_aptos_a_pagar").slideDown('slow');
+                            });
+                        } else {
+                            $("#title_individual_confirmados").html("<h4>Recebidas - Empresarial</h4>");
+                            listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                        }
+                        if($("#tabela_estorno_table_back").is(":visible")) {
+                            $("#tabela_estorno_back").slideUp(1000,function(){
+                                $("#tabela_aptos_a_pagar").slideDown('slow',function(){
+                                    $("#title_individual_confirmados").html("<h4>Recebidas - Empresarial</h4>");
+                                    listaraptosapagar.ajax.url(`{{ url('/gerente/comissao/empresarial/confirmadas/${id}/${mes}/${ano}') }}`).load();
+                                });
+                            });
+                        }
+                    } else {
+                        $("#listar_coletivo_apto").removeClass("ativo");
+                        $(".listar li").removeClass("ativo");
+                        $("#listar_individual_apto").removeClass("ativo");
+                        toastr["error"]("Escolha um Corretor")
+                        toastr.options = {
+                            'time-out': 3000,
+                            'close-button':true,
+                            'position-class':'toast-top-full-width',
+                            'class' : 'fullwidth',
+                            'fixed': false
+                        }
+                    }
+                });
+
+                var listaraptosapagar = $(".listaraptosapagar").DataTable({
+                    dom: '<"flex justify-between items-center"<"#title_individual_confirmados"><"btns"B><"estilizar_search"f>>' +
+                        'tr' +
+                        '<"flex justify-between items-center"<"por_pagina"l><"estilizar_pagination"p>>',
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Exportar para Excel',
+                            className: 'bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 hidden',
+                            exportOptions: {
+                                columns: [0, 1, 3, 5, 9, 13, 14, 15, 16, 17]
+                            }
+                        },
+                        {
+                            text: 'Exportar Tudo para Excel',
+                            className: 'bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 hidden',
+                            action: function () {
+                                exportAllToExcel();
+                            }
+                        }
+                    ],
+                    language: {
+                        "search": "Pesquisar",
+                        "paginate": {
+                            "next": "Próx.",
+                            "previous": "Ant.",
+                            "first": "Primeiro",
+                            "last": "Último"
+                        },
+                        "emptyTable": "Nenhum registro encontrado",
+                        "info": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+                        "infoEmpty": "Mostrando 0 até 0 de 0 registros",
+                        "infoFiltered": "(Filtrados de _MAX_ registros)",
+                        "infoThousands": ".",
+                        "loadingRecords": "Carregando...",
+                        "processing": "Processando...",
+                        "lengthMenu": "Exibir _MENU_ por página"
+                    },
+                    ajax: {
+                        url:url_padrao,
+                        dataSrc:""
+                    },
+                    "lengthMenu": [1000,2000,3000,4000,5000],
+                    "ordering": false,
+                    "paging": true,
+                    "searching": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "responsive": true,
+                    processing: true,
+                    columns: [
+                        {data:"administradora",name:"administradora",width:"4%"},
+                        {data:"created_at",name:"created_at",width:"4%"},
+                        {data:"codigo",name:"codigo",width:"3%"},
+                        {data:"cliente",name:"cliente",width:"18%"},
+                        {data:"parcela",name:"parcela",width:"3%",className: 'dt-center'},
+                        {data:"valor_plano",name:"valor_plano",width:"5%",render: $.fn.dataTable.render.number('.',',',2,'R$ '),className: 'dt-center'},
+                        {data:"vencimento",name:"vencimento",width:"5%",className: 'dt-center'},
+                        {data:"data_baixa",name:"data_baixa",width:"5%"},
+
+                        {data:"valor",name:"valor",width:"3%",render: $.fn.dataTable.render.number('.',',',2,'R$ '),className: 'comissao_receber'},
+                        {data:"desconto",name:"desconto",className:"desconto_atual",render: $.fn.dataTable.render.number('.',',',2,'R$ '),width:"3%"},
+                        {data:"id",name:"id",width:"5%",className: 'dt-center',
+                            "createdCell": function (td, cellData, rowData, row, col) {
+
+                                $(td).html(`
+
+
+
+
+
+                                <svg id="${cellData}" data-plano="${rowData.plano}" class="w-6 h-6 text-white removeButton" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14-4-4m4 4 4-4"/>
+                                </svg>
+
+                                `)
+                            }
+                        },
+                        {
+                            data: "contrato_id", name: "contrato_id", width: "1%",
+                            "createdCell": function (td, cellData, rowData, row, col) {
+                                let contrato_id = cellData;
+                                if(rowData.plano == 1) {
+                                    $(td).html(`<div class='text-center text-white'>
+                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_individual">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                    </a>
+                                </div>
+                            `);
+                                } else if(rowData.plano == 3) {
+                                    $(td).html(`<div class='text-center text-white'>
+                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_coletivo">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                    </a>
+                                </div>
+                            `);
+                                } else {
+                                    $(td).html(`<div class='text-center text-white'>
+                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_empresarial">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                    </a>
+                                </div>
+                            `);
+                                }
+                            }
+                        },
+                        {data:"plano_nome",name:"plano_nome",visible:false},
+                        {data:"corretor",name:"corretor",visible:false},
+                        {data:"quantidade_vidas",name:"quantidade",visible:false},
+                        {data:"parcela",name:"parcela",visible:false},
+                        {data:"codigo_externo",name:"codigo_externo",visible:false},
+
+                    ],
+                    "drawCallback":function(settings) {
+                        if(settings.aoData.length >= 1) {
+
+                            let title = $(settings.nTableWrapper.childNodes[0].childNodes[0].childNodes[0]).text();
+
+                            let soma = 0;
+                            let columnIndex = 10;
+                            $(settings.nTable).find('tbody tr').each(function() {
+                                let valor = parseFloat($(this).find('td:eq(' + columnIndex + ')').text().replace(',', '.').replace("R$ ","")) || 0;
+                                soma += valor;
+                            });
+
+                            if (/Individual/.test(title)) {
+                                $("#desconto_individual").val(soma.toFixed(2));
+                            } else if (/Coletivo/.test(title)) {
+                                $("#desconto_coletivo").val(soma.toFixed(2));
+                            } else if (/Empresarial/.test(title)) {
+                                $("#desconto_empresarial").val(soma.toFixed(2));
+                            }
+
+
+                        }
+
+
+
+                    },
+                    "initComplete": function( settings, json ) {
+                        $('#title_individual_confirmados').html("<h4>Recebidas - Individual</h4>");
+                    },
+                    footerCallback: function (row, data, start, end, display) {
+                        var api = this.api();
+                        var intVal = function (i) {
+                            return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+                        };
+                        conditionalTotal = 0;
+                        conditionalRecebida = 0;
+                        api.rows( { search: "applied" } ).every( function ( rowIdx, tableLoop, rowLoop ) {
+                            var d = this.data();
+                            conditionalTotal += intVal(d['comissao_esperada']);
+                            conditionalRecebida += intVal(d['comissao_recebida']);
+                            //qtdLinha = rowLoop + 1;
+                        });
+                        $("#previsao_de_comissao").html("Previsão da Comissão: "+conditionalTotal.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'}));
+                    }
+                });
+
+                $("body").on('click', '.criar_pdf', function(){
+                    $("#exampleModalTipoPlanosCorretora").removeClass('hidden').addClass('flex');
+                });
+
+
+
+
+
+
+                $('body').on('click', '.removeButton', function () {
+
+                    $("#loading-overlay").removeClass('ocultar');
+                    let row = listaraptosapagar.row($(this).parents('tr'));
+                    let desconto = listaraptosapagar.row($(this).parents('tr')).data().desconto;
+                    let comissao = listaraptosapagar.row($(this).parents('tr')).data().valor;
+
+                    let id = $(this).attr('id');
+
+
+                    // Adicionar requisição na fila
+                    let requestData = {
+                        id: id,
+                        mes: $("#mes_folha").val(),
+                        ano: $("#mes_folha").find('option:selected').text().split("/")[1],
+                        user_id: $("#corretor_escolhido").val(),
+                        salario: $("#salario_vendedor").val(),
+                        premiacao: $("#premiacao_vendedor").val(),
+                        comissao,
+                        desconto,
+                        total: $("#total_campo_vendedor").val(),
+                    };
+
+                    $.ajax({
+                        url: "{{ route('gerente.mudar.para_a_nao_pago') }}",
+                        method: "POST",
+                        data: requestData,
+                        success: function (res) {
+                            $("#comissao").val(res.valores_geral.comissao);
+                            $("#salario").val(res.valores_geral.salario);
+                            $("#premiacao").val(res.valores_geral.premiacao);
+                            $("#estorno_geral").val(res.valores_geral.estorno);
+                            $("#valor_total_desconto").val(res.valores_geral.desconto);
+
+                            $(".valor_empresarial_a_receber").text(res.valor_empresarial_a_receber);
+                            $("#total_quantidade_individual").text(res.total_individual_quantidade);
+
+                            $("#valor_total_individual").text(res.total_individual);
+
+                            $(".quantidade_estorno_empresarial").text(res.total_empresarial_quantidade_estorno);
+
+                            $("#total_quantidade_empresarial").text(res.total_empresarial_quantidade);
+                            $("#valor_total_empresarial").text(res.total_empresarial);
+                            $("#comissao_vendedor").val(res.total_comissao);
+                            $("#valores_confirmados").val(res.id_confirmados);
+                            $("#salario_vendedor").val(res.total_salario);
+                            $("#premiacao_vendedor").val(res.total_premiacao);
+
+                            $("#total_campo_vendedor").val(res.total);
+
+                            $(".empresarial_a_receber").removeClass('ativo');
+
+                            $(".empresarial_recebidas").removeClass('ativo');
+
+                            $("#listar_empresarial_apto").removeClass('ativo');
+
+
+                            $("#list_user").html(res.view);
+                            $("#btn_fechar_mes").html('<button id="confirmBtn" >Fechar Mês</button>');
+                            const select = $("#escolher_vendedor");
+                            select.html('<option value="" class="text-center">--Corretores--</option>');
+                            $.each(res.usuarios, function(index, corretor) {
+                                const option = $("<option>").attr("value", corretor.id).text(corretor.name);
+                                if (corretor.id == $("#corretor_escolhido").val()) {
+                                    option.attr("selected", "selected");
+                                }
+                                select.append(option);
+                            });
+                            select.append("<option value='00'>--Finalizar--</option>");
+
+
+                            // let total_a_pagar = parseFloat(res.total_comissao) - parseFloat(res.desconto)
+                            if(parseFloat(res.total_comissao) > 0) {
+                                $(".total_a_pagar").text(res.total);
+                            } else {
+                                $(".total_a_pagar").text(0);
+                            }
+
+                            listaraptosapagar.ajax.reload();
+                        },
+                        complete: function () {
+                            $("#loading-overlay").addClass('ocultar');
+                        },
+                    });
+
+
 
 
 
 
 
                 });
+
+
+
+
+
+
+
+
+
+
+                $("body").on('click', '.pagar_comissao_up', function () {
+                    // $("#loading-overlay").removeClass('ocultar');
+
+                    // Coleta de dados
+                    const elemento = $(this);
+                    const mes = $("#mes_folha option:selected").val();
+                    const ano = $("#mes_folha").find('option:selected').text().split("/")[1];
+                    const id = elemento.attr('id');
+                    const plano = elemento.data('plano');
+                    const linha = elemento.closest('tr');
+                    const desconto = parseFloat(linha.find("input[name='porcentagem_change']").val().replace(/\./g, '').replace(',', '.'));
+                    const comissao_pagando = linha.find('.comissao_pagando').val();
+                    const comissao_recebida = comissao_pagando
+                        ? parseFloat(comissao_pagando.replace(/\./g, '').replace(',', '.'))
+                        : parseFloat(linha.find('.comissao_recebida').text().replace("R$", "").replace(/\./g, '').replace(',', '.'));
+
+
+
+
+                    // Dados para enviar ao backend
+                    const dadosRequest = {
+                        id: id,
+                        mes: mes,
+                        ano: ano,
+                        desconto: desconto,
+                        salario: $("#salario_vendedor").val(),
+                        comissao: comissao_recebida, // Ajuste conforme necessário
+                        premiacao: $("#premiacao_vendedor").val(),
+                        estorno: $("#valor_total_estorno_vendedor").val(),
+                        user_id: $("#corretor_escolhido").val(),
+                        total: $("#total_campo_vendedor").val()
+                    };
+
+
+
+                    // Requisição AJAX
+                    $.ajax({
+                        url: "{{route('gerente.aptar.pagamento')}}",
+                        method: "POST",
+                        data: dadosRequest,
+                        success: function (res) {
+
+
+                            if (res != "error") {
+
+                                $(".valor_empresarial_a_receber").text(res.valor_empresarial_a_receber);
+                                $("#total_quantidade_empresarial").text(res.total_empresarial_quantidade);
+                                $("#valor_total_empresarial").text(res.total_empresarial);
+                                $("#comissao_vendedor").val(res.total_comissao);
+                                $("#valores_confirmados").val(res.id_confirmados);
+                                $("#salario_vendedor").val(res.total_salario);
+                                $("#premiacao_vendedor").val(res.total_premiacao);
+                                $("#total_campo_vendedor").val(res.total);
+                                $(".empresarial_a_receber").removeClass('ativo');
+                                $(".empresarial_recebidas").removeClass('ativo');
+                                $("#listar_empresarial_apto").removeClass('ativo');
+                                $("#total_quantidade_empresarial_total").text(res.total_empresarial_quantidade_geral);
+                                $("#valor_total_empresarial_total").text(res.total_empresarial_geral);
+                                $("#salario").val(res.valores_geral.salario);
+                                $("#comissao").val(res.valores_geral.comissao);
+                                $("#premiacao").val(res.valores_geral.premiacao);
+                                $("#estorno_geral").val(res.valores_geral.estorno);
+                                $("#valor_total_desconto").val(res.valores_geral.desconto);
+                                $("#total_campo").val(res.valores_geral.total)
+                            //
+                            //
+                                $("#list_user").html(res.view);
+                                $("#btn_fechar_mes").html('<button id="confirmBtn" >Fechar Mês</button>');
+                                const select = $("#escolher_vendedor");
+                                select.html('<option value="" class="text-center">--Corretores--</option>');
+                                $.each(res.usuarios, function (index, corretor) {
+                                    const option = $("<option>").attr("value", corretor.id).text(corretor.name);
+                                    if (corretor.id == $("#corretor_escolhido").val()) {
+                                        option.attr("selected", "selected");
+                                    }
+                                    select.append(option);
+                                });
+                                select.append("<option value='00'>--Finalizar--</option>");
+                            //
+                            //
+                            //     // let total_a_pagar = parseFloat(res.total_comissao) - parseFloat(res.desconto)
+                            //     if (parseFloat(res.total_comissao) > 0) {
+                            //         $(".total_a_pagar").text(res.total);
+                            //     } else {
+                            //         $(".total_a_pagar").text(0);
+                            //     }
+                            }
+
+                            listarcomissaomesdfirente.row(linha).remove().draw();
+                        // },
+                        // error: function (xhr) {
+                        //     alert("Erro ao processar pagamento: " + xhr.responseText);
+                        // },
+                        // complete: function () {
+                        //     $("#loading-overlay").addClass('ocultar');
+                          }
+
+                    });
+                });
+
 
                 var listarcomissaomesdfirente = $(".listarcomissaomesdiferente").DataTable({
                     dom: '<"flex justify-between"<"#title_comissao_diferente"><"estilizar_search"f>><tr><"flex justify-between items-center"<"por_pagina"l><"estilizar_pagination"p>>',
@@ -991,14 +1615,14 @@
                         {data:"valor",name:"comissao_pagando",render: $.fn.dataTable.render.number('.',',',2,'R$ '),width:"10%",
                             "createdCell":function(td, cellData, rowData, row, col) {
                                 let valor_comisao = parseFloat(rowData.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                $(td).html('<input type="text" value='+valor_comisao+' data-id='+cellData+' readonly name="comissao_pagando" class="comissao_pagando" style="width:80%; padding: 4px 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.9rem; color: #000; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);" />')
+                                $(td).html('<input type="text" value='+valor_comisao+' data-id='+cellData+' disabled name="comissao_pagando" class="comissao_pagando" style="width:80%; padding: 4px 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.9rem; color: #000; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);" />')
                             }
                         },
                         {data:"quantidade_vidas",name:"quantidade_vidas",width:"3%",className: 'dt-center'},
                         {data:"desconto",name:"desconto",width:"8%",
                             "createdCell":function(td, cellData, rowData, row, col) {
                                 let descondo_calc = parseFloat(cellData).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                $(td).html('<input type="text" value='+descondo_calc+' data-id='+rowData.id+' name="porcentagem_change" class="porcentagem_change" style="width:80%; padding: 4px 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.9rem; color: #000; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);" />')
+                                $(td).html('<input disabled type="text" value='+descondo_calc+' data-id='+rowData.id+' name="porcentagem_change" class="porcentagem_change" style="width:80%; padding: 4px 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.9rem; color: #000; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);" />')
                             }
                         },
                         {
@@ -1047,23 +1671,13 @@
                                     </div>
                                 `);
                                 }
-
-
-
-
                             },
                         }
                     ],
-
                     "initComplete": function( settings, json ) {
                         $('#title_comissao_diferente').html("<h4>A Receber Individual</h4>");
                     }
                 });
-
-
-
-
-
 
 
                 var listarcomissaomesrecebidas = $(".listarcomissaomesrecebidas").DataTable({
@@ -1086,7 +1700,7 @@
                         "lengthMenu": "Exibir _MENU_ por página"
                     },
                     ajax: {
-                        url:'',
+                        url:url_padrao,
                         dataSrc:""
                     },
                     "lengthMenu": [50,100,150,200,300,500],
@@ -1109,18 +1723,6 @@
 
                     }
                 });
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             });

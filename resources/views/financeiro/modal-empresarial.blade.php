@@ -14,7 +14,7 @@
 
 
     <!-- Bloco da Esquerda (Formulário 60%) -->
-    <div class="flex basis-[48%] pr-1 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] py-1 shadow-lg rounded-lg border mr-1">
+    <div class="flex basis-[98%] pr-1 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] py-1 shadow-lg rounded-lg border mr-1">
         <form>
             <!-- 1ª Linha (Corretor) -->
             <div class="grid grid-cols-4 gap-4 mb-2">
@@ -98,13 +98,13 @@
             <!-- 3ª Linha (Código Externo e Email) -->
             <div class="grid grid-cols-3 gap-4 mb-2">
                 <div>
-                    <label for="telefone" class="block text-white text-sm flex justify-between">
-                        <span>Telefone</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                    <label for="codigo_externo" class="block text-white text-sm flex justify-between">
+                        <span>Codigo Externo</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_codigo_externo">
                             <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
                         </svg>
                     </label>
-                    <input type="text" id="telefone" value="" class="w-full text-sm  bg-gray-100 mudar_empresarial text-gray-800 p-1 rounded-md" readonly>
+                    <input type="text" id="codigo_externo" value="{{$codigo_externo}}" class="w-full text-sm  bg-gray-100 mudar_empresarial text-gray-800 p-1 rounded-md" readonly>
                 </div>
                 <div>
                     <label for="celular" class="block text-white text-sm flex justify-between">
@@ -207,17 +207,19 @@
                     </label>
                     <input type="text" id="senha_cliente" value="{{$senha_cliente}}" readonly class="w-full mudar_empresarial bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
-            </div>
 
-            <!-- 5ª Linha (Rua, Complemento) -->
-            <div class="grid grid-cols-4 gap-4 mb-2">
                 <div>
                     <label for="valor_saude" class="block text-white text-sm flex justify-between">
                         <span>Valor Saude:</span>
-
                     </label>
                     <input type="text" id="valor_saude" value="{{number_format($valor_saude,2,",",".")}}" readonly class="w-full mudar_empresarial_valor bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
+
+            </div>
+
+            <!-- 5ª Linha (Rua, Complemento) -->
+            <div class="grid grid-cols-5 gap-4 mb-2">
+
                 <div>
                     <label for="valor_odonto" class="block text-white text-sm flex justify-between">
                         <span>Valor Odonto:</span>
@@ -230,51 +232,40 @@
                         <span>Total Plano:</span>
 
                     </label>
-                    <input type="text" id="total_plano" value="" readonly class="w-full bg-gray-100 mudar_empresarial_valor text-sm text-gray-800 p-1 rounded-md">
+                    <input type="text" id="total_plano" value="{{number_format($valor_plano,2,",",".")}}" readonly class="w-full bg-gray-100 mudar_empresarial_valor text-sm text-gray-800 p-1 rounded-md">
                 </div>
 
-            </div>
-
-            <div class="grid grid-cols-4 gap-4 mb-2">
-                <div>
-                    <label for="plano_adesao" class="block text-white text-sm flex justify-between">
-                        <span>Plano c/Adesão:</span>
-
-                    </label>
-                    <input type="text" id="plano_adesao" value="" readonly class="w-full bg-gray-100 mudar_empresarial_valor text-sm text-gray-800 p-1 rounded-md">
-                </div>
-                <div>
-                    <label for="valor_boleto" class="block text-white text-sm flex justify-between">
-                        <span>Valor Boleto:</span>
-
-                    </label>
-                    <input type="text" id="valor_boleto" value="" readonly class="w-full mudar_empresarial_valor bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
-                </div>
                 <div>
                     <label for="vencimento_boleto" class="block text-white text-sm flex justify-between">
                         <span>Venc. Boleto:</span>
 
                     </label>
-                    <input type="date" id="vencimento_boleto" readonly value="{{$vencimento_boleto}}" class="w-full mudar_empresarial bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
+                    <input type="text" id="vencimento_boleto" readonly value="{{$vencimento_boleto}}" class="w-full mudar_empresarial bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
                 <div>
                     <label for="data_boleto" class="block text-white text-sm flex justify-between">
                         <span>Data 1º Boleto:</span>
 
                     </label>
-                    <input type="date" id="data_boleto" readonly value="{{$data_boleto}}" class="w-full bg-gray-100 text-sm mudar_empresarial text-gray-800 p-1 rounded-md">
+                    <input type="text" id="data_boleto" readonly value="{{$data_boleto}}" class="w-full bg-gray-100 text-sm mudar_empresarial text-gray-800 p-1 rounded-md">
                 </div>
+
+                <div>
+                    <label for="data_cadastro" class="block text-white text-sm flex justify-between">
+                        <span>Data Criação:</span>
+                    </label>
+                    <input type="text" id="data_cadastro" readonly value="{{$data_cadastro}}" class="w-full bg-gray-100 text-sm mudar_empresarial text-gray-800 p-1 rounded-md">
+                </div>
+
+
             </div>
+
+
 
 
 
         </form>
     </div>
 
-    <!-- Bloco da Direita (40%) -->
-    <div class="flex basis-[49%] flex-wrap  p-2 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] rounded-lg border">
 
-        <div class="relative overflow-x-auto shadow-md sm:rounded-lg w-full">
-       </div>
-    </div>
 </div>

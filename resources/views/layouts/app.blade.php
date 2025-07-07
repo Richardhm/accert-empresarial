@@ -18,7 +18,7 @@
     <script src="{{asset('js/buttons.html5.min.js')}}"></script>
 
     <script src="{{asset('js/jquery-deparam.min.js')}}"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{asset('js/sweetalert2@11.js')}}"></script>
     <script src="{{asset('js/toastr.min.js')}}"></script>
     <link rel="stylesheet" href="{{asset('assets/datatables.min.css')}}">

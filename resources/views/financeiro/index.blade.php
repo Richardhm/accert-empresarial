@@ -15,11 +15,11 @@
             var tableempresarial;
         </script>
 
-        <div id="myModalEmpresarial" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div id="myModalEmpresarial" class="fixed mx-auto inset-0 z-50 flex items-center justify-center hidden">
             <!-- Backdrop -->
             <div class="fixed inset-0 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] z-40"></div>
             <!-- Conteúdo da Modal -->
-            <div class="relative w-11/12 rounded-lg shadow-3xl p-2 z-50">
+            <div class="relative w-[50%] rounded-lg shadow-3xl p-2 z-50">
                 <!-- Botão Fechar no Topo -->
                 <div id="modalLoaderEmpresa" class="flex justify-center items-center h-64">
                     <div class="dot-flashing">
@@ -44,9 +44,7 @@
         </section>
 
         <section class="conteudo_abas mt-2" style="width:95%;margin:0 auto;">
-
             <x-aba-empresarial></x-aba-empresarial>
-
         </section>
 
     <script>
@@ -70,6 +68,57 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
+
+
+            $("body").on('click','.excluir_contrato',function(){
+               let id = $(this).attr('data-id');
+                // Exibe o alerta de confirmação com SweetAlert
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Você não poderá reverter esta ação!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Se o usuário confirmar, executa a requisição AJAX
+                        $.ajax({
+                            url: "{{route('contratos.excluir')}}",
+                            data: { id: id }, // Envia o ID no corpo da requisição
+                            method: "POST",
+                            success: function (res) {
+                                // Mostra mensagem de sucesso ou realiza alguma ação
+                                Swal.fire(
+                                    'Excluído!',
+                                    'O contrato foi excluído com sucesso.',
+                                    'success'
+                                ).then(() => {
+                                    // Recarrega a página após a mensagem de sucesso
+                                    location.reload();
+                                });
+
+                            },
+                            error: function (xhr) {
+                                // Mostra mensagem de erro, caso ocorra
+                                Swal.fire(
+                                    'Erro!',
+                                    'Houve um problema ao excluir o contrato.',
+                                    'error'
+                                );
+                                console.error(xhr.responseText);
+                            }
+                        });
+                    }
+                });
+
+            });
+
+
+
+
         });
     </script>
 

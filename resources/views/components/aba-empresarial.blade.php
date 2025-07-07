@@ -90,6 +90,7 @@
                         <th>Status</th>
                         <th>Ver</th>
                         <th>Resposta</th>
+                        <th>Excluir</th>
                     </tr>
                     </thead>
                     <tbody></tbody>

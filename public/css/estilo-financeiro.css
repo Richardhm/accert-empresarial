@@ -1,10 +1,10 @@
 table.dataTable tbody td {
-    font-size: 0.8em !important;
+    font-size: 0.75em !important;
     padding: 0px !important;
 }
 
 table.dataTable thead th {
-    font-size: 0.8em !important;
+    font-size: 0.75em !important;
     padding: 0px !important;
 }
 
@@ -18,12 +18,32 @@ table.dataTable thead th {
     color: white !important; /* Define a cor da fonte do botão atual como branca */
 }
 
+.dataTables_wrapper .dataTable tbody td {
+    border-bottom: 2px solid #ddd; /* Borda inferior com cor cinza claro */
+}
+
+.dataTables_wrapper .dataTable tbody tr:hover {
+    background-color: #f5f5f5; /* Cor de fundo ao passar o mouse */
+    transition: background-color 0.1s ease; /* Suave transição */
+    color:black !important;
+}
+
+.dataTables_wrapper .dataTable tbody tr:hover .div_info  {
+    color:black !important;
+}
+
+
+
 #mudar_ano_table option selected {
     color: #FFF !important;
 }
 
 input[readonly] {
     background-color: #9ca3af;
+}
+
+.text-center {
+    text-align: center !important;
 }
 
 
@@ -78,25 +98,13 @@ input[readonly] {
 #tabela_empresarial_filter input[type='search'] {background-color: #FFF !important;color:black !important;}
 
 #tabela_empresarial td {white-space: nowrap;overflow: hidden;text-overflow: clip;}
-#tabela_individual td {white-space: nowrap;overflow: hidden;text-overflow: clip;}
-#tabela_coletivo td {white-space: nowrap;overflow: hidden;text-overflow: clip;}
 
 
 
-#tabela_individual td:nth-child(9), /* Índice para 'status' */
-#tabela_individual td:nth-child(14), /* Índice para 'status' */
-#tabela_individual td:nth-child(15), /* Índice para 'estagiario' */
-#tabela_individual td:nth-child(16) /* Índice para 'corretor_id' */ {
-    display: none !important;
-}
 
 
-#tabela_individual th:nth-child(9), /* Índice para 'status' */
-#tabela_individual th:nth-child(14), /* Índice para 'status' */
-#tabela_individual th:nth-child(15), /* Índice para 'estagiario' */
-#tabela_individual th:nth-child(16) /* Índice para 'corretor_id' */ {
-    display: none !important;
-}
+
+
 
 
 .select2-container .select2-selection {
