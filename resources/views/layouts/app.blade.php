@@ -259,6 +259,7 @@
 
 
 
+            @if(Auth::user()->isAdministrador())
             <li text-data="dashboard" class="hover:text-black">
                 <a href="{{route('dashboard')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                     <svg class="w-4 h-4 text-gray-800 text-white hover:text-black flex align-middle" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -267,6 +268,7 @@
                     <span class="text-sm">dashboard</span>
                 </a>
             </li>
+            @endif
 
 
 {{--            <li text-data="estrela" class="hover:text-black">--}}
@@ -293,6 +295,7 @@
 
 
 
+                @if(Auth::user()->isAdministrador())
                 <li text-data="gerente">
                     <a href="{{route('gerente.index')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                         <svg class="w-4 h-4 text-gray-800 text-white hover:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
@@ -301,6 +304,15 @@
                         <span class="text-sm">gerente</span>
                     </a>
                 </li>
+                <li text-data="usuários">
+                    <a href="{{route('admin.cadastrar_usuario')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
+                        <svg class="w-4 h-4 text-gray-800 text-white hover:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.25-2.095c.478-.86.75-1.85.75-2.905a5.973 5.973 0 0 0-.75-2.906 4 4 0 1 1 0 5.811ZM15.466 20c.34-.588.535-1.271.535-2v-1a5.978 5.978 0 0 0-1.528-4H18a4 4 0 0 1 4 4v1a2 2 0 0 0-2-2h-4.534Z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm">usuários</span>
+                    </a>
+                </li>
+                @endif
 
 
 

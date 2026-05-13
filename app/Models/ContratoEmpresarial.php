@@ -33,7 +33,9 @@ class ContratoEmpresarial extends Model
         'uf',
         'plano_contrado',
         'pago',
-        'codigo_vendedor'
+        'codigo_vendedor',
+        'status_pagamento',
+        'cadastrado_por'
     ];
 
     // Associação com o modelo de plano

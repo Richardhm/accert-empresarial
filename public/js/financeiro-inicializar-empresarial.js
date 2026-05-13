@@ -1,4 +1,22 @@
 var tableempresarial;
+
+var opcoesStatusPagamento = [
+    { value: '',              label: '-- Selecionar --' },
+    { value: 'gerar_boleto',  label: 'Gerar Boleto'    },
+    { value: 'liquidado_pix', label: 'Liquidado Pix'   },
+    { value: 'liquidado',     label: 'Liquidado'        },
+    { value: 'em_aberto',     label: 'Em Aberto'        },
+    { value: 'cancelado',     label: 'Cancelado'        },
+];
+
+function buildSelectStatusPagamento(valorAtual, contratoId) {
+    var options = opcoesStatusPagamento.map(function(op) {
+        var selected = (op.value === (valorAtual || '')) ? ' selected' : '';
+        return '<option value="' + op.value + '"' + selected + '>' + op.label + '</option>';
+    }).join('');
+    return '<select class="select_status_pagamento rounded text-black text-xs px-1 py-1 w-full" style="min-width:110px;" data-id="' + contratoId + '">' + options + '</select>';
+}
+
 function inicializarEmpresarial(corretora_id = null) {
 
     if($.fn.DataTable.isDataTable('.listarempresarial')) {
@@ -40,22 +58,45 @@ function inicializarEmpresarial(corretora_id = null) {
         "responsive": true,
         "processing": true,
         columns: [
-            {data:"created_at",name:"created_at",width:"8%"},
-            {data:"codigo_externo",name:"codigo_externo",width:"8%"},
-            {data:"usuario",name:"usuario",width:"15%"},
-            {data:"razao_social",name:"razao_social",width:"15%"},
-            {data:"cnpj",name:"cnpj",width:"14%"},
-            {data:"quantidade_vidas",name:"vidas",width:"8%",className: "text-center"},
-            {data:"valor_plano",name:"valor_plano",width:"11%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
-            {data:"comissao",name:"comissao",width:"10%",render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
-            {data:"porcentagem",name:"porcentagem",width:"3%",
+            // 0: Data
+            {data:"created_at",       name:"created_at",        width:"7%"},
+            // 1: Cod.
+            {data:"codigo_externo",   name:"codigo_externo",    width:"7%"},
+            // 2: Corretor
+            {data:"usuario",          name:"usuario",           width:"10%"},
+            // 3: Cadastrado Por (NEW)
+            {data:"cadastrado_por_nome", name:"cadastrado_por_nome", width:"10%"},
+            // 4: Cliente
+            {data:"razao_social",     name:"razao_social",      width:"12%"},
+            // 5: CNPJ
+            {data:"cnpj",             name:"cnpj",              width:"12%"},
+            // 6: Vidas
+            {data:"quantidade_vidas", name:"vidas",             width:"5%", className:"text-center"},
+            // 7: Valor
+            {data:"valor_plano",      name:"valor_plano",       width:"9%", render: $.fn.dataTable.render.number('.', ',', 2, 'R$ ')},
+            // 8: Comissão (admin only)
+            {data:"comissao",         name:"comissao",          width:"8%", render: $.fn.dataTable.render.number('.', ',', 2, 'R$ '), visible: isAdmin},
+            // 9: % (admin only)
+            {data:"porcentagem",      name:"porcentagem",       width:"3%", visible: isAdmin,
                 render: function (data, type, row, meta) {
-                     return parseInt(data);
+                    return parseInt(data);
                 }
             },
-            {data:"plano",name:"plano",width:"10%"},
-            {data:"vencimento_boleto",name:"vencimento_boleto",width:"10%"},
-            {data:"status",name:"status",width:"8%",
+            // 10: Plano
+            {data:"plano",            name:"plano",             width:"8%"},
+            // 11: Vencimento
+            {data:"vencimento_boleto",name:"vencimento_boleto", width:"8%"},
+            // 12: Status Pagamento (NEW select)
+            {data:"status_pagamento", name:"status_pagamento",  width:"10%",
+                render: function(data, type, row, meta) {
+                    if (type === 'display') {
+                        return buildSelectStatusPagamento(data, row['id']);
+                    }
+                    return data;
+                }
+            },
+            // 13: Status pago/não pago (admin only)
+            {data:"status",           name:"status",            width:"6%", visible: isAdmin,
                 render: function (data, type, row, meta) {
                     if (data == 1) {
                         return `<div class="text-center">
@@ -72,9 +113,12 @@ function inicializarEmpresarial(corretora_id = null) {
                     }
                 }
             },
-            {data:"id",name:"id",width:"4%"},
-            {data:"id",name:"id",width:"4%",visible:false},
-            {data:"status",name:"status",width:"8%",
+            // 14: Ver (ação)
+            {data:"id", name:"id", width:"4%"},
+            // 15: id oculto
+            {data:"id", name:"id", width:"4%", visible:false},
+            // 16: Excluir (ação)
+            {data:"status", name:"status", width:"6%",
                 render:function(data,type,row,meta) {
                     if (data == 0) {
                         return `
@@ -89,10 +133,8 @@ function inicializarEmpresarial(corretora_id = null) {
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" style="margin-left:5px;color:#0d6efd;width:25px;height:25px;text-align:center;font-weight:bolder;" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                             </svg>
-
                         </div>`;
                     }
-
                 }
             }
         ],
@@ -101,17 +143,16 @@ function inicializarEmpresarial(corretora_id = null) {
                 extend: 'excelHtml5',
                 title: 'vivaz-empresarial',
                 text: 'Exportar',
-                className: 'btn-exportar', // Classe personalizada para estilo
+                className: 'btn-exportar',
                 exportOptions: {
-                    columns: [0,1,2,3,4,5,6] // Define as colunas a serem exportadas (ajuste conforme necessário)
+                    columns: [0,1,2,3,4,5,6,7]
                 },
                 filename: 'vivaz-empresarial'
             }
         ],
         "columnDefs": [
-
             {
-                "targets": 12,
+                "targets": 14,
                 "createdCell": function (td, cellData, rowData, row, col) {
                     let id = cellData;
                     let corretor = rowData['usuario'];
@@ -142,30 +183,26 @@ function inicializarEmpresarial(corretora_id = null) {
                     let valor_plano = rowData['valor_plano'];
                     let uf = rowData['uf'];
                     let data_analise = rowData['data_analise'];
-
-                    let data_cadastro = rowData['created_at']
-
-
+                    let data_cadastro = rowData['created_at'];
 
                     $(td).html(`<div class='text-center text-white'>
-                                            <a href="#" data-data_cadastro="${data_cadastro}" data-valor_plano="${valor_plano}" data-id="${id}" data-vendedor="${corretor}" data-plano="${plano}" data-origens="${tabela_origens}"
-                                              data-razao_social="${razao_social}" data-cnpj="${cnpj}" data-vidas="${vidas}" data-celular="${celular}"
-                                              data-email="${email}" data-responsavel="${responsavel}" data-cidade="${cidade}"
-                                              data-plano_contrado="${plano_contratado}" data-codigo_corretora="${codigo_corretora}"
-                                              data-codigo_saude="${codigo_saude}" data-codigo_odonto="${codigo_odonto}" data-senha_cliente="${senha_cliente}"
-                                              data-valor_saude="${valor_saude}" data-valor_odonto="${valor_odonto}" data-valor_total="${valor_total}"
-                                              data-taxa_adesao="${taxa_adesao}" data-valor_boleto="${valor_boleto}" data-vencimento_boleto="${data_vencimento}"
-                                              data-boleto="${data_boleto}" data-uf="${uf}" data-codigo_externo="${codigo_externo}"
-                                              data-analise="${data_analise}"
-                                              class="text-white open-modal-empresarial">
-
-                                                <svg style="width:25px; height:25px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                    </svg>
-                                            </a>
-                                        </div>
-                                    `);
+                                    <a href="#" data-data_cadastro="${data_cadastro}" data-valor_plano="${valor_plano}" data-id="${id}" data-vendedor="${corretor}" data-plano="${plano}" data-origens="${tabela_origens}"
+                                      data-razao_social="${razao_social}" data-cnpj="${cnpj}" data-vidas="${vidas}" data-celular="${celular}"
+                                      data-email="${email}" data-responsavel="${responsavel}" data-cidade="${cidade}"
+                                      data-plano_contrado="${plano_contratado}" data-codigo_corretora="${codigo_corretora}"
+                                      data-codigo_saude="${codigo_saude}" data-codigo_odonto="${codigo_odonto}" data-senha_cliente="${senha_cliente}"
+                                      data-valor_saude="${valor_saude}" data-valor_odonto="${valor_odonto}" data-valor_total="${valor_total}"
+                                      data-taxa_adesao="${taxa_adesao}" data-valor_boleto="${valor_boleto}" data-vencimento_boleto="${data_vencimento}"
+                                      data-boleto="${data_boleto}" data-uf="${uf}" data-codigo_externo="${codigo_externo}"
+                                      data-analise="${data_analise}"
+                                      class="text-white open-modal-empresarial">
+                                        <svg style="width:25px; height:25px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            `);
                 },
             },
         ],
@@ -177,32 +214,31 @@ function inicializarEmpresarial(corretora_id = null) {
                 'padding': '8px 16px',
                 'border-radius': '4px'
             });
-            //$('#title_empresarial').html("<h4 style='font-size:1em;margin-top:10px;'>Listagem(Completa)</h4>");
-            let corretores = this.api().column(2).data().unique(); // Coluna 2 tem os corretores
+            // Popula select de corretores (coluna 2)
+            let corretores = this.api().column(2).data().unique();
             let selectUsuarioIndividual = $('#mudar_user_empresarial');
-            selectUsuarioIndividual.empty(); // Limpa o select
-            selectUsuarioIndividual.append('<option value="">-- Todos os Corretores --</option>'); // Adiciona uma opção para todos
+            selectUsuarioIndividual.empty();
+            selectUsuarioIndividual.append('<option value="">-- Todos os Corretores --</option>');
             corretores.each(function(d) {
                 selectUsuarioIndividual.append(`<option value="${d}" style="color:black;">${d}</option>`);
             });
 
-            let planos = this.api().column(9).data().unique(); // Coluna 2 tem os corretores
+            // Popula select de planos (coluna 10)
+            let planos = this.api().column(10).data().unique();
             let mudarPlanosEmpresarial = $('#mudar_planos_empresarial');
-            mudarPlanosEmpresarial.empty(); // Limpa o select
-            mudarPlanosEmpresarial.append('<option value="">-- Todos os Planos --</option>'); // Adiciona uma opção para todos
+            mudarPlanosEmpresarial.empty();
+            mudarPlanosEmpresarial.append('<option value="">-- Todos os Planos --</option>');
             planos.each(function(d) {
                 mudarPlanosEmpresarial.append(`<option value="${d}" style="color:black;">${d}</option>`);
             });
-
         },
-        "drawCallback":function(settings) {
-
-        },
+        "drawCallback":function(settings) {},
         footerCallback: function (row, data, start, end, display) {
             var intVal = (i) => typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
-            total = this.api().column(6,{search: 'applied'}).data().reduce(function (a, b) {return intVal(a) + intVal(b);}, 0);
-            total_vidas = this.api().column(5,{search: 'applied'}).data().reduce(function (a, b) {return intVal(a) + intVal(b);},0);
-            total_linhas = this.api().column(5,{search: 'applied'}).data().count();
+            // Coluna 7 = valor_plano, coluna 6 = quantidade_vidas
+            total       = this.api().column(7,{search: 'applied'}).data().reduce(function (a, b) {return intVal(a) + intVal(b);}, 0);
+            total_vidas = this.api().column(6,{search: 'applied'}).data().reduce(function (a, b) {return intVal(a) + intVal(b);}, 0);
+            total_linhas = this.api().column(6,{search: 'applied'}).data().count();
             total_br = total.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});
 
             $(".total_por_page_empresarial").html(total_br);
@@ -211,22 +247,42 @@ function inicializarEmpresarial(corretora_id = null) {
         }
     });
 }
+
 $('#tabela_empresarial').on('click', 'tbody tr', function () {
     tableempresarial.$('tr').removeClass('textoforte');
     $(this).closest('tr').addClass('textoforte');
 });
-inicializarEmpresarial();
 
+inicializarEmpresarial();
 
 $("#mudar_user_empresarial").on('change',function(){
     let valorSelecionado = $(this).val();
     tableempresarial.column(2).search(valorSelecionado).draw();
 });
 
-
 $("#mudar_planos_empresarial").on('change',function(){
     let valorSelecionado = $(this).val();
-    tableempresarial.column(9).search(valorSelecionado).draw();
+    tableempresarial.column(10).search(valorSelecionado).draw();
+});
+
+// Atualizar status de pagamento via AJAX
+$(document).on('change', '.select_status_pagamento', function() {
+    let id     = $(this).data('id');
+    let status = $(this).val();
+    let $select = $(this);
+
+    $.ajax({
+        url: urlAtualizarStatusPagamento,
+        method: 'POST',
+        data: { id: id, status: status },
+        success: function(res) {
+            $select.css('border', '2px solid green');
+            setTimeout(function(){ $select.css('border',''); }, 1500);
+        },
+        error: function() {
+            $select.css('border', '2px solid red');
+        }
+    });
 });
 
 $(document).on('click','.open-modal-empresarial',function(e){
@@ -308,27 +364,19 @@ $("body").on('click','#closeModalEmpresarial',function(){
 });
 
 $("body").on('click','.editar_empresarial_select',function(){
-
     let input = $(this).closest("div").find("select");
-
     if (input.prop('disabled')) {
-        input.prop('disabled', false); // Remove a propriedade readonly
+        input.prop('disabled', false);
     } else {
-        input.prop('disabled', true); // Adiciona a propriedade readonly
+        input.prop('disabled', true);
     }
 });
-
-
 
 $("body").on('click','.editar_empresarial',function(){
-
     let input = $(this).closest("div").find("input");
-
     if (input.prop('readonly')) {
-        input.prop('readonly', false); // Remove a propriedade readonly
+        input.prop('readonly', false);
     } else {
-        input.prop('readonly', true); // Adiciona a propriedade readonly
+        input.prop('readonly', true);
     }
 });
-
-

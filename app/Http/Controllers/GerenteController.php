@@ -7,6 +7,7 @@ use App\Models\FolhaMes;
 use App\Models\FolhaPagamento;
 use App\Models\Plano;
 use App\Models\User;
+use App\Models\Vale;
 use App\Models\ValoresCorretoresLancados;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -74,6 +75,7 @@ class GerenteController extends Controller
             "users" => $this->getUsers($mes,$ano),
             "users_apto_apagar" => $users_apto_apagar,
             "mes" => $mes,
+            "ano" => $ano,
 
             "quantidade_geral" => $quantidade_geral,
             "total_valor_geral" => $total_valor_geral,
@@ -469,13 +471,12 @@ class GerenteController extends Controller
 
         $mes_folha = $meses[$mes];
         $user = User::where("id",$request->user_id)->first()->name;
-        $dados = ValoresCorretoresLancados::whereMonth("data",$mes)->whereYear("data",$ano)->where("user_id",$request->user_id)->first();
-        $comissao = $dados->valor_comissao;
-        $salario = $dados->valor_salario;
-        $premiacao = $dados->valor_premiacao;
-
-        $total = $dados->valor_total;
-        $desconto = $dados->valor_desconto;
+        $dados    = ValoresCorretoresLancados::whereMonth("data",$mes)->whereYear("data",$ano)->where("user_id",$request->user_id)->first();
+        $comissao = $dados ? $dados->valor_comissao  : 0;
+        $salario  = $dados ? $dados->valor_salario   : 0;
+        $premiacao= $dados ? $dados->valor_premiacao : 0;
+        $total    = $dados ? $dados->valor_total     : 0;
+        $desconto = $dados ? $dados->valor_desconto  : 0;
 
 
 
@@ -520,15 +521,22 @@ class GerenteController extends Controller
         WHERE contrato_empresarial.pago = 1 AND user_id = {$id} AND MONTH(data_baixa_finalizado) = {$mes} AND YEAR(data_baixa_finalizado) = {$ano}
         ")[0]->total;
 
-        $total =   floatval($total_empresarial);
-
-
-        $comissao = $empresarial[0]->comissao;
-        $total = $dados->valor_total;
+        $total    = floatval($total_empresarial);
+        $comissao = floatval($total_empresarial);
         $desconto = 0;
 
+        // Vales do vendedor no mês
+        $total_vale = Vale::where('user_id', $id)
+            ->whereMonth('mes', $mes)
+            ->whereYear('mes', $ano)
+            ->sum('valor');
 
+        $vales = Vale::where('user_id', $id)
+            ->whereMonth('mes', $mes)
+            ->whereYear('mes', $ano)
+            ->get();
 
+        $total_liquido = max(0, $total - $total_vale);
 
         $pdf = PDFFile::loadView('gerente.pdf-folha',[
 
@@ -540,6 +548,9 @@ class GerenteController extends Controller
             "premiacao" => $premiacao,
             "comissao" => $comissao,
             "total" => $total,
+            "total_vale" => $total_vale,
+            "total_liquido" => $total_liquido,
+            "vales" => $vales,
             "logo" => $logo,
             "primeiro_dia" => $primeiroDia,
             "ultimo_dia" => $ultimoDia,
@@ -565,7 +576,207 @@ class GerenteController extends Controller
 
     }
 
+    public function exportarExcel(Request $request)
+    {
+        $mes = intval($request->mes);
+        $ano = intval($request->ano);
 
+        $dados = DB::select("
+            SELECT
+                ce.razao_social,
+                ce.cidade,
+                ce.valor_plano    AS valor,
+                u.name            AS vendedor,
+                ce.valor_pagar    AS comissao_vendedor
+            FROM contrato_empresarial ce
+            INNER JOIN users u ON u.id = ce.user_id
+            WHERE
+                ce.pago = 1 AND
+                MONTH(ce.data_baixa_finalizado) = {$mes} AND
+                YEAR(ce.data_baixa_finalizado)  = {$ano}
+            ORDER BY u.name, ce.razao_social
+        ");
+
+        $meses    = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril',
+                     '05'=>'Maio','06'=>'Junho','07'=>'Julho','08'=>'Agosto',
+                     '09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
+        $mes_nome = $meses[str_pad($mes, 2, '0', STR_PAD_LEFT)] ?? $mes;
+        $esc      = fn(string $v): string => htmlspecialchars($v, ENT_XML1, 'UTF-8');
+
+        // ── Shared strings ───────────────────────────────────────────────────
+        $strings  = [];
+        $si       = 0;
+        $addStr   = function (string $v) use (&$strings, &$si): int {
+            if (!array_key_exists($v, $strings)) { $strings[$v] = $si++; }
+            return $strings[$v];
+        };
+
+        // ── Linhas da planilha ────────────────────────────────────────────────
+        $cols    = ['A','B','C','D','E'];
+        $headers = ['Razão Social','Cidade','Valor (R$)','Vendedor','Comissão Vendedor (R$)'];
+
+        $sheetRows = '';
+        $r = 1;
+
+        // cabeçalho (estilo 1 = header azul)
+        $sheetRows .= '<row r="' . $r . '">';
+        foreach ($headers as $i => $h) {
+            $sheetRows .= '<c r="' . $cols[$i] . $r . '" s="1" t="s"><v>' . $addStr($h) . '</v></c>';
+        }
+        $sheetRows .= '</row>';
+        $r++;
+
+        // dados
+        foreach ($dados as $row) {
+            $sheetRows .= '<row r="' . $r . '">';
+            $sheetRows .= '<c r="A' . $r . '" t="s"><v>' . $addStr($row->razao_social ?? '')    . '</v></c>';
+            $sheetRows .= '<c r="B' . $r . '" t="s"><v>' . $addStr($row->cidade ?? '')          . '</v></c>';
+            $sheetRows .= '<c r="C' . $r . '" s="2"><v>' . number_format((float)$row->valor, 2, '.', '')             . '</v></c>';
+            $sheetRows .= '<c r="D' . $r . '" t="s"><v>' . $addStr($row->vendedor ?? '')        . '</v></c>';
+            $sheetRows .= '<c r="E' . $r . '" s="2"><v>' . number_format((float)$row->comissao_vendedor, 2, '.', '') . '</v></c>';
+            $sheetRows .= '</row>';
+            $r++;
+        }
+
+        // ── Shared strings XML ────────────────────────────────────────────────
+        $sortedSI = array_flip($strings); ksort($sortedSI);
+        $ssXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            . ' count="' . $si . '" uniqueCount="' . $si . '">';
+        foreach ($sortedSI as $val) {
+            $ssXml .= '<si><t xml:space="preserve">' . $esc($val) . '</t></si>';
+        }
+        $ssXml .= '</sst>';
+
+        // ── Partes fixas do pacote ────────────────────────────────────────────
+        $contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            . '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+            . '</Types>';
+
+        $relsRoot = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            . '</Relationships>';
+
+        $workbook = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            . ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            . '<sheets><sheet name="' . $esc('Empresas ' . $mes_nome . ' ' . $ano) . '" sheetId="1" r:id="rId1"/></sheets>'
+            . '</workbook>';
+
+        $workbookRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+            . '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            . '</Relationships>';
+
+        $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts>'
+            . '<fonts count="2">'
+            .   '<font><sz val="11"/><name val="Calibri"/></font>'
+            .   '<font><sz val="11"/><b/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+            . '</fonts>'
+            . '<fills count="3">'
+            .   '<fill><patternFill patternType="none"/></fill>'
+            .   '<fill><patternFill patternType="gray125"/></fill>'
+            .   '<fill><patternFill patternType="solid"><fgColor rgb="FF4472C4"/></patternFill></fill>'
+            . '</fills>'
+            . '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+            . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+            . '<cellXfs count="3">'
+            .   '<xf numFmtId="0"   fontId="0" fillId="0" borderId="0" xfId="0"/>'
+            .   '<xf numFmtId="0"   fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'
+            .   '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+            . '</cellXfs>'
+            . '</styleSheet>';
+
+        $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<sheetData>' . $sheetRows . '</sheetData>'
+            . '</worksheet>';
+
+        // ── Montar ZIP (ZipArchive nativo do PHP) ─────────────────────────────
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml',        $contentTypes);
+        $zip->addFromString('_rels/.rels',                $relsRoot);
+        $zip->addFromString('xl/workbook.xml',            $workbook);
+        $zip->addFromString('xl/_rels/workbook.xml.rels', $workbookRels);
+        $zip->addFromString('xl/styles.xml',              $styles);
+        $zip->addFromString('xl/sharedStrings.xml',       $ssXml);
+        $zip->addFromString('xl/worksheets/sheet1.xml',   $sheet);
+        $zip->close();
+
+        $content  = file_get_contents($tmp);
+        unlink($tmp);
+
+        $filename = 'empresas_' . Str::slug($mes_nome) . '_' . $ano . '.xlsx';
+
+        return response($content)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Length', strlen($content))
+            ->header('Pragma', 'no-cache')
+            ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0');
+    }
+
+    public function previsualizarFolha(Request $request)
+    {
+        $id  = intval($request->user_id);
+        $mes = intval($request->mes);
+        $ano = intval($request->ano);
+
+        $empresarial = DB::select("
+            SELECT
+                contrato_empresarial.razao_social      AS cliente,
+                contrato_empresarial.codigo_externo    AS codigo_externo,
+                DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') AS data,
+                contrato_empresarial.valor_plano       AS valor_plano_contratado,
+                contrato_empresarial.valor_pagar       AS comissao
+            FROM contrato_empresarial
+            WHERE
+                contrato_empresarial.pago = 1 AND
+                contrato_empresarial.user_id = {$id} AND
+                MONTH(contrato_empresarial.data_baixa_finalizado) = {$mes} AND
+                YEAR(contrato_empresarial.data_baixa_finalizado)  = {$ano}
+            ORDER BY contrato_empresarial.id
+        ");
+
+        $total_comissao = array_sum(array_column(array_map(fn($e) => (array)$e, $empresarial), 'comissao'));
+
+        $total_vale = Vale::where('user_id', $id)
+            ->whereMonth('mes', $mes)
+            ->whereYear('mes', $ano)
+            ->sum('valor');
+
+        $total_liquido = max(0, $total_comissao - $total_vale);
+
+        $empresas = array_map(function ($e) {
+            return [
+                'cliente'        => mb_convert_case($e->cliente, MB_CASE_UPPER, 'UTF-8'),
+                'codigo_externo' => $e->codigo_externo,
+                'data'           => $e->data,
+                'valor_plano'    => number_format($e->valor_plano_contratado, 2, ',', '.'),
+                'comissao'       => number_format($e->comissao, 2, ',', '.'),
+            ];
+        }, $empresarial);
+
+        return response()->json([
+            'empresas'       => $empresas,
+            'total_comissao' => number_format($total_comissao, 2, ',', '.'),
+            'total_vale'     => number_format($total_vale,     2, ',', '.'),
+            'total_liquido'  => number_format($total_liquido,  2, ',', '.'),
+        ]);
+    }
 
     public function mudarComissaoCorretor(Request $request)
     {
@@ -1043,6 +1254,124 @@ class GerenteController extends Controller
     }
 
 
+    // ─── Vale ──────────────────────────────────────────────────────────
+    public function salvarVale(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'valor'   => 'required|numeric|min:0.01',
+        ]);
+
+        $folha = FolhaMes::where('status', 0)->first();
+        if (!$folha) {
+            return response()->json(['error' => 'Nenhuma folha aberta.'], 422);
+        }
+
+        $mes = $folha->mes; // ex: 2025-07-01
+
+        Vale::create([
+            'user_id' => $request->user_id,
+            'valor'   => $request->valor,
+            'mes'     => $mes,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function listarValesMes(Request $request)
+    {
+        $folha = FolhaMes::where('status', 0)->first();
+        if (!$folha) {
+            return response()->json([]);
+        }
+        $mes = $folha->mes;
+
+        $vales = Vale::with('user:id,name')
+            ->whereMonth('mes', date('m', strtotime($mes)))
+            ->whereYear('mes',  date('Y', strtotime($mes)))
+            ->get()
+            ->map(fn($v) => [
+                'id'         => $v->id,
+                'user_id'    => $v->user_id,
+                'nome'       => $v->user->name ?? '-',
+                'valor'      => $v->valor,
+                'valor_fmt'  => number_format($v->valor, 2, ',', '.'),
+            ]);
+
+        return response()->json($vales);
+    }
+
+    public function excluirVale(Request $request)
+    {
+        Vale::findOrFail($request->id)->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // ─── Fechar Mês ────────────────────────────────────────────────────
+    public function resumoFechamento()
+    {
+        $folha = FolhaMes::where('status', 0)->first();
+        if (!$folha) {
+            return response()->json(['error' => 'Nenhuma folha aberta.'], 422);
+        }
+
+        $mes = date('m', strtotime($folha->mes));
+        $ano = date('Y', strtotime($folha->mes));
+
+        $vendedores = DB::table('valores_corretores_lancadas as vcl')
+            ->join('users', 'users.id', '=', 'vcl.user_id')
+            ->selectRaw('users.id as user_id, users.name as nome,
+                         vcl.valor_comissao as comissao,
+                         vcl.valor_salario as salario,
+                         vcl.valor_premiacao as premiacao,
+                         vcl.valor_desconto as desconto,
+                         vcl.valor_total as total')
+            ->whereMonth('vcl.data', $mes)
+            ->whereYear('vcl.data', $ano)
+            ->orderBy('users.name')
+            ->get();
+
+        // Soma os vales do mês para cada vendedor
+        $valesPorUser = Vale::whereMonth('mes', $mes)
+            ->whereYear('mes', $ano)
+            ->selectRaw('user_id, SUM(valor) as total_vale')
+            ->groupBy('user_id')
+            ->pluck('total_vale', 'user_id');
+
+        $resumo = $vendedores->map(function ($v) use ($valesPorUser) {
+            $vale = $valesPorUser[$v->user_id] ?? 0;
+            return [
+                'nome'      => $v->nome,
+                'comissao'  => number_format($v->comissao, 2, ',', '.'),
+                'salario'   => number_format($v->salario,  2, ',', '.'),
+                'premiacao' => number_format($v->premiacao,2, ',', '.'),
+                'desconto'  => number_format($v->desconto, 2, ',', '.'),
+                'vale'      => number_format($vale,         2, ',', '.'),
+                'total'     => number_format(max(0, $v->total - $vale), 2, ',', '.'),
+            ];
+        });
+
+        $mesNomes = ['01'=>'Janeiro','02'=>'Fevereiro','03'=>'Março','04'=>'Abril',
+                     '05'=>'Maio','06'=>'Junho','07'=>'Julho','08'=>'Agosto',
+                     '09'=>'Setembro','10'=>'Outubro','11'=>'Novembro','12'=>'Dezembro'];
+
+        return response()->json([
+            'resumo'    => $resumo,
+            'mes_label' => ($mesNomes[str_pad($mes,2,'0',STR_PAD_LEFT)] ?? $mes) . '/' . $ano,
+        ]);
+    }
+
+    public function fecharMes()
+    {
+        $folha = FolhaMes::where('status', 0)->first();
+        if (!$folha) {
+            return response()->json(['error' => 'Nenhuma folha aberta.'], 422);
+        }
+        $folha->status = 1;
+        $folha->save();
+        return response()->json(['success' => true]);
+    }
+
     public function comissaoListagemConfirmadasEmpresarial(Request $request)
     {
         $id = $request->id;
@@ -1050,32 +1379,32 @@ class GerenteController extends Controller
             $mes = $request->mes;
             $ano = $request->ano;
             $dados = DB::select("
-            select
+            SELECT
             'Hapvida' AS administradora,
-            DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') as created_at,
-            contrato_empresarial.codigo_externo as codigo,
-            contrato_empresarial.codigo_externo as codigo_externo,
-            (contrato_empresarial.razao_social) as cliente,
-            (SELECT nome FROM planos WHERE contrato_empresarial.plano_id = planos.id) as plano_nome,
-            (SELECT name FROM users WHERE contrato_empresarial.user_id = users.id) as corretor,
-            '1' as parcela ,
-            (contrato_empresarial.valor_plano) as valor_plano,
+            DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') AS created_at,
+            contrato_empresarial.codigo_externo AS codigo,
+            contrato_empresarial.codigo_externo AS codigo_externo,
+            contrato_empresarial.razao_social AS cliente,
+            (SELECT nome FROM planos WHERE planos.id = contrato_empresarial.plano_id) AS plano_nome,
+            (SELECT name FROM users WHERE users.id = contrato_empresarial.user_id) AS corretor,
+            '1' AS parcela,
+            contrato_empresarial.valor_plano AS valor_plano,
             DATE_FORMAT(contrato_empresarial.vencimento_boleto,'%d/%m/%Y') AS vencimento,
-            DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') as data_baixa,
-            comissao.valor AS porcentagem,
+            DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') AS data_baixa,
+            COALESCE((SELECT valor FROM comissao WHERE comissao.user_id = contrato_empresarial.user_id LIMIT 1), 0) AS porcentagem,
             contrato_empresarial.valor_pagar AS valor,
             contrato_empresarial.plano_id AS plano,
             contrato_empresarial.quantidade_vidas AS quantidade_vidas,
-            '0' as desconto,
+            '0' AS desconto,
             contrato_empresarial.id,
-            contrato_empresarial.id,
-            contrato_empresarial.id as contrato_id
+            contrato_empresarial.id AS contrato_id
         FROM contrato_empresarial
-        INNER JOIN comissao ON comissao.user_id = contrato_empresarial.user_id
-
         WHERE
-
-        contrato_empresarial.user_id = {$id} AND month(data_baixa_finalizado) = {$mes} AND year(data_baixa_finalizado) = {$ano} AND contrato_empresarial.pago = 1 ORDER BY contrato_empresarial.id
+            contrato_empresarial.user_id = {$id}
+            AND MONTH(data_baixa_finalizado) = {$mes}
+            AND YEAR(data_baixa_finalizado)  = {$ano}
+            AND contrato_empresarial.pago = 1
+        ORDER BY contrato_empresarial.id
         ");
         } else {
             $dados = DB::connection('tenant')->select("

@@ -53,5 +53,17 @@ class User extends Authenticatable
         return $this->hasMany(ContratoEmpresarial::class, 'user_id', 'id');
     }
 
+    public function comissao()
+    {
+        return $this->hasOne(Comissao::class, 'user_id', 'id');
+    }
 
+    public function isAdministrador(): bool
+    {
+        $admins = [
+            'administrador@accert.com',
+            'richardjonhshm@gmail.com'
+        ];
+        return in_array($this->email, $admins);
+    }
 }

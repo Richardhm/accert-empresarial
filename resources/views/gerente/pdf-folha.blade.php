@@ -57,9 +57,20 @@
             <div style="clear: both;"></div>
 
            <div style="clear: both;"></div>
+           @if(!empty($vales) && count($vales) > 0)
+           @foreach($vales as $vale)
+           <div>
+               <span style="width:89%;left:0;float:left;">Vale / Desconto</span>
+               <div style="width:11%;right:0;top:0;float:right;">
+                   <div style="width:75%;float:right;text-align:right;">({{number_format($vale->valor,2,",",".")}})</div>
+               </div>
+           </div>
+           <div style="clear: both;"></div>
+           @endforeach
+           @endif
            <div>
                 <span style="width:50%;left:0;float:left;">Total Geral</span>
-                <span style="width:40%;right:0;top:0;float:right;text-align:right;">{{number_format($total,2,",",".")}}</span>
+                <span style="width:40%;right:0;top:0;float:right;text-align:right;font-weight:bold;">{{number_format($total_liquido ?? $total,2,",",".")}}</span>
            </div>
         </div>
 

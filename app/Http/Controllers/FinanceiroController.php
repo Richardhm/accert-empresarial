@@ -44,7 +44,9 @@ class FinanceiroController extends Controller
         $dados['data_boleto'] = Carbon::parse($dados['data_boleto'])->format('Y-m-d'); // Usando Carbon para formatar datas
         $dados['vencimento_boleto'] = Carbon::parse($dados['vencimento_boleto'])->format('Y-m-d');
         $dados['codigo_vendedor'] = User::where('id',$request->user_id)->first()->codigo_vendedor;
+        $dados['cadastrado_por'] = auth()->id();
         ContratoEmpresarial::query()->create($dados);
+        Cache::forget('listarContratoEmpresaPendentes');
         return redirect('/financeiro');
     }
 
@@ -61,6 +63,7 @@ class FinanceiroController extends Controller
                         DB::raw("DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') as created_at"),
                         'contrato_empresarial.codigo_externo as codigo_externo',
                         'users.name as usuario',
+                        DB::raw("IFNULL((SELECT name FROM users WHERE users.id = contrato_empresarial.cadastrado_por), '-') as cadastrado_por_nome"),
                         'contrato_empresarial.razao_social',
                         'contrato_empresarial.cnpj',
                         'contrato_empresarial.quantidade_vidas',
@@ -79,13 +82,13 @@ class FinanceiroController extends Controller
                         'comissao.valor as porcentagem',
                         'contrato_empresarial.senha_cliente as senha_cliente',
                         'contrato_empresarial.pago as status',
+                        'contrato_empresarial.status_pagamento as status_pagamento',
                         DB::raw("DATE_FORMAT(contrato_empresarial.vencimento_boleto,'%d/%m/%Y') as vencimento_boleto"),
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_boleto,'%d/%m/%Y') as data_boleto"),
                         'tabela_origens.nome as tabela_origens',
                         'contrato_empresarial.responsavel as responsavel',
                         'contrato_empresarial.plano_contrado as plano_contrado'
                     )
-
                     ->join('users', 'users.id', '=', 'contrato_empresarial.user_id')
                     ->join('comissao', 'users.id', '=', 'comissao.user_id')
                     ->join('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
@@ -128,6 +131,17 @@ class FinanceiroController extends Controller
 
 
 
+
+    public function atualizarStatusPagamento(Request $request)
+    {
+        if (!$request->id) {
+            return response()->json(['error' => 'ID não fornecido'], 400);
+        }
+        ContratoEmpresarial::where('id', $request->id)
+            ->update(['status_pagamento' => $request->status]);
+        Cache::forget('listarContratoEmpresaPendentes');
+        return response()->json(['success' => true]);
+    }
 
     public function modalEmpresarial(Request $request)
     {

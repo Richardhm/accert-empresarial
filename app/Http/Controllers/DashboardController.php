@@ -2,54 +2,66 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContratoEmpresarial;
-use App\Models\Plano;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Cards: por plano — total de vidas e total vendido
+        $cardsPlanos = DB::select("
+            SELECT
+                p.id,
+                p.nome,
+                COALESCE(SUM(ce.quantidade_vidas), 0) AS total_vidas,
+                COALESCE(SUM(ce.valor_plano), 0)       AS total_valor,
+                COUNT(ce.id)                           AS total_contratos
+            FROM planos p
+            LEFT JOIN contrato_empresarial ce ON ce.plano_id = p.id
+            GROUP BY p.id, p.nome
+            ORDER BY total_contratos DESC
+        ");
 
-        // Dados dos cards: Busca todos os planos e calcula as métricas
-        $dadosPlanos = Plano::with(['contratos' => function ($q) {
-            $q->selectRaw('plano_id, SUM(quantidade_vidas) as total_vidas')
-                ->selectRaw('SUM(valor_plano) as total_valor')
-                ->groupBy('plano_id');
-        }])->get();
+        // Tabela usuários: total contratos, vidas e comissão paga
+        $rankingUsuarios = DB::select("
+            SELECT
+                ce.user_id,
+                u.name                                                                  AS nome,
+                COUNT(ce.id)                                                            AS total_contratos,
+                COALESCE(SUM(ce.quantidade_vidas), 0)                                  AS total_vidas,
+                COALESCE(SUM(CASE WHEN ce.pago = 1 THEN ce.valor_pagar ELSE 0 END), 0) AS total_comissao_paga
+            FROM contrato_empresarial ce
+            INNER JOIN users u ON u.id = ce.user_id
+            GROUP BY ce.user_id, u.name
+            ORDER BY total_contratos DESC
+        ");
 
+        return view('dashboard', compact('cardsPlanos', 'rankingUsuarios'));
+    }
 
+    public function empresasPorVendedor(Request $request)
+    {
+        $userId = intval($request->user_id);
 
-        // Top planos mais vendidos (agrupados por plano_id)
-        $topPlanos = ContratoEmpresarial::select('plano_id')
-            ->with('plano:id,nome')
-            ->selectRaw('COUNT(*) as total_vendas, SUM(valor_pagar) as total_recebido')
-            ->groupBy('plano_id')
-            ->orderByDesc('total_vendas')
-            ->take(5)
-            ->get();
+        $empresas = DB::select("
+            SELECT
+                ce.razao_social,
+                ce.cidade,
+                ce.cnpj,
+                p.nome                                       AS plano_nome,
+                ce.quantidade_vidas,
+                ce.valor_plano,
+                ce.valor_pagar                               AS comissao,
+                ce.pago,
+                DATE_FORMAT(ce.created_at, '%d/%m/%Y')       AS data_cadastro,
+                DATE_FORMAT(ce.data_baixa_finalizado, '%d/%m/%Y') AS data_pagamento
+            FROM contrato_empresarial ce
+            INNER JOIN planos p ON p.id = ce.plano_id
+            WHERE ce.user_id = {$userId}
+            ORDER BY ce.created_at DESC
+        ");
 
-
-
-
-
-
-
-        // Classificação de usuários por maior número de vendas
-        $usuariosRanking = ContratoEmpresarial::select('user_id')
-            ->with('user:id,name,email')
-            ->selectRaw('COUNT(*) as total_contratos')
-            ->groupBy('user_id')
-            ->orderByDesc('total_contratos')
-            ->take(5)
-            ->get();
-
-        // Dados para tabela detalhada
-        $tabelaDetalhada = ContratoEmpresarial::with(['plano:id,nome', 'user:id,name,email'])
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        return view('dashboard', compact('dadosPlanos','topPlanos', 'usuariosRanking', 'tabelaDetalhada'));
+        return response()->json($empresas);
     }
 }

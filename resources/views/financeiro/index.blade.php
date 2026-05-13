@@ -1,78 +1,65 @@
 <x-app-layout>
     @section('css')
-       <link rel="stylesheet" href="{{asset('css/estilo-financeiro.css')}}"/>
+        <link rel="stylesheet" href="{{ asset('css/estilo-financeiro.css') }}"/>
     @endsection
-    <input type="hidden" id="janela_atual" value="aba_individual">
-
-        <!-- Modal -->
-        <script>
-            var urlGeralEmpresarialPendentes = "{{ route('contratos.listarEmpresarial.listarContratoEmpresaPendentes') }}";
-            var empresarialFinanceiroInicializar = "{{route('financeiro.modal.contrato.empresarial')}}";
-            var table;
-            var table_individual;
-            var parcelaSelecionada;
-            var tableodonto;
-            var tableempresarial;
-        </script>
-
-        <div id="myModalEmpresarial" class="fixed mx-auto inset-0 z-50 flex items-center justify-center hidden">
-            <!-- Backdrop -->
-            <div class="fixed inset-0 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] z-40"></div>
-            <!-- Conteúdo da Modal -->
-            <div class="relative w-[50%] rounded-lg shadow-3xl p-2 z-50">
-                <!-- Botão Fechar no Topo -->
-                <div id="modalLoaderEmpresa" class="flex justify-center items-center h-64">
-                    <div class="dot-flashing">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                    </div>
-                </div>
-                <!-- Borda Animada -->
-                <div class="relative p-1 rounded-lg animate-border overflow-hidden content-modal-empresarial hidden">
-                </div>
-            </div>
-        </div>
-
-        <section class="py-1 flex items-center justify-between text-white rounded" style="width:95%;margin:10px auto;background:rgba(254,254,254,0.18);backdrop-filter: blur(15px);">
-            <div class="flex w-[50%] justify-end text-right" style="font-size: 1.5em;">
-                <h2>Financeiro</h2>
-            </div>
-            <div class="flex w-[50%] justify-end">
-                <small>Pagina criada as 03:59 da manhã sexta-feira 04/07/2025</small>
-            </div>
-        </section>
-
-        <section class="conteudo_abas mt-2" style="width:95%;margin:0 auto;">
-            <x-aba-empresarial></x-aba-empresarial>
-        </section>
 
     <script>
+        var urlGeralEmpresarialPendentes    = "{{ route('contratos.listarEmpresarial.listarContratoEmpresaPendentes') }}";
+        var empresarialFinanceiroInicializar = "{{ route('financeiro.modal.contrato.empresarial') }}";
+        var urlAtualizarStatusPagamento      = "{{ route('financeiro.status.pagamento') }}";
+        var isAdmin = {{ auth()->check() && auth()->user()->isAdministrador() ? 'true' : 'false' }};
+        var table;
+        var table_individual;
+        var parcelaSelecionada;
+        var tableodonto;
+        var tableempresarial;
+    </script>
 
-        $(document).ready(function(){
+    {{-- ── Modal Empresarial (preservado intacto) ── --}}
+    <div id="myModalEmpresarial" class="fixed mx-auto inset-0 z-50 flex items-center justify-center hidden">
+        <div class="fixed inset-0 bg-[rgba(254,254,254,0.18)] backdrop-blur-[15px] z-40"></div>
+        <div class="relative w-[50%] rounded-lg shadow-3xl p-2 z-50">
+            <div id="modalLoaderEmpresa" class="flex justify-center items-center h-64">
+                <div class="dot-flashing"><div></div><div></div><div></div></div>
+            </div>
+            <div class="relative p-1 rounded-lg animate-border overflow-hidden content-modal-empresarial hidden"></div>
+        </div>
+    </div>
 
+    {{-- ── Page ── --}}
+    <div class="fin-page">
+        <div class="fin-inner">
+
+            {{-- Header --}}
+            <div class="fin-header">
+                <div>
+                    <h1 class="fin-title">Financeiro</h1>
+                    <p class="fin-sub">Gestão de contratos empresariais</p>
+                </div>
+                <a href="{{ route('contratos.create.empresarial') }}" class="fin-btn-new">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Novo Contrato
+                </a>
+            </div>
+
+            {{-- Conteúdo principal --}}
+            <section>
+                <x-aba-empresarial></x-aba-empresarial>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
             $('#valor').mask('#.##0,00', {reverse: true});
-            function getUrlParameter(name) {
-                name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-                var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-                var results = regex.exec(location.search);
-                return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-            }
-
-            function totalMes() {
-                return $("#select_usuario_individual").val();
-            }
 
             $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
             });
 
-
-            $("body").on('click','.excluir_contrato',function(){
-               let id = $(this).attr('data-id');
-                // Exibe o alerta de confirmação com SweetAlert
+            $("body").on('click', '.excluir_contrato', function () {
+                let id = $(this).attr('data-id');
                 Swal.fire({
                     title: 'Tem certeza?',
                     text: "Você não poderá reverter esta ação!",
@@ -84,53 +71,28 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Se o usuário confirmar, executa a requisição AJAX
                         $.ajax({
-                            url: "{{route('contratos.excluir')}}",
-                            data: { id: id }, // Envia o ID no corpo da requisição
+                            url: "{{ route('contratos.excluir') }}",
+                            data: { id: id },
                             method: "POST",
-                            success: function (res) {
-                                // Mostra mensagem de sucesso ou realiza alguma ação
-                                Swal.fire(
-                                    'Excluído!',
-                                    'O contrato foi excluído com sucesso.',
-                                    'success'
-                                ).then(() => {
-                                    // Recarrega a página após a mensagem de sucesso
-                                    location.reload();
-                                });
-
+                            success: function () {
+                                Swal.fire('Excluído!', 'O contrato foi excluído com sucesso.', 'success')
+                                    .then(() => location.reload());
                             },
                             error: function (xhr) {
-                                // Mostra mensagem de erro, caso ocorra
-                                Swal.fire(
-                                    'Erro!',
-                                    'Houve um problema ao excluir o contrato.',
-                                    'error'
-                                );
-                                console.error(xhr.responseText);
+                                Swal.fire('Erro!', 'Houve um problema ao excluir o contrato.', 'error');
                             }
                         });
                     }
                 });
-
             });
-
-
-
-
         });
     </script>
 
-        @section('scripts')
-            <script src="{{asset('js/financeiro-arquivo.js')}}"></script>
-            <script src="{{asset('js/financeiro-inicializar-empresarial.js')}}"></script>
-            <script src="{{asset('js/financeiro-parametro-url.js')}}"></script>
-
-
-
-
-
-        @endsection
+    @section('scripts')
+        <script src="{{ asset('js/financeiro-arquivo.js') }}"></script>
+        <script src="{{ asset('js/financeiro-inicializar-empresarial.js') }}"></script>
+        <script src="{{ asset('js/financeiro-parametro-url.js') }}"></script>
+    @endsection
 
 </x-app-layout>
