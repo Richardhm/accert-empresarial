@@ -317,7 +317,6 @@
             </div>
         </div>
     </div>
-
     {{-- ── Modal Detalhe Pagamentos ── --}}
     <div id="modal-detalhe-overlay" class="modal-colar-overlay" style="display:none;">
         <div class="modal-colar-box" style="max-width:860px;width:95vw;">
