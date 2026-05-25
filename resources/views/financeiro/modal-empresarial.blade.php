@@ -211,6 +211,9 @@
                 <div>
                     <label for="valor_saude" class="block text-white text-sm flex justify-between">
                         <span>Valor Saude:</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="valor_saude" value="{{number_format($valor_saude,2,",",".")}}" readonly class="w-full mudar_empresarial_valor bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
@@ -223,14 +226,18 @@
                 <div>
                     <label for="valor_odonto" class="block text-white text-sm flex justify-between">
                         <span>Valor Odonto:</span>
-
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="valor_odonto" value="{{number_format($valor_odonto,2,",",".")}}" readonly class="w-full mudar_empresarial_valor bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
                 <div>
                     <label for="total_plano" class="block text-white text-sm flex justify-between">
                         <span>Total Plano:</span>
-
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="total_plano" value="{{number_format($valor_plano,2,",",".")}}" readonly class="w-full bg-gray-100 mudar_empresarial_valor text-sm text-gray-800 p-1 rounded-md">
                 </div>
@@ -238,14 +245,18 @@
                 <div>
                     <label for="vencimento_boleto" class="block text-white text-sm flex justify-between">
                         <span>Venc. Boleto:</span>
-
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="vencimento_boleto" readonly value="{{$vencimento_boleto}}" class="w-full mudar_empresarial bg-gray-100 text-sm  text-gray-800 p-1 rounded-md">
                 </div>
                 <div>
                     <label for="data_boleto" class="block text-white text-sm flex justify-between">
                         <span>Data 1º Boleto:</span>
-
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="data_boleto" readonly value="{{$data_boleto}}" class="w-full bg-gray-100 text-sm mudar_empresarial text-gray-800 p-1 rounded-md">
                 </div>
@@ -253,6 +264,9 @@
                 <div>
                     <label for="data_cadastro" class="block text-white text-sm flex justify-between">
                         <span>Data Criação:</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 editar_empresarial">
+                            <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                        </svg>
                     </label>
                     <input type="text" id="data_cadastro" readonly value="{{$data_cadastro}}" class="w-full bg-gray-100 text-sm mudar_empresarial text-gray-800 p-1 rounded-md">
                 </div>
@@ -269,3 +283,30 @@
 
 
 </div>
+
+<script>
+(function () {
+    // CNPJ — 00.000.000/0000-00
+    $('#cnpj').mask('00.000.000/0000-00');
+
+    // Celular — dinâmico 10 ou 11 dígitos
+    var celularBehavior = function (val) {
+        return val.replace(/\D/g, '').length <= 10 ? '(00) 0000-00009' : '(00) 00000-0000';
+    };
+    $('#celular').mask(celularBehavior($('#celular').val()), {
+        onKeyPress: function (val, e, f, o) {
+            f.mask(celularBehavior(val), o);
+        }
+    });
+
+    // Valores monetários
+    $('#valor_saude').mask('#.##0,00', { reverse: true });
+    $('#valor_odonto').mask('#.##0,00', { reverse: true });
+    $('#total_plano').mask('#.##0,00', { reverse: true });
+
+    // Datas — dd/mm/aaaa
+    $('#vencimento_boleto').mask('00/00/0000');
+    $('#data_boleto').mask('00/00/0000');
+    $('#data_cadastro').mask('00/00/0000');
+})();
+</script>

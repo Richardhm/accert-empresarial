@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ConfiguracoesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\GerenteController;
+use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,8 +33,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/contratos/cadastrar/empresarial',[FinanceiroController::class,'formCreateEmpresarial'])->name('contratos.create.empresarial');
 
     Route::post('/contratos/empresarial/financeiro',[FinanceiroController::class,'storeEmpresarialFinanceiro'])->name('contratos.storeEmpresarial.financeiro');
+    Route::post('/contratos/colar/empresarial',[FinanceiroController::class,'storeColarEmpresarial'])->name('contratos.colar.empresarial');
+    Route::post('/contratos/empresarial/atualizar-campo',[FinanceiroController::class,'atualizarCampoEmpresarial'])->name('contratos.empresarial.atualizar_campo');
+    Route::post('/contratos/empresarial/avancar-etapa',[FinanceiroController::class,'avancarEtapa'])->name('contratos.empresarial.avancar_etapa');
+    Route::post('/contratos/empresarial/atualizar',[FinanceiroController::class,'atualizarContrato'])->name('contratos.empresarial.atualizar');
+    Route::post('/contratos/empresarial/importar-planilha',[FinanceiroController::class,'importarPlanilha'])->name('contratos.empresarial.importar_planilha');
+    Route::post('/contratos/empresarial/upload-aditivo',[FinanceiroController::class,'uploadAditivoPdf'])->name('contratos.empresarial.upload_aditivo');
+    Route::post('/contratos/empresarial/salvar-adesao',[FinanceiroController::class,'salvarDataAdesao'])->name('contratos.empresarial.salvar_adesao');
+    Route::post('/contratos/empresarial/upload-adesao',[FinanceiroController::class,'uploadAdesao'])->name('contratos.empresarial.upload_adesao');
+    Route::post('/contratos/empresarial/extrair-valor-boleto',[FinanceiroController::class,'extrairValorBoletoPdf'])->name('contratos.empresarial.extrair_valor_boleto');
+    Route::post('/contratos/empresarial/debug-pdf',[FinanceiroController::class,'debugExtrairPdf'])->name('contratos.empresarial.debug_pdf');
+    Route::post('/contratos/empresarial/salvar-boleto',[FinanceiroController::class,'salvarBoleto'])->name('contratos.empresarial.salvar_boleto');
+    Route::post('/contratos/empresarial/salvar-vigencia',[FinanceiroController::class,'salvarVigencia'])->name('contratos.empresarial.salvar_vigencia');
+    Route::post('/contratos/empresarial/salvar-vigencia-colar',[FinanceiroController::class,'salvarVigenciaColar'])->name('contratos.empresarial.salvar_vigencia_colar');
+    Route::post('/contratos/empresarial/upload-carteirinha',[FinanceiroController::class,'uploadCarteirinha'])->name('contratos.empresarial.upload_carteirinha');
+    Route::post('/contratos/empresarial/deletar-carteirinha',[FinanceiroController::class,'deletarCarteirinha'])->name('contratos.empresarial.deletar_carteirinha');
+    Route::post('/contratos/empresarial/salvar-primeiro-boleto',[FinanceiroController::class,'salvarPrimeiroBoleto'])->name('contratos.empresarial.salvar_primeiro_boleto');
+    Route::post('/contratos/empresarial/upload-documento-boleto',[FinanceiroController::class,'uploadDocumentoBoleto'])->name('contratos.empresarial.upload_documento_boleto');
+    Route::post('/contratos/empresarial/salvar-finalizado',[FinanceiroController::class,'salvarFinalizado'])->name('contratos.empresarial.salvar_finalizado');
     Route::post('/financeiro/modal/empresarial',[FinanceiroController::class,'modalEmpresarial'])->name('financeiro.modal.contrato.empresarial');
     Route::post('/financeiro/status-pagamento',[FinanceiroController::class,'atualizarStatusPagamento'])->name('financeiro.status.pagamento');
+    Route::get('/financeiro/resumo-valor/{id}',[FinanceiroController::class,'resumoValor'])->name('financeiro.resumo_valor');
+    Route::get('/financeiro/beneficiarios/{id}',[FinanceiroController::class,'listarBeneficiarios'])->name('financeiro.beneficiarios');
 
     // Rotas exclusivas para administradores
     Route::middleware('admin')->group(function () {
@@ -58,6 +80,34 @@ Route::middleware('auth')->group(function () {
         // Fechar mês
         Route::get('/gerente/fechamento/resumo', [GerenteController::class,'resumoFechamento'])->name('gerente.fechamento.resumo');
         Route::post('/gerente/fechamento/fechar', [GerenteController::class,'fecharMes'])->name('gerente.fechamento.fechar');
+
+        // Configurações — Faixas Etárias (Saúde)
+        Route::get('/configuracoes/faixas', [ConfiguracoesController::class, 'faixas'])->name('configuracoes.faixas');
+        Route::get('/configuracoes/faixas/cidades', [ConfiguracoesController::class, 'cidadesPorUf'])->name('configuracoes.cidades');
+        Route::get('/configuracoes/faixas/carregar', [ConfiguracoesController::class, 'carregar'])->name('configuracoes.faixas.carregar');
+        Route::post('/configuracoes/faixas/salvar', [ConfiguracoesController::class, 'salvar'])->name('configuracoes.faixas.salvar');
+
+        // Configurações — Valores Odonto
+        Route::get('/configuracoes/odonto', [ConfiguracoesController::class, 'odonto'])->name('configuracoes.odonto');
+        Route::get('/configuracoes/odonto/carregar', [ConfiguracoesController::class, 'odontoCarregar'])->name('configuracoes.odonto.carregar');
+        Route::post('/configuracoes/odonto/salvar', [ConfiguracoesController::class, 'odontoSalvar'])->name('configuracoes.odonto.salvar');
+
+        // Configurações — Cadastro unificado
+        Route::get('/configuracoes/cadastro', [ConfiguracoesController::class, 'cadastro'])->name('configuracoes.cadastro');
+
+        // Configurações — Gerenciar Planos
+        Route::get('/configuracoes/planos',                [ConfiguracoesController::class, 'listarPlanos'])->name('configuracoes.planos.listar');
+        Route::post('/configuracoes/planos/salvar',        [ConfiguracoesController::class, 'salvarPlano'])->name('configuracoes.planos.salvar');
+        Route::post('/configuracoes/planos/{id}/atualizar',[ConfiguracoesController::class, 'atualizarPlano'])->name('configuracoes.planos.atualizar');
+        Route::post('/configuracoes/planos/{id}/excluir',  [ConfiguracoesController::class, 'excluirPlano'])->name('configuracoes.planos.excluir');
+
+        Route::get('/pagamento', [PagamentoController::class, 'index'])->name('pagamento.index');
+        Route::get('/listar/pagamento', [PagamentoController::class, 'listar'])->name('pagamento.listar');
+        Route::post('/pagamento/upload-planilha', [PagamentoController::class, 'uploadPlanilha'])->name('pagamento.upload_planilha');
+        Route::get('/pagamento/detalhe/{id}', [PagamentoController::class, 'detalheContrato'])->name('pagamento.detalhe');
+        Route::get('/pagamento/nao-vinculados', [PagamentoController::class, 'naoVinculados'])->name('pagamento.nao_vinculados');
+        Route::get('/pagamento/buscar-contratos', [PagamentoController::class, 'buscarContratos'])->name('pagamento.buscar_contratos');
+        Route::post('/pagamento/vincular/{id}', [PagamentoController::class, 'vincular'])->name('pagamento.vincular');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/empresas-vendedor', [DashboardController::class, 'empresasPorVendedor'])->name('dashboard.empresas.vendedor');

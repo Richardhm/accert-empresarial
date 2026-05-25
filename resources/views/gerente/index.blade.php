@@ -555,6 +555,70 @@
 
 
 
+<!-- ══════════════ MODAL DETALHE CONTRATO GERENTE ══════════════ -->
+<div id="modalDetalheGerente" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 hidden z-50">
+    <div class="rounded-xl shadow-2xl p-6" style="background:#151e30;color:#e2e8f0;width:520px;max-width:95%;border:1px solid rgba(255,255,255,.1);">
+
+        <div class="flex justify-between items-center mb-5">
+            <div>
+                <h5 class="text-base font-bold" id="detalheGerTitulo" style="color:#fff;margin:0;"></h5>
+                <p class="text-xs mt-1" id="detalheGerSub" style="color:rgba(255,255,255,.4);margin:0;"></p>
+            </div>
+            <button id="closeModalDetalheGerente" style="color:rgba(255,255,255,.5);font-size:1.4rem;line-height:1;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+
+        <!-- chips de valores -->
+        <div class="flex gap-3 mb-4" id="detalheGerChips">
+            <div class="flex-1 rounded-lg p-3 text-center" style="background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);">
+                <p class="text-xs mb-1" style="color:rgba(255,255,255,.4);">Valor Plano</p>
+                <p class="font-bold text-sm" id="dg_valor_plano" style="color:#93c5fd;">–</p>
+            </div>
+            <div class="flex-1 rounded-lg p-3 text-center" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);">
+                <p class="text-xs mb-1" style="color:rgba(255,255,255,.4);">Comissão</p>
+                <p class="font-bold text-sm" id="dg_comissao" style="color:#34d399;">–</p>
+            </div>
+            <div class="flex-1 rounded-lg p-3 text-center" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);">
+                <p class="text-xs mb-1" style="color:rgba(255,255,255,.4);">Vidas</p>
+                <p class="font-bold text-sm" id="dg_vidas" style="color:#fcd34d;">–</p>
+            </div>
+        </div>
+
+        <!-- linhas de info -->
+        <table class="w-full text-sm" id="detalheGerTabela">
+            <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);width:40%;font-size:.73rem;">Código</td>
+                    <td class="py-2 font-medium" id="dg_codigo" style="font-size:.73rem;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Administradora</td>
+                    <td class="py-2 font-medium" id="dg_admin" style="font-size:.73rem;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Comissão %</td>
+                    <td class="py-2 font-medium" id="dg_pct" style="font-size:.73rem;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Data Cadastro</td>
+                    <td class="py-2 font-medium" id="dg_criacao" style="font-size:.73rem;"></td>
+                </tr>
+                <tr>
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Vencimento Boleto</td>
+                    <td class="py-2 font-medium" id="dg_vencimento" style="font-size:.73rem;"></td>
+                </tr>
+                <tr id="dg_plano_row" style="border-top:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Plano</td>
+                    <td class="py-2 font-medium" id="dg_plano" style="font-size:.73rem;"></td>
+                </tr>
+                <tr id="dg_corretor_row" style="border-top:1px solid rgba(255,255,255,.06);">
+                    <td class="py-2 pr-3" style="color:rgba(255,255,255,.4);font-size:.73rem;">Corretor</td>
+                    <td class="py-2 font-medium" id="dg_corretor" style="font-size:.73rem;"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <!-- ══════════════ MODAL VALE ══════════════ -->
 <div id="modalVale" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
     <div class="rounded-lg shadow-lg p-6" style="background:#1e2a3a;color:#fff;width:480px;max-width:95%;">
@@ -935,6 +999,7 @@
                 });
 
 
+
                 $("body").on('click','.criar_pdf_corretor',function(){
                     $("#exampleModalTipoPlanos").removeClass('hidden').addClass('flex');
                 });
@@ -1163,6 +1228,8 @@
                     }
                 });
 
+                var gerenteRowMap = {};
+
                 var listaraptosapagar = $(".listaraptosapagar").DataTable({
                     dom: '<"flex justify-between items-center"<"#title_individual_confirmados"><"btns"B><"estilizar_search"f>>' +
                         'tr' +
@@ -1243,39 +1310,14 @@
                         },
                         {
                             data: "contrato_id", name: "contrato_id", width: "1%",
-                            "createdCell": function (td, cellData, rowData, row, col) {
-                                let contrato_id = cellData;
-                                if(rowData.plano == 1) {
-                                    $(td).html(`<div class='text-center text-white'>
-                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_individual">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                    </a>
-                                </div>
-                            `);
-                                } else if(rowData.plano == 3) {
-                                    $(td).html(`<div class='text-center text-white'>
-                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_coletivo">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                    </a>
-                                </div>
-                            `);
-                                } else {
-                                    $(td).html(`<div class='text-center text-white'>
-                                    <a href="#" data-id="${contrato_id}" target="_blank" class="text-white ver_empresarial">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                    </a>
-                                </div>
-                            `);
-                                }
+                            render: function (data, type, row) {
+                                if (type !== 'display') return data;
+                                gerenteRowMap[data] = row;
+                                return '<span class="ver-emp-btn" data-id="' + data + '" style="cursor:pointer;color:#93c5fd;display:inline-flex;align-items:center;justify-content:center;">'
+                                    + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />'
+                                    + '</svg></span>';
                             }
                         },
                         {data:"plano_nome",name:"plano_nome",visible:false},
@@ -1330,6 +1372,9 @@
                         $("#previsao_de_comissao").html("Previsão da Comissão: "+conditionalTotal.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'}));
                     }
                 });
+
+
+
 
                 $("body").on('click', '.criar_pdf', function(){
                     var user_id = $("#corretor_escolhido").val();
@@ -1671,40 +1716,15 @@
                         },
                         {
                             data:"contrato_id",name:"contrato_id",width:"3%",
-                            "createdCell": function (td, cellData, rowData, row, col) {
-                                let contrato_id = cellData;
-                                if(rowData.plano == 3) {
-                                    $(td).html(`<div data-id="${contrato_id}" class='text-center text-white ver_coletivo'>
-                                        <a href="#" target="_blank" class="text-white">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                `);
-                                } else if(rowData.plano == 1) {
-                                    $(td).html(`<div data-id="${contrato_id}" class='text-center text-white ver_individual'>
-                                        <a href="#" class="text-white">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                `);
-                                } else {
-                                    $(td).html(`<div data-id="${contrato_id}" class='text-center text-white ver_empresarial'>
-                                        <a href="#" target="_blank" class="text-white">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 div_info">
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                `);
-                                }
-                            },
+                            render: function (data, type, row) {
+                                if (type !== 'display') return data;
+                                gerenteRowMap[data] = row;
+                                return '<span class="ver-emp-btn" data-id="' + data + '" style="cursor:pointer;color:#93c5fd;display:inline-flex;align-items:center;justify-content:center;">'
+                                    + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />'
+                                    + '</svg></span>';
+                            }
                         }
                     ],
                     "initComplete": function( settings, json ) {
@@ -1744,19 +1764,114 @@
                     "autoWidth": false,
                     "responsive": true,
                     columns: [
-
+                        {data:"administradora", name:"administradora", width:"5%"},
+                        {data:"data_criacao", name:"data_criacao", width:"7%",
+                            "createdCell": function(td, cellData) {
+                                if (cellData) {
+                                    $(td).html(cellData.split(" ")[0].split("-").reverse().join("/"));
+                                }
+                            }
+                        },
+                        {data:"orcamento", name:"orcamento", width:"5%"},
+                        {data:"cliente", name:"cliente", width:"18%"},
+                        {data:"parcela", name:"parcela", className:'dt-center', width:"3%"},
+                        {data:"valor_plano_contratado", name:"valor_plano_contratado", width:"6%",
+                            render: $.fn.dataTable.render.number('.',',',2,'R$ ')
+                        },
+                        {data:"data", name:"data", className:'dt-center', width:"6%"},
+                        {data:"data_baixa_gerente", name:"data_baixa_gerente", width:"6%"},
+                        {data:"comissao_recebida", name:"comissao_recebida", width:"7%",
+                            render: $.fn.dataTable.render.number('.',',',2,'R$ ')
+                        },
+                        {data:"porcentagem_parcela_corretor", name:"porcentagem_parcela_corretor", width:"4%"},
+                        {data:"id", name:"id", width:"5%", className:'dt-center',
+                            "createdCell": function (td, cellData, rowData) {
+                                $(td).html('<svg id="' + cellData + '" class="w-6 h-6 text-white pagar_comissao_up" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">'
+                                    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4"/>'
+                                    + '</svg>');
+                            }
+                        },
+                        {data:"quantidade_vidas", name:"quantidade_vidas", width:"3%", className:'dt-center'},
+                        {data:"desconto", name:"desconto", width:"5%",
+                            render: $.fn.dataTable.render.number('.',',',2,'R$ ')
+                        },
+                        {data:"plano", name:"plano", width:"4%"},
+                        {data:"contrato_id", name:"contrato_id", width:"3%",
+                            render: function (data, type, row) {
+                                if (type !== 'display') return data;
+                                gerenteRowMap[data] = row;
+                                return '<span class="ver-emp-btn" data-id="' + data + '" style="cursor:pointer;color:#93c5fd;display:inline-flex;align-items:center;justify-content:center;">'
+                                    + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;">'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />'
+                                    + '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />'
+                                    + '</svg></span>';
+                            }
+                        },
                     ],
 
-                    "initComplete": function( settings, json ) {
-
-
-
-                    },
-                    footerCallback: function (row, data, start, end, display) {
-
-                    }
+                    "initComplete": function( settings, json ) {},
+                    footerCallback: function () {}
                 });
 
+                // ── Detalhe contrato (olhinho) ───────────────────────────────
+                function fmtBrl(v) {
+                    var n = parseFloat(v) || 0;
+                    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                function fmtDataGer(v) {
+                    if (!v) return '–';
+                    var s = String(v).split(' ')[0];
+                    if (s.indexOf('-') > 0) return s.split('-').reverse().join('/');
+                    return s;
+                }
+
+
+
+                $('body').on('click', '.ver-emp-btn', function (e) {
+                    console.log("Olaaaaaaaaaaaaaaaaaaaaa");
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var id = $(this).attr('data-id');
+                    var d = gerenteRowMap[id];
+                    if (!d) return;
+
+                    var cliente  = d.cliente   || d.razao_social || '–';
+                    var codigo   = d.orcamento || d.codigo_externo || d.codigo || '–';
+                    var admin    = d.administradora || 'Hapvida';
+                    var valPlano = d.valor_plano_contratado || d.valor_plano || 0;
+                    var comissao = d.valor     || d.comissao || 0;
+                    var vidas    = d.quantidade_vidas || '–';
+                    var pct      = d.porcentagem_parcela_corretor || d.porcentagem || '–';
+                    var criacao  = fmtDataGer(d.data_criacao || d.created_at);
+                    var vencto   = d.data      || d.vencimento || '–';
+                    var planoNome = d.plano_nome || null;
+                    var corretor  = d.corretor  || null;
+
+                    $('#detalheGerTitulo').text(String(cliente).toUpperCase());
+                    $('#detalheGerSub').text('Resumo do contrato');
+                    $('#dg_valor_plano').text(fmtBrl(valPlano));
+                    $('#dg_comissao').text(fmtBrl(comissao));
+                    $('#dg_vidas').text(vidas || '–');
+                    $('#dg_codigo').text(codigo);
+                    $('#dg_admin').text(admin);
+                    $('#dg_pct').text(pct && pct !== '–' ? pct + '%' : '–');
+                    $('#dg_criacao').text(criacao);
+                    $('#dg_vencimento').text(vencto);
+
+                    if (planoNome) { $('#dg_plano').text(planoNome); $('#dg_plano_row').show(); }
+                    else           { $('#dg_plano_row').hide(); }
+                    if (corretor)  { $('#dg_corretor').text(corretor); $('#dg_corretor_row').show(); }
+                    else           { $('#dg_corretor_row').hide(); }
+
+                    $('#modalDetalheGerente').removeClass('hidden');
+                });
+
+                $('#closeModalDetalheGerente').on('click', function () {
+                    $('#modalDetalheGerente').addClass('hidden');
+                });
+                $('#modalDetalheGerente').on('click', function (e) {
+                    if ($(e.target).is('#modalDetalheGerente')) { $(this).addClass('hidden'); }
+                });
 
             });
 

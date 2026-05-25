@@ -287,6 +287,7 @@ class GerenteController extends Controller
         return (object) [
             'a_receber' => DB::table('contrato_empresarial')
                 ->where('contrato_empresarial.pago', 0)
+                ->where('contrato_empresarial.etapa_atual', '>=', 3)
                 ->selectRaw('COUNT(*) as quantidade, SUM(contrato_empresarial.valor_plano) as valor')
                 ->first(),
             'recebidas' => DB::table('contrato_empresarial')
@@ -349,7 +350,9 @@ class GerenteController extends Controller
             FROM contrato_empresarial
 
             INNER JOIN users ON users.id = contrato_empresarial.user_id
-            WHERE pago != 1 and users.id NOT IN
+            WHERE pago != 1
+            AND contrato_empresarial.etapa_atual >= 3
+            AND users.id NOT IN
             (SELECT user_id FROM valores_corretores_lancadas WHERE MONTH(data) = {$mes} AND YEAR(data) = {$ano})
             GROUP BY users.id, users.name
             ORDER BY users.name
@@ -418,10 +421,9 @@ class GerenteController extends Controller
             SELECT
             COUNT(*) AS total
             FROM contrato_empresarial
-
-            WHERE contrato_empresarial.pago = 0 AND
-
-            contrato_empresarial.user_id = {$id}
+            WHERE contrato_empresarial.pago = 0
+            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.user_id = {$id}
         ")[0]->total;
 
 
@@ -877,7 +879,7 @@ class GerenteController extends Controller
             $folha->save();
 
             $users_select = User::whereHas('contratos', function ($query) {
-                $query->where('pago', 0);
+                $query->where('pago', 0)->where('etapa_atual', '>=', 3);
             })->get(['id', 'name']);
 
             return [
@@ -918,7 +920,7 @@ class GerenteController extends Controller
             SELECT
             COUNT(*) AS total
             FROM contrato_empresarial
-            where pago = 0 and user_id = {$id}
+            WHERE pago = 0 AND etapa_atual >= 3 AND user_id = {$id}
         ")[0]->total;
 
 
@@ -953,10 +955,8 @@ class GerenteController extends Controller
 //            ORDER BY users.name;
 //         ");
 
-        $usuarios = User::whereHas('contratos', function ($query) use($mes,$ano) {
-            $query->where('pago', 0);
-            $query->whereMonth('data_baixa_finalizado',$mes);
-            $query->whereYear('data_baixa_finalizado',$ano);
+        $usuarios = User::whereHas('contratos', function ($query) {
+            $query->where('pago', 0)->where('etapa_atual', '>=', 3);
         })->get(['id', 'name']);
 
 
@@ -1004,7 +1004,9 @@ class GerenteController extends Controller
         '1' AS contrato_id
         FROM contrato_empresarial
         WHERE
-        contrato_empresarial.pago = 0 AND contrato_empresarial.user_id = {$id}
+        contrato_empresarial.pago = 0
+        AND contrato_empresarial.etapa_atual >= 3
+        AND contrato_empresarial.user_id = {$id}
         ");
 
         return $dados;
@@ -1032,8 +1034,9 @@ class GerenteController extends Controller
             contrato_empresarial.razao_social AS cliente,
             'Hapvida' AS administradora
             FROM contrato_empresarial
-            WHERE contrato_empresarial.pago = 0 AND
-            contrato_empresarial.user_id = {$id}
+            WHERE contrato_empresarial.pago = 0
+            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.user_id = {$id}
         ");
         return $dados;
     }
@@ -1157,8 +1160,9 @@ class GerenteController extends Controller
             SELECT
             COUNT(*) AS total
             FROM contrato_empresarial
-            WHERE contrato_empresarial.pago = 0 AND
-            contrato_empresarial.user_id = {$id}
+            WHERE contrato_empresarial.pago = 0
+            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.user_id = {$id}
         ")[0]->total;
 
         $total_empresarial_quantidade = ContratoEmpresarial
@@ -1223,7 +1227,7 @@ class GerenteController extends Controller
         ");
 
         $usuarios = User::whereHas('contratos', function ($query) {
-            $query->where('pago', 0);
+            $query->where('pago', 0)->where('etapa_atual', '>=', 3);
         })->get(['id', 'name']);
 
 
