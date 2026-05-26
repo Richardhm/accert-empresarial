@@ -125,10 +125,18 @@
 
         {{-- Legenda --}}
         <div class="fin-legenda">
-            <span style="font-weight:600;color:rgba(255,255,255,.6);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;">Legenda:</span>
+            <span style="font-weight:600;color:rgba(255,255,255,.6);font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;">Legenda:</span>
+            <div class="fin-legenda-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:10px;height:10px;flex-shrink:0;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>
+                <span style="color:#34d399;">Saúde</span>
+            </div>
+            <div class="fin-legenda-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd" style="width:10px;height:10px;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C5.6 2 3.6 3.6 3 5.9c-.5 1.8-.1 3.8 1.1 5.3.7.9 1.1 2 1.2 3.1L6 20c.2 1.2.9 2 1.9 2 .9 0 1.6-.7 1.8-1.9L10 18l.3 2.1c.2 1.2.9 1.9 1.8 1.9 1 0 1.7-.8 1.9-2l.7-5.7c.1-1.1.5-2.2 1.2-3.1C17.1 9.7 17.5 7.7 17 5.9 16.4 3.6 14.4 2 12 2H8z"/></svg>
+                <span style="color:#93c5fd;">Odonto</span>
+            </div>
             <div class="fin-legenda-item">
                 <div class="fin-legenda-cor amarelo"></div>
-                <span>Valor do boleto de adesão diverge da planilha — clique em ⚠️ para ver a justificativa</span>
+                <span>Boleto de adesão diverge da planilha — clique em ⚠️ para ver justificativa</span>
             </div>
         </div>
 
@@ -139,8 +147,7 @@
             <thead>
                 <tr style="font-size:0.9em;">
                     <th class="dt-center">Tipo</th>
-                    <th>Plano</th>
-                    <th>Cadastro</th>
+                    <th class="dt-center">Plano</th>
                     <th>Código</th>
                     <th>CNPJ</th>
                     <th>Cliente</th>

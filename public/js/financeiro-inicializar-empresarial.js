@@ -15,37 +15,37 @@ var PLANO_COLORS = [
 ];
 
 // ── Ícones SVG das etapas ─────────────────────────────────────────────────────
-var SVG_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:20px;height:20px"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.06-1.06l-3.31 3.31-1.48-1.48a.75.75 0 0 0-1.06 1.06l2.01 2.01a.75.75 0 0 0 1.06 0l3.84-3.84Z" clip-rule="evenodd"/></svg>';
+var SVG_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:13px;height:13px"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.06-1.06l-3.31 3.31-1.48-1.48a.75.75 0 0 0-1.06 1.06l2.01 2.01a.75.75 0 0 0 1.06 0l3.84-3.84Z" clip-rule="evenodd"/></svg>';
 
-var SVG_LOCK = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(255,255,255,.2)" style="width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+var SVG_LOCK = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(255,255,255,.2)" style="width:10px;height:10px"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
 
-var SVG_UPLOAD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>';
+var SVG_UPLOAD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>';
 
-var SVG_PDF = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
+var SVG_PDF = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
 
-var SVG_CALENDAR = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>';
+var SVG_CALENDAR = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>';
 
-var SVG_RECEIPT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>';
+var SVG_RECEIPT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg>';
 
-var SVG_CARD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 21Z"/></svg>';
+var SVG_CARD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 21Z"/></svg>';
 
-var SVG_BILL = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>';
+var SVG_BILL = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>';
 
-var SVG_FLAG = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f59e0b" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"/></svg>';
+var SVG_FLAG = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f59e0b" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"/></svg>';
 
-var SVG_EYE = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(79,142,247,.9)" style="width:13px;height:13px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+var SVG_EYE = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(79,142,247,.9)" style="width:10px;height:10px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
 
-var SVG_DOWNLOAD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#4f8ef7" style="width:15px;height:15px;margin-left:4px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>';
+var SVG_DOWNLOAD = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#4f8ef7" style="width:11px;height:11px;margin-left:2px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>';
 
-var SVG_EDIT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="rgba(148,163,184,.7)" style="width:12px;height:12px;vertical-align:middle;cursor:pointer;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>';
+var SVG_EDIT = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="rgba(148,163,184,.7)" style="width:9px;height:9px;vertical-align:middle;cursor:pointer;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>';
 
-var SVG_PDF_DL = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f87171" style="width:14px;height:14px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
+var SVG_PDF_DL = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#f87171" style="width:10px;height:10px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>';
 
-var SVG_WARNING = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fbbf24" style="width:14px;height:14px;vertical-align:middle;cursor:pointer;margin-left:3px;"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>';
+var SVG_WARNING = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fbbf24" style="width:10px;height:10px;vertical-align:middle;cursor:pointer;margin-left:2px;"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg>';
 
-var SVG_HEART_SM = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:11px;height:11px;flex-shrink:0;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>';
+var SVG_HEART_SM = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:9px;height:9px;flex-shrink:0;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>';
 
-var SVG_TOOTH_SM = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd" style="width:11px;height:11px;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C5.6 2 3.6 3.6 3 5.9c-.5 1.8-.1 3.8 1.1 5.3.7.9 1.1 2 1.2 3.1L6 20c.2 1.2.9 2 1.9 2 .9 0 1.6-.7 1.8-1.9L10 18l.3 2.1c.2 1.2.9 1.9 1.8 1.9 1 0 1.7-.8 1.9-2l.7-5.7c.1-1.1.5-2.2 1.2-3.1C17.1 9.7 17.5 7.7 17 5.9 16.4 3.6 14.4 2 12 2H8z"/></svg>';
+var SVG_TOOTH_SM = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd" style="width:9px;height:9px;flex-shrink:0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C5.6 2 3.6 3.6 3 5.9c-.5 1.8-.1 3.8 1.1 5.3.7.9 1.1 2 1.2 3.1L6 20c.2 1.2.9 2 1.9 2 .9 0 1.6-.7 1.8-1.9L10 18l.3 2.1c.2 1.2.9 1.9 1.8 1.9 1 0 1.7-.8 1.9-2l.7-5.7c.1-1.1.5-2.2 1.2-3.1C17.1 9.7 17.5 7.7 17 5.9 16.4 3.6 14.4 2 12 2H8z"/></svg>';
 
 // ── Render factory para as colunas de etapa ───────────────────────────────────
 // data = row.id | row = linha completa com etapa_atual
@@ -231,25 +231,23 @@ function inicializarEmpresarial(corretora_id) {
         processing: true,
         columns: [
             // ── Dados do contrato ──────────────────────────────────────────
-            { data: "tipo_contrato", name: "tipo_contrato", orderable: false, width: "4%", className: "dt-center col-tipo", // 0
+            { data: "tipo_contrato", name: "tipo_contrato", orderable: false, width: "1.5%", className: "dt-center col-tipo", // 0
               render: function (data, type, row) {
                   if (type !== 'display') return data || '';
                   if (data === 'ambos') {
-                      return '<div style="display:inline-flex;flex-direction:column;gap:2px;align-items:flex-start;">'
-                          + '<span style="display:inline-flex;align-items:center;gap:3px;color:#34d399;font-size:.62rem;font-weight:600;line-height:1;">' + SVG_HEART_SM + 'Saúde</span>'
-                          + '<span style="display:inline-flex;align-items:center;gap:3px;color:#93c5fd;font-size:.62rem;font-weight:600;line-height:1;">' + SVG_TOOTH_SM + 'Odonto</span>'
+                      return '<div style="display:inline-flex;flex-direction:column;gap:2px;align-items:center;">'
+                          + SVG_HEART_SM + SVG_TOOTH_SM
                           + '</div>';
                   } else if (data === 'saude') {
-                      return '<span style="display:inline-flex;align-items:center;gap:3px;color:#34d399;font-size:.62rem;font-weight:600;line-height:1;">' + SVG_HEART_SM + 'Saúde</span>';
+                      return SVG_HEART_SM;
                   } else if (data === 'odonto') {
-                      return '<span style="display:inline-flex;align-items:center;gap:3px;color:#93c5fd;font-size:.62rem;font-weight:600;line-height:1;">' + SVG_TOOTH_SM + 'Odonto</span>';
+                      return SVG_TOOTH_SM;
                   }
                   return '-';
               }
             },
-            { data: "plano",          name: "plano",          width: "5%"  }, // 1
-            { data: "created_at",     name: "created_at",     width: "6%"  }, // 2
-            { data: "codigo_externo", name: "codigo_externo", width: "6%", className: "col-codigo", // 3
+            { data: "plano",          name: "plano",          width: "5%", className: "dt-center"  }, // 1
+            { data: "codigo_externo", name: "codigo_externo", width: "6%", className: "col-codigo", // 2
               render: function (data, type, row) {
                   if (type !== 'display') return data || '';
                   var icoS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:10px;height:10px;flex-shrink:0;vertical-align:middle;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>';
@@ -277,8 +275,8 @@ function inicializarEmpresarial(corretora_id) {
             { data: "usuario",        name: "usuario",        width: "7%"  }, // 8
 
             // ── Vidas + Valor ──────────────────────────────────────────────
-            { data: "quantidade_vidas", name: "quantidade_vidas", width: "3%", className: "dt-center" }, // 9
-            { data: "valor_plano", name: "valor_plano", width: "8%", className: "dt-right",             // 10
+            { data: "quantidade_vidas", name: "quantidade_vidas", width: "2%", className: "dt-center" }, // 8
+            { data: "valor_plano", name: "valor_plano", width: "11%", className: "dt-right",            // 9
               render: function (data, type, row) {
                   if (type !== 'display') return data;
                   if (!data) return '-';
@@ -301,16 +299,16 @@ function inicializarEmpresarial(corretora_id) {
                   var valorHtml;
                   if (tipo === 'ambos') {
                       var total = valS + valO;
-                      valorHtml = '<div style="display:flex;flex-direction:column;gap:1px;align-items:flex-end;">'
-                          + '<span style="display:inline-flex;align-items:center;gap:3px;color:#34d399;font-size:.74rem;white-space:nowrap;">' + icoS + fmtNum(valS) + '</span>'
-                          + '<span style="display:inline-flex;align-items:center;gap:3px;color:#93c5fd;font-size:.74rem;white-space:nowrap;">' + icoO + fmtNum(valO) + '</span>'
-                          + '<span style="color:rgba(255,255,255,.2);font-size:.6rem;letter-spacing:.05em;align-self:stretch;text-align:right;">──────</span>'
-                          + '<span style="font-size:.74rem;font-weight:700;color:#fcd34d;white-space:nowrap;">' + fmtNum(total) + '</span>'
+                      valorHtml = '<div style="display:flex;flex-direction:column;gap:0px;align-items:flex-end;">'
+                          + '<span style="display:inline-flex;align-items:center;gap:2px;color:#34d399;font-size:.58rem;white-space:nowrap;">' + icoS + fmtNum(valS) + '</span>'
+                          + '<span style="display:inline-flex;align-items:center;gap:2px;color:#93c5fd;font-size:.58rem;white-space:nowrap;">' + icoO + fmtNum(valO) + '</span>'
+                          + '<span style="color:rgba(255,255,255,.2);font-size:.48rem;letter-spacing:.05em;align-self:stretch;text-align:right;">──────</span>'
+                          + '<span style="font-size:.6rem;font-weight:700;color:#fcd34d;white-space:nowrap;">' + fmtNum(total) + '</span>'
                           + '</div>';
                   } else if (tipo === 'saude') {
-                      valorHtml = '<span style="display:inline-flex;align-items:center;gap:3px;color:#34d399;white-space:nowrap;">' + icoS + fmtNum(valS) + '</span>';
+                      valorHtml = '<span style="display:inline-flex;align-items:center;gap:2px;color:#34d399;font-size:.58rem;white-space:nowrap;">' + icoS + fmtNum(valS) + '</span>';
                   } else if (tipo === 'odonto') {
-                      valorHtml = '<span style="display:inline-flex;align-items:center;gap:3px;color:#93c5fd;white-space:nowrap;">' + icoO + fmtNum(valO) + '</span>';
+                      valorHtml = '<span style="display:inline-flex;align-items:center;gap:2px;color:#93c5fd;font-size:.58rem;white-space:nowrap;">' + icoO + fmtNum(valO) + '</span>';
                   } else {
                       valorHtml = '<span style="white-space:nowrap;">' + fmtNum(parseFloat(data)) + '</span>';
                   }
@@ -336,7 +334,7 @@ function inicializarEmpresarial(corretora_id) {
                   var svgEye = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(79,142,247,.85)" style="width:16px;height:16px;vertical-align:middle;">'
                       + '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178Z"/>'
                       + '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
-                  var svgPen = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="rgba(148,163,184,.75)" style="width:14px;height:14px;vertical-align:middle;">'
+                  var svgPen = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="rgba(148,163,184,.75)" style="width:10px;height:10px;vertical-align:middle;">'
                       + '<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>';
                   var btnDetalhe = '<button class="btn-detalhe-contrato" data-id="' + data + '" title="Ver detalhes" '
                       + 'style="background:none;border:none;padding:3px;cursor:pointer;line-height:0;opacity:.7;transition:opacity .15s;" '
@@ -356,7 +354,7 @@ function inicializarEmpresarial(corretora_id) {
                 title: 'vivaz-empresarial',
                 text: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Exportar Tabela',
                 className: 'btn-exportar',
-                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
                 filename: 'vivaz-empresarial'
             }
         ],
@@ -428,9 +426,9 @@ function inicializarEmpresarial(corretora_id) {
                 return 0;
             };
             var api          = this.api();
-            var total        = api.column(10, { search: 'applied' }).data().reduce(function (a, b) { return toNum(a) + toNum(b); }, 0);
-            var total_vidas  = api.column(9,  { search: 'applied' }).data().reduce(function (a, b) { return toNum(a) + toNum(b); }, 0);
-            var total_linhas = api.column(9,  { search: 'applied' }).data().count();
+            var total        = api.column(9, { search: 'applied' }).data().reduce(function (a, b) { return toNum(a) + toNum(b); }, 0);
+            var total_vidas  = api.column(8, { search: 'applied' }).data().reduce(function (a, b) { return toNum(a) + toNum(b); }, 0);
+            var total_linhas = api.column(8, { search: 'applied' }).data().count();
             var total_br     = total.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
             $(".total_por_page_empresarial").html(total_br);

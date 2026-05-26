@@ -83,7 +83,7 @@
 .guia-step-sistema strong { color: #93c5fd; font-weight: 600; }
 
 /* ── Page wrapper ── */
-.fin-page  { background: #0f1623; min-height: 100vh; padding: 28px 10px; }
+.fin-page  { background: #0f1623; min-height: 100vh; padding: 14px 10px; }
 .fin-inner { width: 100%; max-width: 100%; }
 
 /* ── Header ── */
@@ -91,18 +91,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
 }
-.fin-title { font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0; }
-.fin-sub   { font-size: .78rem; color: rgba(255,255,255,.4); margin: 4px 0 0; }
+.fin-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0; }
+.fin-sub   { font-size: .7rem; color: rgba(255,255,255,.4); margin: 2px 0 0; }
 
 .fin-btn-new {
     display: inline-flex; align-items: center;
     background: #4f8ef7; color: #fff;
-    font-size: .82rem; font-weight: 700;
-    padding: 9px 18px; border-radius: 10px;
+    font-size: .75rem; font-weight: 700;
+    padding: 6px 13px; border-radius: 8px;
     text-decoration: none; border: none; cursor: pointer;
     transition: background .2s, transform .15s;
 }
@@ -239,8 +239,8 @@
 .fin-panel {
     background: #151e30;
     border: 1px solid rgba(255,255,255,.07);
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 10px;
     overflow-x: auto;
 }
 
@@ -250,30 +250,30 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .fin-filters-row {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 7px;
     flex-wrap: wrap;
 }
 
-.fin-stats-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.fin-stats-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
 .fin-stat-chip {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 8px 18px;
-    border-radius: 10px;
+    gap: 1px;
+    padding: 5px 12px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,.1);
     background: rgba(255,255,255,.04);
-    min-width: 90px;
+    min-width: 72px;
 }
 .chip-purple { border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.08); }
 .chip-blue   { border-color: rgba(59,130,246,.4);  background: rgba(59,130,246,.08); }
@@ -282,25 +282,25 @@
 .chip-teal   { border-color: rgba(45,212,191,.4);  background: rgba(45,212,191,.08); }
 .chip-orange { border-color: rgba(251,146,60,.4);  background: rgba(251,146,60,.08); }
 
-.chip-lbl { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: rgba(255,255,255,.4); }
-.chip-val { font-size: 1.05rem; font-weight: 800; color: #f1f5f9; }
+.chip-lbl { font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: rgba(255,255,255,.4); }
+.chip-val { font-size: .85rem; font-weight: 800; color: #f1f5f9; }
 .chip-purple .chip-val { color: #c4b5fd; }
 .chip-blue   .chip-val { color: #93c5fd; }
-.chip-green  .chip-val { color: #34d399; font-size: .95rem; }
-.chip-amber  .chip-val { color: #fde68a; font-size: .9rem; }
-.chip-teal   .chip-val { color: #5eead4; font-size: .9rem; }
-.chip-orange .chip-val { color: #fdba74; font-size: .9rem; }
+.chip-green  .chip-val { color: #34d399; font-size: .8rem; }
+.chip-amber  .chip-val { color: #fde68a; font-size: .78rem; }
+.chip-teal   .chip-val { color: #5eead4; font-size: .78rem; }
+.chip-orange .chip-val { color: #fdba74; font-size: .78rem; }
 
-.fin-selects-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.fin-selects-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 
 .fin-select-wrap {
     display: flex;
     align-items: center;
     background: #1a2540;
     border: 1px solid rgba(255,255,255,.12);
-    border-radius: 9px;
-    padding: 0 12px;
-    gap: 8px;
+    border-radius: 7px;
+    padding: 0 9px;
+    gap: 6px;
     transition: border-color .2s;
 }
 .fin-select-wrap:focus-within { border-color: rgba(79,142,247,.5); }
@@ -309,11 +309,11 @@
     background: transparent;
     color: #e2e8f0 !important;
     border: none;
-    padding: 8px 0;
-    font-size: .78rem;
+    padding: 5px 0;
+    font-size: .73rem;
     outline: none;
     cursor: pointer;
-    min-width: 160px;
+    min-width: 140px;
     appearance: none;
 }
 .fin-select-inline option { background: #1a2540 !important; color: #e2e8f0 !important; }
@@ -324,18 +324,18 @@
 /* ── Fieldsets de filtro ── */
 .fin-filter-fieldset {
     border: 1px solid rgba(255,255,255,.13);
-    border-radius: 10px;
-    padding: 8px 10px 10px;
+    border-radius: 8px;
+    padding: 5px 7px 7px;
     margin: 0;
     flex-shrink: 0;
 }
 .fin-filter-legend {
-    font-size: .58rem;
+    font-size: .54rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .09em;
     color: rgba(255,255,255,.35);
-    padding: 0 5px;
+    padding: 0 4px;
 }
 
 /* Saúde e Odonto — verde-teal */
@@ -373,12 +373,12 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 9px 7px;
-    border-radius: 9px;
+    padding: 5px 6px;
+    border-radius: 7px;
     border: 1px solid rgba(255,255,255,.18);
     background: rgba(255,255,255,.04);
     color: rgba(255,255,255,.65);
-    font-size: .68rem;
+    font-size: .64rem;
     font-weight: 600;
     cursor: pointer;
     transition: filter .18s, transform .1s;
@@ -420,10 +420,10 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 9px 7px 9px 6px;
+    padding: 5px 6px;
     border: 1px solid;
-    border-radius: 9px;
-    font-size: .68rem;
+    border-radius: 7px;
+    font-size: .64rem;
     font-weight: 600;
     cursor: pointer;
     transition: all .2s;
@@ -544,21 +544,21 @@
 .fin-etapa-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-    padding: 12px 14px;
+    gap: 5px;
+    margin-bottom: 8px;
+    padding: 7px 10px;
     background: rgba(255,255,255,.02);
     border: 1px solid rgba(255,255,255,.05);
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .fin-tag {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 13px;
-    border-radius: 20px;
-    font-size: .75rem;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: .59rem;
     font-weight: 600;
     cursor: pointer;
     border: 1.5px solid transparent;
@@ -569,7 +569,7 @@
 .fin-tag:active { transform: scale(.96); }
 
 .fin-tag-dot {
-    width: 7px; height: 7px;
+    width: 5px; height: 5px;
     border-radius: 50%;
     flex-shrink: 0;
     transition: transform .2s;
@@ -578,11 +578,11 @@
 .fin-tag.fin-tag-ativo .fin-tag-dot { transform: scale(1.3); }
 
 .fin-tag-count {
-    font-size: .64rem; font-weight: 800;
-    padding: 1px 6px; border-radius: 10px;
+    font-size: .56rem; font-weight: 800;
+    padding: 0px 4px; border-radius: 8px;
     background: rgba(255,255,255,.1);
     color: rgba(255,255,255,.55);
-    min-width: 18px; text-align: center; line-height: 1.6;
+    min-width: 14px; text-align: center; line-height: 1.6;
     transition: all .2s;
 }
 .fin-tag.fin-tag-ativo .fin-tag-count { background: rgba(255,255,255,.22); color: #fff; }
@@ -668,9 +668,9 @@
     border-color: rgba(255,255,255,.06) !important;
 }
 
-table.dataTable tbody td { font-size: 0.73em !important; padding: 6px 4px !important; }
+table.dataTable tbody td { font-size: 0.64em !important; padding: 3px 2px !important; }
 table.dataTable thead th {
-    font-size: 0.72em !important; padding: 8px 4px !important;
+    font-size: 0.55em !important; padding: 4px 2px !important;
     border-bottom: 2px solid rgba(255,255,255,.12) !important;
     color: rgba(255,255,255,.45) !important;
     text-transform: uppercase; letter-spacing: .05em;
@@ -693,9 +693,9 @@ table.dataTable thead th {
 
 /* Search input — compartilhado entre tabelas */
 #tabela_empresarial_filter,
-#tabela_pagamento_filter { margin-bottom: 10px; }
+#tabela_pagamento_filter { margin-bottom: 6px; }
 
-#tabela_empresarial_filter label { color: rgba(255,255,255,.55); font-size: .82rem; font-weight: 600; }
+#tabela_empresarial_filter label { color: rgba(255,255,255,.55); font-size: .73rem; font-weight: 600; }
 
 #tabela_pagamento_filter label {
     color: #93c5fd;
@@ -710,11 +710,11 @@ table.dataTable thead th {
     background: #1a2540 !important;
     color: #e2e8f0 !important;
     border: 1.5px solid rgba(79,142,247,.55) !important;
-    border-radius: 9px !important;
-    padding: 7px 14px !important;
-    margin-left: 8px;
+    border-radius: 7px !important;
+    padding: 4px 10px !important;
+    margin-left: 6px;
     outline: none !important;
-    font-size: .82rem !important;
+    font-size: .73rem !important;
     transition: border-color .2s, box-shadow .2s !important;
     box-shadow: 0 0 0 0 transparent !important;
 }
@@ -732,8 +732,8 @@ table.dataTable thead th {
 }
 
 /* Length menu */
-.dataTables_length { margin-bottom: 8px; }
-.dataTables_length label { color: rgba(255,255,255,.5); font-size: .78rem; }
+.dataTables_length { margin-bottom: 5px; }
+.dataTables_length label { color: rgba(255,255,255,.5); font-size: .7rem; }
 .dataTables_length select {
     background: #1a2540 !important;
     color: #fff !important;
@@ -764,9 +764,9 @@ table.dataTable thead th {
     background: #34d399 !important;
     color: #0f1623 !important;
     border: none !important;
-    padding: 8px 16px !important;
-    border-radius: 9px !important;
-    font-size: .78rem !important;
+    padding: 5px 12px !important;
+    border-radius: 7px !important;
+    font-size: .72rem !important;
     font-weight: 700 !important;
     cursor: pointer !important;
     white-space: nowrap !important;
@@ -801,6 +801,9 @@ table.dataTable thead th {
 #tabela_empresarial td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #tabela_empresarial td.col-tipo,
 #tabela_empresarial td.col-codigo { white-space: normal; overflow: visible; }
+
+/* Respiro entre Valor e Planilha */
+#tabela_empresarial td.dt-right { padding-right: 10px !important; }
 
 /* ═══════════════════════════════════════════════
    MODAL EMPRESARIAL (preservado)
@@ -846,7 +849,7 @@ input[readonly] { background-color: #2d3a52; color: rgba(255,255,255,.5); }
 .etapa2-done { flex-direction:column; gap:1px; }
 .etapa2-icons { display:flex; align-items:center; gap:2px; }
 .etapa-date {
-    font-size:.55rem;
+    font-size:.46rem;
     color:rgba(255,255,255,.5);
     white-space:nowrap;
     line-height:1.2;
@@ -880,14 +883,14 @@ table.listarempresarial tbody tr.even.row-diferenca-valor td {
 .fin-legenda {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
     flex-wrap: wrap;
-    padding: 7px 12px;
-    margin-bottom: 8px;
+    padding: 5px 10px;
+    margin-bottom: 6px;
     background: rgba(255,255,255,.03);
     border: 1px solid rgba(255,255,255,.07);
-    border-radius: 8px;
-    font-size: .7rem;
+    border-radius: 7px;
+    font-size: .65rem;
     color: rgba(255,255,255,.45);
 }
 .fin-legenda-item {
