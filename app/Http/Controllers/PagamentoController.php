@@ -63,8 +63,8 @@ class PagamentoController extends Controller
                     ELSE NULL
                 END as tipo_contrato")
             )
-            ->join('users', 'users.id', '=', 'contrato_empresarial.user_id')
-            ->join('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
+            ->leftJoin('users', 'users.id', '=', 'contrato_empresarial.user_id')
+            ->leftJoin('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
             ->leftJoin('tabela_origens', 'tabela_origens.id', '=', 'contrato_empresarial.tabela_origens_id')
             ->where('contrato_empresarial.etapa_atual', '=', 8)
             ->orderBy('contrato_empresarial.created_at', 'desc')

@@ -42,17 +42,18 @@ class ContratoEmpresarial extends Model
         'saude_cidade',
         'saude_user_id',
         'saude_acomodacao',
-        'saude_coparticipacao',
         'plano_odonto_id',
         'odonto_uf',
         'odonto_cidade',
         'odonto_user_id',
         'planilha_path',
+        'planilha_odonto_path',
         'aditivo_path',
         'data_aditivo',
         'data_adesao',
         'boleto_adesao_path',
         'boleto_adesao_valor',
+        'boleto_adesao_vencimento',
         'justificativa_diferenca',
         'tem_diferenca_valor',
         'data_pgto',
@@ -70,6 +71,8 @@ class ContratoEmpresarial extends Model
         'data_primeiro_boleto',
         'data_baixa_finalizado',
         'finalizado_pdf_path',
+        'importado_historico',
+        'historico_cancelado',
     ];
 
     protected $casts = [

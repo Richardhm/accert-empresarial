@@ -68,10 +68,8 @@ class ConfiguracoesController extends Controller
             FaixaEtariaValor::updateOrCreate(
                 ['plano_id' => $planoId, 'cidade_id' => $cidade->id, 'faixa' => (int) $index],
                 [
-                    'com_copart_apart' => $this->parseMoeda($vals['com_copart_apart'] ?? null),
-                    'com_copart_enfer' => $this->parseMoeda($vals['com_copart_enfer'] ?? null),
-                    'sem_copart_apart' => $this->parseMoeda($vals['sem_copart_apart'] ?? null),
-                    'sem_copart_enfer' => $this->parseMoeda($vals['sem_copart_enfer'] ?? null),
+                    'apartamento' => $this->parseMoeda($vals['apartamento'] ?? null),
+                    'enfermaria'  => $this->parseMoeda($vals['enfermaria']  ?? null),
                 ]
             );
         }

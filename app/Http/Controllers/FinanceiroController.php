@@ -67,7 +67,6 @@ class FinanceiroController extends Controller
         $saudeCidade   = $request->input('saude_cidade')         ?: null;
         $saudeUserId   = $request->input('saude_user_id')        ?: null;
         $saudeAcomoda  = $request->input('saude_acomodacao')     ?: null;
-        $saudeCopart   = $request->input('saude_coparticipacao') ?: null;
         $odontPlanoId  = $request->input('odonto_plano_id')      ?: null;
         $odontUf       = $request->input('odonto_uf')            ?: null;
         $odontCidade   = $request->input('odonto_cidade')        ?: null;
@@ -99,14 +98,14 @@ class FinanceiroController extends Controller
         $cnpj         = $campos['CNPJ']         ?? null;
         $responsavel  = $campos['CONTATO']      ?? null;
         $celular      = $campos['TELEFONE']     ?? null;
-        $email        = $campos['EMAIL']        ?? null;
+        $email        = $campos['EMAIL'] ?? $campos['E-MAIL'] ?? null;
 
         $faltando = [];
         if (!$razao_social) $faltando[] = 'RAZÃO SOCIAL';
         if (!$cnpj)         $faltando[] = 'CNPJ';
         if (!$responsavel)  $faltando[] = 'CONTATO';
         if (!$celular)      $faltando[] = 'TELEFONE';
-        if (!$email)        $faltando[] = 'EMAIL';
+        if (!$email)        $faltando[] = 'E-MAIL';
 
         if (!empty($faltando)) {
             $lista = implode(', ', $faltando);
@@ -170,7 +169,6 @@ class FinanceiroController extends Controller
             'saude_cidade'          => $temSaude ? $saudeCidade  : null,
             'saude_user_id'         => $temSaude ? $saudeUserId  : null,
             'saude_acomodacao'      => $temSaude ? $saudeAcomoda : null,
-            'saude_coparticipacao'  => $temSaude ? $saudeCopart  : null,
             // Odonto-specific fields
             'plano_odonto_id'       => $temOdonto ? $odontPlanoId : null,
             'odonto_uf'             => $temOdonto ? $odontUf      : null,
@@ -224,11 +222,13 @@ class FinanceiroController extends Controller
                         'contrato_empresarial.plano_contrado as plano_contrado',
                         'contrato_empresarial.etapa_atual as etapa_atual',
                         'contrato_empresarial.planilha_path as planilha_path',
+                        'contrato_empresarial.planilha_odonto_path as planilha_odonto_path',
                         'contrato_empresarial.aditivo_path as aditivo_path',
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_aditivo,'%d/%m/%Y') as data_aditivo"),
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_adesao,'%d/%m/%Y') as data_adesao"),
                         'contrato_empresarial.boleto_adesao_path as boleto_adesao_path',
                         'contrato_empresarial.boleto_adesao_valor as boleto_adesao_valor',
+                        DB::raw("DATE_FORMAT(contrato_empresarial.boleto_adesao_vencimento,'%d/%m/%Y') as boleto_adesao_vencimento"),
                         'contrato_empresarial.justificativa_diferenca as justificativa_diferenca',
                         'contrato_empresarial.tem_diferenca_valor as tem_diferenca_valor',
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_pgto,'%d/%m/%Y') as data_pgto"),
@@ -246,9 +246,10 @@ class FinanceiroController extends Controller
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_primeiro_boleto,'%d/%m/%Y') as data_primeiro_boleto"),
                         DB::raw("DATE_FORMAT(contrato_empresarial.data_baixa_finalizado,'%d/%m/%Y') as data_baixa_finalizado"),
                         'contrato_empresarial.finalizado_pdf_path as finalizado_pdf_path',
+                        'contrato_empresarial.importado_historico as importado_historico',
+                        'contrato_empresarial.historico_cancelado as historico_cancelado',
                         'contrato_empresarial.plano_saude_id as plano_saude_id',
                         'contrato_empresarial.plano_odonto_id as plano_odonto_id',
-                        'contrato_empresarial.saude_coparticipacao as saude_coparticipacao',
                         'contrato_empresarial.saude_uf as saude_uf',
                         'contrato_empresarial.saude_cidade as saude_cidade',
                         'contrato_empresarial.odonto_uf as odonto_uf',
@@ -260,10 +261,11 @@ class FinanceiroController extends Controller
                             ELSE NULL
                         END as tipo_contrato")
                     )
-                    ->join('users', 'users.id', '=', 'contrato_empresarial.user_id')
-                    ->join('comissao', 'users.id', '=', 'comissao.user_id')
-                    ->join('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
-                    ->join('tabela_origens', 'tabela_origens.id', '=', 'contrato_empresarial.tabela_origens_id');
+                    ->leftJoin('users', 'users.id', '=', 'contrato_empresarial.user_id')
+                    ->leftJoin('comissao', 'users.id', '=', 'comissao.user_id')
+                    ->leftJoin('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
+                    ->leftJoin('tabela_origens', 'tabela_origens.id', '=', 'contrato_empresarial.tabela_origens_id')
+                    ->orderBy('contrato_empresarial.id', 'desc');
                 return $query->get();
             });
 
@@ -302,6 +304,178 @@ class FinanceiroController extends Controller
 
 
 
+
+    public function importarHistoricoSindicatos(Request $request)
+    {
+        if (!$request->hasFile('planilha')) {
+            return response()->json(['error' => 'Nenhum arquivo enviado.'], 422);
+        }
+
+        $file = $request->file('planilha');
+        $path = $file->getRealPath();
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            return response()->json(['error' => 'Arquivo inválido. Certifique-se de que é um .xlsx.'], 422);
+        }
+
+        // Shared strings
+        $sharedStrings = [];
+        $ssXml = $zip->getFromName('xl/sharedStrings.xml');
+        if ($ssXml) {
+            $ss = new \SimpleXMLElement($ssXml);
+            foreach ($ss->si as $si) {
+                if (isset($si->t)) {
+                    $sharedStrings[] = (string) $si->t;
+                } else {
+                    $parts = [];
+                    foreach ($si->r as $r) {
+                        if (isset($r->t)) $parts[] = (string) $r->t;
+                    }
+                    $sharedStrings[] = implode('', $parts);
+                }
+            }
+        }
+
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+
+        if (!$sheetXml) {
+            return response()->json(['error' => 'Planilha não encontrada dentro do arquivo.'], 422);
+        }
+
+        $sheet = simplexml_load_string($sheetXml);
+
+        $cellValue = function ($cell) use ($sharedStrings): string {
+            $t = (string) ($cell->attributes()->t ?? '');
+            $v = isset($cell->v) ? (string) $cell->v : '';
+            if ($t === 's') return $sharedStrings[(int)$v] ?? '';
+            return $v;
+        };
+
+        $excelDateToYmd = function ($serial): ?string {
+            if (!is_numeric($serial) || (float)$serial <= 0) return null;
+            $serial = (float)$serial;
+            if ($serial > 60) $serial--;
+            return gmdate('Y-m-d', (int)(($serial - 1) * 86400 + mktime(0, 0, 0, 1, 1, 1900)));
+        };
+
+        // Pre-load planos and users for lookup
+        $planoAliases = ['sechseg' => 'sescheg']; // aliases para nomes divergentes na planilha
+        $planosMap    = Plano::all()->mapWithKeys(fn($p) => [mb_strtolower(trim($p->nome)) => $p->id]);
+        $usersAll    = User::all();
+        $tabelaOrigem = TabelaOrigem::first();
+
+        $findUserId = function (string $name) use ($usersAll): ?int {
+            $key = mb_strtolower(trim($name));
+            if (empty($key)) return null;
+            // Exact match first
+            foreach ($usersAll as $u) {
+                if (mb_strtolower(trim($u->name)) === $key) return $u->id;
+            }
+            // Partial: spreadsheet name contained in user name or vice-versa
+            foreach ($usersAll as $u) {
+                $uKey = mb_strtolower(trim($u->name));
+                if (str_contains($uKey, $key) || str_contains($key, $uKey)) return $u->id;
+            }
+            return null;
+        };
+
+        $importados = 0;
+        $rowNum     = 0;
+
+        foreach ($sheet->sheetData->row as $row) {
+            $rowNum++;
+            if ($rowNum === 1) continue; // pular cabeçalho
+
+            // Build column map
+            $cells = [];
+            foreach ($row->c as $c) {
+                $ref = strtoupper((string) $c->attributes()->r);
+                $col = preg_replace('/[0-9]/', '', $ref);
+                $cells[$col] = $cellValue($c);
+            }
+
+            // Colunas: A=Plano B=Data C=Vendedor D=Razão social E=CNPJ F=Telefone
+            //          G=Vidas saúde H=Vidas odonto I=Código saúde J=Código odonto
+            //          K=Valor saúde L=Valor odonto M=Boleto Adesão N=Status O=Status da Adesão
+            $planoNome    = trim($cells['A'] ?? '');
+            $dataSerial   = $cells['B']  ?? null;
+            $vendedorNome = trim($cells['C'] ?? '');
+            $razaoSocial  = trim($cells['D'] ?? '');
+            $cnpj         = trim($cells['E'] ?? '');
+            $telefone     = trim($cells['F'] ?? '');
+            $vidasSaude   = (int) ($cells['G'] ?? 0);
+            $codigoSaude  = trim($cells['I'] ?? '');
+            $codigoOdonto = trim($cells['J'] ?? '');
+            $valorSaude   = (float) ($cells['K'] ?? 0);
+            $boletoAdesao = (float) ($cells['M'] ?? 0);
+            $status       = trim($cells['N'] ?? '');
+
+            if (empty($razaoSocial) && empty($cnpj)) continue;
+
+            // Normalizar códigos inválidos
+            $codigoSaude  = in_array($codigoSaude,  ['**', '-', '0', '']) ? null : $codigoSaude;
+            $codigoOdonto = in_array($codigoOdonto, ['**', '-', '0', '']) ? null : $codigoOdonto;
+
+            $temOdonto  = !empty($codigoOdonto);
+            $planoKey   = mb_strtolower($planoNome);
+            $planoKey   = $planoAliases[$planoKey] ?? $planoKey;
+            $planoId    = $planosMap->get($planoKey);
+            $userId     = $findUserId($vendedorNome) ?? auth()->id();
+            $dataVig    = $excelDateToYmd($dataSerial);
+            $cancelado  = (mb_strtolower($status) === 'cancelado');
+            $dataRef    = $dataVig ?? now()->format('Y-m-d');
+
+            ContratoEmpresarial::create([
+                'tabela_origens_id'     => $tabelaOrigem ? $tabelaOrigem->id : 1,
+                'razao_social'          => $razaoSocial,
+                'cnpj'                  => $cnpj,
+                'celular'               => $telefone ?: null,
+                'email'                 => null,
+                'responsavel'           => null,
+                'quantidade_vidas'      => $vidasSaude,
+                'valor_plano'           => $valorSaude,
+                'valor_plano_saude'     => $valorSaude,
+                'valor_plano_odonto'    => 0,
+                'valor_pagar'           => 0,
+                'data_boleto'           => $dataRef,
+                'vencimento_boleto'     => $dataRef,
+                'pago'                  => 1,
+                'etapa_atual'           => 8,
+                'cadastrado_por'        => auth()->id(),
+                // Campos legados (primário = saúde)
+                'plano_id'              => $planoId,
+                'user_id'              => $userId,
+                'uf'                    => 'GO',
+                'cidade'               => 'Goiânia',
+                'codigo_saude'         => $codigoSaude,
+                'codigo_odonto'        => $codigoOdonto,
+                // Campos de saúde
+                'plano_saude_id'       => $planoId,
+                'saude_uf'             => 'GO',
+                'saude_cidade'         => 'Goiânia',
+                'saude_user_id'        => $userId,
+                // Campos de odonto (só se tiver código odonto)
+                'plano_odonto_id'      => $temOdonto ? $planoId : null,
+                'odonto_uf'            => $temOdonto ? 'GO' : null,
+                'odonto_cidade'        => $temOdonto ? 'Goiânia' : null,
+                'odonto_user_id'       => $temOdonto ? $userId : null,
+                // Datas e valores
+                'data_vigencia'        => $dataVig,
+                'boleto_adesao_valor'  => $boletoAdesao ?: null,
+                'data_baixa_finalizado' => $dataVig,
+                // Flags de histórico
+                'importado_historico'  => true,
+                'historico_cancelado'  => $cancelado,
+            ]);
+
+            $importados++;
+        }
+
+        Cache::forget('listarContratoEmpresaPendentes');
+        return response()->json(['success' => true, 'importados' => $importados]);
+    }
 
     public function avancarEtapa(Request $request)
     {
@@ -382,6 +556,9 @@ class FinanceiroController extends Controller
         $contratoId    = $request->input('contrato_id');
         $modoEdicao    = (bool) $request->input('modo_edicao');
         $justificativa = trim($request->input('justificativa_diferenca', ''));
+        $tipoPlanilha  = in_array($request->input('tipo_planilha'), ['saude', 'odonto'])
+                         ? $request->input('tipo_planilha')
+                         : 'saude';
 
         if (!$request->hasFile('planilha') || !$request->file('planilha')->isValid()) {
             return response()->json(['error' => 'Arquivo inválido ou não enviado.'], 422);
@@ -513,10 +690,11 @@ class FinanceiroController extends Controller
 
         $normalizeHeader = function (string $h): string {
             $from = ['á','é','í','ó','ú','â','ê','î','ô','û','à','è','ì','ò','ù','ã','õ','ä','ë','ï','ö','ü','ç',
-                     'Á','É','Í','Ó','Ú','Â','Ê','Î','Ô','Û','À','È','Ì','Ò','Ù','Ã','Õ','Ä','Ë','Ï','Ö','Ü','Ç','/'];
+                     'Á','É','Í','Ó','Ú','Â','Ê','Î','Ô','Û','À','È','Ì','Ò','Ù','Ã','Õ','Ä','Ë','Ï','Ö','Ü','Ç','/','-','_'];
             $to   = ['a','e','i','o','u','a','e','i','o','u','a','e','i','o','u','a','o','a','e','i','o','u','c',
-                     'A','E','I','O','U','A','E','I','O','U','A','E','I','O','U','A','O','A','E','I','O','U','C',' '];
-            return strtolower(trim(str_replace($from, $to, $h)));
+                     'A','E','I','O','U','A','E','I','O','U','A','E','I','O','U','A','O','A','E','I','O','U','C',' ',' ',' '];
+            $result = strtolower(trim(str_replace($from, $to, $h)));
+            return preg_replace('/\s+/', ' ', $result);
         };
 
         foreach ($rows as $row) {
@@ -577,6 +755,7 @@ class FinanceiroController extends Controller
 
             $beneficiarios[] = [
                 'contrato_empresarial_id' => $contratoId,
+                'tipo_plano'       => $tipoPlanilha,
                 'tipo'             => $tipo,
                 'nome_completo'    => $get($cells, $colMap, 'nome completo'),
                 'nome_titular'     => $get($cells, $colMap, 'nome titular'),
@@ -584,7 +763,9 @@ class FinanceiroController extends Controller
                 'data_nascimento'  => $excelDateToYmd($nascSerial),
                 'idade'            => (int) ($get($cells, $colMap, 'idade') ?? 0) ?: null,
                 'nome_mae'         => $get($cells, $colMap, 'nome da mae', 'nome mae'),
-                'acomodacao'       => $get($cells, $colMap, 'saude acomodacao', 'acomodacao'),
+                'acomodacao'       => $tipoPlanilha === 'saude'
+                                      ? $get($cells, $colMap, 'saude acomodacao', 'acomodacao', 'tipo acomodacao', 'tipo de acomodacao')
+                                      : null,
                 'sexo'             => $get($cells, $colMap, 'sexo'),
                 'grau_parentesco'  => $get($cells, $colMap, 'grau do parentesco', 'grau parentesco'),
                 'data_casamento'   => $excelDateToYmd($casSerial),
@@ -599,23 +780,50 @@ class FinanceiroController extends Controller
             return response()->json(['error' => 'Nenhum beneficiário encontrado na planilha. Verifique o conteúdo do arquivo.'], 422);
         }
 
-        // ── Salvar arquivo físico em public/{cnpj}/planilha.xlsx ─────────────
+        // ── Salvar arquivo físico em public/{cnpj}/ ──────────────────────────
         $pasta   = public_path($cnpjContrato);
         if (!is_dir($pasta)) {
             mkdir($pasta, 0755, true);
         }
-        $destino = $pasta . DIRECTORY_SEPARATOR . 'planilha.xlsx';
+        $nomeArquivo  = $tipoPlanilha === 'odonto' ? 'planilha_odonto.xlsx' : 'planilha.xlsx';
+        $destino      = $pasta . DIRECTORY_SEPARATOR . $nomeArquivo;
         copy($path, $destino);
-        $planilhaPath = $cnpjContrato . '/planilha.xlsx';
+        $planilhaPath = $cnpjContrato . '/' . $nomeArquivo;
 
-        // ── Reimportar beneficiários ──────────────────────────────────────────
-        Beneficiario::where('contrato_empresarial_id', $contratoId)->delete();
+        // ── Reimportar beneficiários do tipo atual, preservar o outro ─────────
+        if ($tipoPlanilha === 'odonto') {
+            Beneficiario::where('contrato_empresarial_id', $contratoId)
+                ->where('tipo_plano', 'odonto')
+                ->delete();
+        } else {
+            // 'saude': apaga também os que tinham tipo_plano NULL (importações antigas)
+            Beneficiario::where('contrato_empresarial_id', $contratoId)
+                ->where(function ($q) { $q->where('tipo_plano', 'saude')->orWhereNull('tipo_plano'); })
+                ->delete();
+        }
         foreach (array_chunk($beneficiarios, 100) as $chunk) {
             Beneficiario::insert($chunk);
         }
 
-        // ── Calcular vidas e valores ──────────────────────────────────────────
-        $totalVidas  = count($beneficiarios);
+        // ── Calcular vidas e valores usando todos os beneficiários (saude + odonto) ──
+        $ageToFaixa = function (int $age): int {
+            if ($age <= 18) return 0;
+            if ($age <= 23) return 1;
+            if ($age <= 28) return 2;
+            if ($age <= 33) return 3;
+            if ($age <= 38) return 4;
+            if ($age <= 43) return 5;
+            if ($age <= 48) return 6;
+            if ($age <= 53) return 7;
+            if ($age <= 58) return 8;
+            return 9;
+        };
+
+        $allBenDb  = Beneficiario::where('contrato_empresarial_id', $contratoId)->get();
+        $benSaude  = $allBenDb->filter(fn ($b) => is_null($b->tipo_plano) || $b->tipo_plano === 'saude');
+        $benOdonto = $allBenDb->filter(fn ($b) => $b->tipo_plano === 'odonto');
+        $totalVidas = $benSaude->count();
+
         $valorSaude  = 0.0;
         $valorOdonto = 0.0;
 
@@ -625,39 +833,18 @@ class FinanceiroController extends Controller
                 ->first();
 
             if ($cidadeSaude) {
-                $copart = $contrato->saude_coparticipacao;
-
                 $faixasTodas = FaixaEtariaValor::where('plano_id', $contrato->plano_saude_id)
                     ->where('cidade_id', $cidadeSaude->id)
                     ->get()
                     ->keyBy('faixa');
 
-                $ageToFaixa = function (int $age): int {
-                    if ($age <= 18) return 0;
-                    if ($age <= 23) return 1;
-                    if ($age <= 28) return 2;
-                    if ($age <= 33) return 3;
-                    if ($age <= 38) return 4;
-                    if ($age <= 43) return 5;
-                    if ($age <= 48) return 6;
-                    if ($age <= 53) return 7;
-                    if ($age <= 58) return 8;
-                    return 9;
-                };
-
-                foreach ($beneficiarios as $b) {
-                    $faixa    = $ageToFaixa((int) ($b['idade'] ?? 0));
+                foreach ($benSaude as $b) {
+                    $faixa    = $ageToFaixa((int) ($b->idade ?? 0));
                     $faixaRec = $faixasTodas->get($faixa);
                     if (!$faixaRec) continue;
 
-                    $acomoda = strtolower(trim($b['acomodacao'] ?? ''));
-                    $isApart = str_contains($acomoda, 'apart');
-
-                    if ($copart === 'com') {
-                        $colFaixa = $isApart ? 'com_copart_apart' : 'com_copart_enfer';
-                    } else {
-                        $colFaixa = $isApart ? 'sem_copart_apart' : 'sem_copart_enfer';
-                    }
+                    $acomoda  = strtolower(trim($b->acomodacao ?? ''));
+                    $colFaixa = str_contains($acomoda, 'apart') ? 'apartamento' : 'enfermaria';
 
                     $valorSaude += (float) ($faixaRec->$colFaixa ?? 0);
                 }
@@ -675,17 +862,28 @@ class FinanceiroController extends Controller
                     ->first();
 
                 if ($ov) {
-                    $valorOdonto = round((float) $ov->valor * $totalVidas, 2);
+                    // Odonto: preço unitário × número de beneficiários odonto
+                    // Se planilha odonto ainda não foi importada E há beneficiários saúde
+                    // sem distinção de tipo (legado), usa contagem saúde como fallback
+                    $planilhaOdontoJaExiste = $contrato->planilha_odonto_path
+                                             || $tipoPlanilha === 'odonto';
+                    if ($planilhaOdontoJaExiste) {
+                        $vidasOdonto = $benOdonto->count();
+                    } else {
+                        // Retrocompatível: planilha única antiga (tipo_plano NULL)
+                        $vidasOdonto = $benOdonto->count() ?: $benSaude->count();
+                    }
+                    $valorOdonto = round((float) $ov->valor * $vidasOdonto, 2);
                 }
             }
         }
 
-        // Fallback: se nenhum plano novo estiver configurado, usa coluna "valor" da planilha
+        // Fallback: se nenhum plano configurado, soma coluna "valor" da planilha importada
         if (!$contrato->plano_saude_id && !$contrato->plano_odonto_id) {
             $totalValor = array_reduce($beneficiarios, fn ($carry, $b) => $carry + (float) ($b['valor'] ?? 0), 0.0);
         } else {
-            $valorSaude  = round($valorSaude, 2);
-            $totalValor  = round($valorSaude + $valorOdonto, 2);
+            $valorSaude = round($valorSaude, 2);
+            $totalValor = round($valorSaude + $valorOdonto, 2);
         }
 
         $comissao   = Comissao::where('user_id', $contrato->user_id)->first();
@@ -706,11 +904,15 @@ class FinanceiroController extends Controller
 
         // ── Avançar etapa e salvar path + vidas + valor ───────────────────────
         $updates = [
-            'planilha_path'      => $planilhaPath,
             'quantidade_vidas'   => $totalVidas,
             'valor_plano'        => $totalValor,
             'valor_pagar'        => $valorPagar,
         ];
+        if ($tipoPlanilha === 'odonto') {
+            $updates['planilha_odonto_path'] = $planilhaPath;
+        } else {
+            $updates['planilha_path'] = $planilhaPath;
+        }
         if ($contrato->plano_saude_id || $contrato->plano_odonto_id) {
             $updates['valor_plano_saude']  = $valorSaude;
             $updates['valor_plano_odonto'] = $valorOdonto;
@@ -738,9 +940,14 @@ class FinanceiroController extends Controller
 
         Cache::forget('listarContratoEmpresaPendentes');
 
+        $msgVidas = count($beneficiarios) . ' vida(s) ' . ($tipoPlanilha === 'odonto' ? 'Odonto' : 'Saúde') . ' importada(s)';
+        if ($benSaude->count() > 0 && $benOdonto->count() > 0) {
+            $msgVidas = $benSaude->count() . ' Saúde + ' . $benOdonto->count() . ' Odonto';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => $totalVidas . ' vida(s) importada(s) · Valor total: R$ ' . number_format($totalValor, 2, ',', '.'),
+            'message' => $msgVidas . ' · Valor total: R$ ' . number_format($totalValor, 2, ',', '.'),
             'total'   => $totalVidas,
         ]);
     }
@@ -812,8 +1019,9 @@ class FinanceiroController extends Controller
             return response()->json(['error' => 'Apenas arquivos PDF são aceitos.'], 422);
         }
 
-        $texto = $this->lerTextoPdf($file->getRealPath());
-        $valor = $this->extrairValorDoBoleto($texto);
+        $texto          = $this->lerTextoPdf($file->getRealPath());
+        $valor          = $this->extrairValorDoBoleto($texto);
+        $dataVencimento = $this->extrairDataVencimentoBoleto($texto);
 
         if ($valor === null) {
             $dekerned = preg_replace('/(\d) (?=[\d.])/', '$1', $texto);
@@ -821,19 +1029,23 @@ class FinanceiroController extends Controller
             $dekerned = preg_replace('/(\d) (?=[\d.])/', '$1', $dekerned);
             $compact  = preg_replace('/\s/', '', $texto);
 
-            // Garante UTF-8 válido nos campos de diagnóstico antes de serializar
             $utf8 = fn(string $s) => mb_convert_encoding($s, 'UTF-8', 'UTF-8');
 
             return response()->json([
-                'error'    => 'Não foi possível identificar o valor neste PDF.',
-                'manual'   => true,
-                'preview'  => $utf8(mb_substr($texto,    0, 800)),
-                'dekerned' => $utf8(mb_substr($dekerned, 0, 800)),
-                'compact'  => $utf8(mb_substr($compact,  0, 800)),
+                'error'           => 'Não foi possível identificar o valor neste PDF.',
+                'manual'          => true,
+                'data_vencimento' => $dataVencimento,
+                'preview'         => $utf8(mb_substr($texto,    0, 800)),
+                'dekerned'        => $utf8(mb_substr($dekerned, 0, 800)),
+                'compact'         => $utf8(mb_substr($compact,  0, 800)),
             ], 422);
         }
 
-        return response()->json(['success' => true, 'valor' => $valor]);
+        return response()->json([
+            'success'         => true,
+            'valor'           => $valor,
+            'data_vencimento' => $dataVencimento,
+        ]);
     }
 
     // Endpoint de diagnóstico — retorna o texto bruto extraído do PDF
@@ -905,13 +1117,25 @@ class FinanceiroController extends Controller
                 return response()->json(['error' => 'Apenas arquivos PDF são aceitos.'], 422);
             }
 
-            // Tentar extrair valor automaticamente do PDF
-            $boletoValor = null;
+            // Tentar extrair valor e vencimento automaticamente do PDF
+            $boletoValor    = null;
+            $boletoVencimento = null;
             try {
-                $texto       = $this->lerTextoPdf($arquivo->getRealPath());
-                $boletoValor = $this->extrairValorDoBoleto($texto);
+                $texto          = $this->lerTextoPdf($arquivo->getRealPath());
+                $boletoValor    = $this->extrairValorDoBoleto($texto);
+                $boletoVencimento = $this->extrairDataVencimentoBoleto($texto);
             } catch (\Throwable $e) {
                 // Falha silenciosa; usar valor manual
+            }
+
+            // Fallback: vencimento enviado pelo frontend (campo hidden)
+            if ($boletoVencimento === null) {
+                $vencRaw = trim($request->input('boleto_adesao_vencimento', ''));
+                if ($vencRaw !== '') {
+                    try {
+                        $boletoVencimento = \Carbon\Carbon::createFromFormat('Y-m-d', $vencRaw)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
             }
 
             // Fallback: valor digitado manualmente
@@ -946,11 +1170,12 @@ class FinanceiroController extends Controller
             $boletoPath = $cnpj . '/' . $nomeArquivo;
 
             $updates = [
-                'data_adesao'             => $dataAdesao,
-                'boleto_adesao_path'      => $boletoPath,
-                'boleto_adesao_valor'     => $boletoValor,
-                'justificativa_diferenca' => $temDiferenca ? $justificativa : null,
-                'tem_diferenca_valor'     => $temDiferenca ? 1 : 0,
+                'data_adesao'              => $dataAdesao,
+                'boleto_adesao_path'       => $boletoPath,
+                'boleto_adesao_valor'      => $boletoValor,
+                'boleto_adesao_vencimento' => $boletoVencimento,
+                'justificativa_diferenca'  => $temDiferenca ? $justificativa : null,
+                'tem_diferenca_valor'      => $temDiferenca ? 1 : 0,
             ];
             if ((int) $contrato->etapa_atual === 2) {
                 $updates['etapa_atual'] = 3;
@@ -1106,6 +1331,57 @@ class FinanceiroController extends Controller
             // bytes 127–159: caracteres de controlo, descartados
         }
         return trim($out);
+    }
+
+    private function extrairDataVencimentoBoleto(string $texto): ?string
+    {
+        $texto    = preg_replace('/\s+/', ' ', trim($texto));
+        $dekerned = preg_replace('/(\d) (?=[\d.\/])/', '$1', $texto);
+        $dekerned = preg_replace('/(\.)\s(?=\d)/', '$1', $dekerned);
+
+        // ── PRIORIDADE: texto próximo a "Data de Vencimento" ─────────────────
+        // Captura a primeira data DD/MM/YYYY que apareça após o label no texto
+        $labelsPattern = [
+            '/[Dd]ata\s+de\s+[Vv]encimento\s*[:.]?\s*(\d{2}\/\d{2}\/\d{4})/i',
+            '/[Dd]ata\s+[Vv]enc(?:imento)?\.?\s*[:.]?\s*(\d{2}\/\d{2}\/\d{4})/i',
+            '/[Vv]encimento\s*[:.]?\s*(\d{2}\/\d{2}\/\d{4})/i',
+            '/[Vv]to\.?\s*[:.]?\s*(\d{2}\/\d{2}\/\d{4})/i',
+        ];
+
+        foreach ($labelsPattern as $pattern) {
+            foreach ([$texto, $dekerned] as $v) {
+                if (preg_match($pattern, $v, $m)) {
+                    try {
+                        return \Carbon\Carbon::createFromFormat('d/m/Y', $m[1])->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+            }
+        }
+
+        // ── FALLBACK: fator de vencimento na linha digitável (barcode) ────────
+        // 5º campo: primeiros 4 dígitos = dias desde base FEBRABAN
+        // Base antiga: 07/10/1997 (válida até ~fev/2025, fatores ~1000–9999)
+        // Base nova:   29/05/2022 (reinicia em 1000 a partir de fev/2025)
+        $compact    = preg_replace('/\s/', '', $texto);
+        $reLinhadig = '/\d{5}\.\d{5}\s*\d{5}\.\d{6}\s*\d{5}\.\d{6}\s*\d\s*(\d{14})/';
+        foreach ([$texto, $dekerned, $compact] as $v) {
+            if (preg_match($reLinhadig, $v, $m)) {
+                $fator = (int) substr($m[1], 0, 4);
+                if ($fator >= 1000) {
+                    $base_old  = mktime(0, 0, 0, 10, 7, 1997);
+                    $base_new  = mktime(0, 0, 0, 5, 29, 2022);
+                    $date_old  = $base_old + ($fator * 86400);
+                    // Se a data pela base antiga for recente (últimos 30 dias ou futura), usa-a;
+                    // caso contrário o boleto usa a nova base FEBRABAN (pós-fev/2025).
+                    if ($date_old >= (time() - 30 * 86400)) {
+                        return date('Y-m-d', $date_old);
+                    }
+                    return date('Y-m-d', $base_new + ($fator * 86400));
+                }
+            }
+        }
+
+        return null;
     }
 
     private function extrairValorDoBoleto(string $texto): ?float
@@ -1404,16 +1680,14 @@ class FinanceiroController extends Controller
         }
 
         if ($temSaude) {
-            $updates['plano_saude_id']      = $request->input('plano_saude_id') ?: null;
-            $updates['saude_coparticipacao'] = $request->input('saude_coparticipacao') ?: null;
-            $updates['saude_uf']             = trim($request->input('saude_uf', '')) ?: null;
-            $updates['saude_cidade']         = trim($request->input('saude_cidade', '')) ?: null;
+            $updates['plano_saude_id'] = $request->input('plano_saude_id') ?: null;
+            $updates['saude_uf']       = trim($request->input('saude_uf', '')) ?: null;
+            $updates['saude_cidade']   = trim($request->input('saude_cidade', '')) ?: null;
         } else {
             // Usuário desmarcou Saúde — limpa os campos
-            $updates['plano_saude_id']      = null;
-            $updates['saude_coparticipacao'] = null;
-            $updates['saude_uf']             = null;
-            $updates['saude_cidade']         = null;
+            $updates['plano_saude_id'] = null;
+            $updates['saude_uf']       = null;
+            $updates['saude_cidade']   = null;
         }
 
         if ($temOdonto) {
@@ -1716,8 +1990,7 @@ class FinanceiroController extends Controller
             return 9;
         };
 
-        $faixasTodas    = collect();
-        $copart         = $contrato->saude_coparticipacao;
+        $faixasTodas     = collect();
         $valorOdontoUnit = 0.0;
 
         if ($contrato->plano_saude_id) {
@@ -1746,19 +2019,24 @@ class FinanceiroController extends Controller
             }
         }
 
-        $resultado = $beneficiarios->map(function ($b) use ($ageToFaixa, $faixasTodas, $copart, $valorOdontoUnit) {
-            $faixa    = $ageToFaixa((int) ($b->idade ?? 0));
-            $faixaRec = $faixasTodas->get($faixa);
-            $acomoda  = strtolower(trim($b->acomodacao ?? ''));
-            $isApart  = str_contains($acomoda, 'apart');
+        $resultado = $beneficiarios->map(function ($b) use ($ageToFaixa, $faixasTodas, $valorOdontoUnit) {
+            $tipoPlano = $b->tipo_plano; // 'saude', 'odonto' ou null (legado = saude)
+            $ehOdonto  = ($tipoPlano === 'odonto');
 
-            if ($copart === 'com') {
-                $colFaixa = $isApart ? 'com_copart_apart' : 'com_copart_enfer';
+            $valorSaude  = 0.0;
+            $valorOdonto = 0.0;
+
+            if (!$ehOdonto) {
+                // Beneficiário saúde: calcular por faixa etária
+                $faixa    = $ageToFaixa((int) ($b->idade ?? 0));
+                $faixaRec = $faixasTodas->get($faixa);
+                $acomoda  = strtolower(trim($b->acomodacao ?? ''));
+                $colFaixa = str_contains($acomoda, 'apart') ? 'apartamento' : 'enfermaria';
+                $valorSaude = $faixaRec ? (float) ($faixaRec->$colFaixa ?? 0) : 0.0;
             } else {
-                $colFaixa = $isApart ? 'sem_copart_apart' : 'sem_copart_enfer';
+                // Beneficiário odonto: valor unitário do plano
+                $valorOdonto = $valorOdontoUnit;
             }
-
-            $valorSaude = $faixaRec ? (float) ($faixaRec->$colFaixa ?? 0) : 0.0;
 
             return [
                 'nome_completo'   => $b->nome_completo,
@@ -1767,8 +2045,9 @@ class FinanceiroController extends Controller
                     : null,
                 'idade'           => $b->idade,
                 'acomodacao'      => $b->acomodacao,
+                'tipo_plano'      => $tipoPlano ?: 'saude',
                 'valor_saude'     => $valorSaude,
-                'valor_odonto'    => $valorOdontoUnit,
+                'valor_odonto'    => $valorOdonto,
             ];
         });
 
@@ -1811,33 +2090,35 @@ class FinanceiroController extends Controller
             $faixasDetalhadas = [];
 
             if ($cidadeSaude) {
-                $acomoda = $contrato->saude_acomodacao;
-                $copart  = $contrato->saude_coparticipacao;
-
-                if ($copart === 'com' && $acomoda === 'apartamento')     $col = 'com_copart_apart';
-                elseif ($copart === 'com' && $acomoda === 'enfermaria')  $col = 'com_copart_enfer';
-                elseif ($copart === 'sem' && $acomoda === 'apartamento') $col = 'sem_copart_apart';
-                else                                                      $col = 'sem_copart_enfer';
-
-                $faixaValores = FaixaEtariaValor::where('plano_id', $contrato->plano_saude_id)
+                $faixaRecs = FaixaEtariaValor::where('plano_id', $contrato->plano_saude_id)
                     ->where('cidade_id', $cidadeSaude->id)
-                    ->pluck($col, 'faixa')
-                    ->toArray();
+                    ->get()
+                    ->keyBy('faixa');
 
+                // Agrupa por (faixa + acomodação) para exibir linhas distintas
                 $grouped = [];
-                foreach (Beneficiario::where('contrato_empresarial_id', $id)->get() as $b) {
-                    $f = $ageToFaixa((int) ($b->idade ?? 0));
-                    $grouped[$f] = ($grouped[$f] ?? 0) + 1;
+                foreach (Beneficiario::where('contrato_empresarial_id', $id)
+                    ->whereIn('tipo_plano', ['saude'])->orWhere(function ($q) use ($id) {
+                        $q->where('contrato_empresarial_id', $id)->whereNull('tipo_plano');
+                    })->get() as $b) {
+                    $f    = $ageToFaixa((int) ($b->idade ?? 0));
+                    $col  = str_contains(strtolower(trim($b->acomodacao ?? '')), 'apart') ? 'apartamento' : 'enfermaria';
+                    $key  = $f . '|' . $col;
+                    if (!isset($grouped[$key])) {
+                        $grouped[$key] = ['faixa' => $f, 'col' => $col, 'count' => 0];
+                    }
+                    $grouped[$key]['count']++;
                 }
-                ksort($grouped);
 
-                foreach ($grouped as $faixa => $count) {
-                    $valorUnit = (float) ($faixaValores[$faixa] ?? 0);
+                foreach ($grouped as $item) {
+                    $faixaRec  = $faixaRecs->get($item['faixa']);
+                    $valorUnit = $faixaRec ? (float) ($faixaRec->{$item['col']} ?? 0) : 0.0;
                     $faixasDetalhadas[] = [
-                        'label'      => FaixaEtariaValor::$labels[$faixa] ?? "Faixa $faixa",
-                        'count'      => $count,
+                        'label'      => (FaixaEtariaValor::$labels[$item['faixa']] ?? "Faixa {$item['faixa']}")
+                                        . ' (' . ucfirst($item['col']) . ')',
+                        'count'      => $item['count'],
                         'valor_unit' => $valorUnit,
-                        'subtotal'   => round($valorUnit * $count, 2),
+                        'subtotal'   => round($valorUnit * $item['count'], 2),
                     ];
                 }
             }
@@ -1847,7 +2128,6 @@ class FinanceiroController extends Controller
                 'cidade'         => $contrato->saude_cidade ?? '—',
                 'uf'             => $contrato->saude_uf ?? '—',
                 'acomodacao'     => $contrato->saude_acomodacao ?? '—',
-                'coparticipacao' => $contrato->saude_coparticipacao ?? '—',
                 'faixas'         => $faixasDetalhadas,
                 'total'          => (float) $contrato->valor_plano_saude,
             ];

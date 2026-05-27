@@ -10,6 +10,7 @@ class Beneficiario extends Model
 
     protected $fillable = [
         'contrato_empresarial_id',
+        'tipo_plano',
         'tipo',
         'nome_completo',
         'nome_titular',

@@ -183,15 +183,18 @@ function renderEtapa2Done(id, row) {
 }
 
 function renderEtapa1Done(id, row) {
+    var base   = (typeof appAssetUrl !== 'undefined' ? appAssetUrl : '/');
     var editar = '<span class="etapa1-editar" data-id="' + id + '" title="Re-importar planilha" style="line-height:0;margin-left:6px;">' + SVG_EDIT + '</span>';
-    var dl = '';
+    var links  = '';
     if (row.planilha_path) {
-        var url = (typeof appAssetUrl !== 'undefined' ? appAssetUrl : '/') + row.planilha_path;
-        dl = '<a href="' + url + '" download title="Baixar planilha" style="line-height:0;">' + SVG_DOWNLOAD + '</a>';
+        links += '<a href="' + base + row.planilha_path + '" download title="Baixar planilha Saúde" style="line-height:0;color:#34d399;">' + SVG_DOWNLOAD + '</a>';
+    }
+    if (row.planilha_odonto_path) {
+        links += '<a href="' + base + row.planilha_odonto_path + '" download title="Baixar planilha Odonto" style="line-height:0;color:#93c5fd;margin-left:3px;">' + SVG_DOWNLOAD + '</a>';
     }
     return '<div class="etapa-cell etapa-done etapa2-done" title="Planilha importada ✓">'
         + '<div class="etapa2-icons">' + SVG_CHECK + editar + '</div>'
-        + (dl ? '<div class="etapa2-icons" style="margin-top:2px;justify-content:center;">' + dl + '</div>' : '')
+        + (links ? '<div class="etapa2-icons" style="margin-top:2px;justify-content:center;">' + links + '</div>' : '')
         + '</div>';
 }
 
@@ -269,14 +272,14 @@ function inicializarEmpresarial(corretora_id) {
               }
             },
             { data: "cnpj",           name: "cnpj",           width: "10%" }, // 4
-            { data: "razao_social",   name: "razao_social",   width: "11%" }, // 5
-            { data: "uf",             name: "uf",             width: "3%"  }, // 6
+            { data: "razao_social",   name: "razao_social",   width: "15%" }, // 5
+            { data: "uf",             name: "uf",             width: "1.5%"  }, // 6
             { data: "cidade",         name: "cidade",         width: "6%"  }, // 7
             { data: "usuario",        name: "usuario",        width: "7%"  }, // 8
 
             // ── Vidas + Valor ──────────────────────────────────────────────
             { data: "quantidade_vidas", name: "quantidade_vidas", width: "2%", className: "dt-center" }, // 8
-            { data: "valor_plano", name: "valor_plano", width: "11%", className: "dt-right",            // 9
+            { data: "valor_plano", name: "valor_plano", width: "7%", className: "dt-right",            // 9
               render: function (data, type, row) {
                   if (type !== 'display') return data;
                   if (!data) return '-';
@@ -323,12 +326,12 @@ function inicializarEmpresarial(corretora_id) {
             { data: "id", name: "etapa1", orderable: false, className: "dt-center", width: "4%", render: criarRenderEtapa(1, "Importar Planilha", SVG_UPLOAD, renderEtapa1Done) }, // 11
             { data: "id", name: "etapa2", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(2, "Aditivo PDF",        SVG_PDF,    renderEtapa2Done) }, // 12
             { data: "id", name: "etapa3", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(3, "Adesão",             SVG_CALENDAR, renderEtapa3Done) }, // 13
-            { data: "id", name: "etapa4", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(4, "PG Boleto",          SVG_RECEIPT, renderEtapa4Done) }, // 14
+            { data: "id", name: "etapa4", orderable: false, className: "dt-center", width: "8%", render: criarRenderEtapa(4, "PG Boleto",          SVG_RECEIPT, renderEtapa4Done) }, // 14
             { data: "id", name: "etapa5", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(5, "Vigência",           SVG_CALENDAR, renderEtapa5Done) }, // 15
             { data: "id", name: "etapa6", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(6, "Carteirinha",        SVG_CARD, renderEtapa6Done) }, // 16
             { data: "id", name: "etapa7", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(7, "1º Boleto",          SVG_BILL, renderEtapa7Done) }, // 17
             { data: "id", name: "etapa8", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(8, "Finalizado", SVG_FLAG, renderEtapa8Done) }, // 18
-            { data: "id", name: "acoes", orderable: false, className: "dt-center", width: "5%", // 19
+            { data: "id", name: "acoes", orderable: false, className: "dt-center", width: "4%", // 19
               render: function (data, type, row) {
                   if (type !== 'display') return data;
                   var svgEye = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(79,142,247,.85)" style="width:16px;height:16px;vertical-align:middle;">'
@@ -418,6 +421,9 @@ function inicializarEmpresarial(corretora_id) {
             if (data.tem_diferenca_valor == 1) {
                 $(row).addClass('row-diferenca-valor');
             }
+            if (data.historico_cancelado == 1) {
+                $(row).addClass('row-historico-cancelado');
+            }
         },
         footerCallback: function (row, data, start, end, display) {
             var toNum = function (i) {
@@ -434,6 +440,25 @@ function inicializarEmpresarial(corretora_id) {
             $(".total_por_page_empresarial").html(total_br);
             $(".total_por_vida_empresarial").html(total_vidas);
             $(".total_por_orcamento_empresarial").html(total_linhas);
+
+            var adesaoPago     = 0;
+            var adesaoPendente = 0;
+            api.rows({ search: 'applied' }).data().each(function (r) {
+                var etapa = parseInt(r.etapa_atual) || 0;
+                var tipo  = r.tipo_contrato || '';
+                var valS  = toNum(r.valor_saude);
+                var valO  = toNum(r.valor_odonto);
+                var vp;
+                if (tipo === 'ambos')       { vp = valS + valO; }
+                else if (tipo === 'saude')  { vp = valS || toNum(r.valor_plano); }
+                else if (tipo === 'odonto') { vp = valO || toNum(r.valor_plano); }
+                else                        { vp = toNum(r.valor_plano); }
+                if (etapa >= 4)       { adesaoPago     += vp; }
+                else if (etapa === 3) { adesaoPendente += vp; }
+            });
+            var fmtBRL = function (v) { return v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }); };
+            $(".total_adesao_pago").html(fmtBRL(adesaoPago));
+            $(".total_adesao_pendente").html(fmtBRL(adesaoPendente));
         }
     });
 }
@@ -492,7 +517,8 @@ $(document).on('click', '.etapa-avail', function () {
     // Etapa 1 → abre modal de upload de planilha
     if (step === 1) {
         if (typeof window.abrirModalPlanilha === 'function') {
-            window.abrirModalPlanilha(id);
+            var rowData1 = tableempresarial.row($el.closest('tr')).data();
+            window.abrirModalPlanilha(id, false, rowData1 ? rowData1.tipo_contrato : null);
         }
         return;
     }
@@ -517,7 +543,8 @@ $(document).on('click', '.etapa-avail', function () {
 
     // Etapa 4 → SweetAlert com data, forma de pagamento e oriundo
     if (step === 4) {
-        window.abrirEtapa4Boleto(id);
+        var rowData4 = tableempresarial.row($el.closest('tr')).data();
+        window.abrirEtapa4Boleto(id, false, rowData4);
         return;
     }
 
@@ -560,9 +587,10 @@ $(document).on('click', '.etapa-avail', function () {
 // ── Etapa 1: re-importar planilha (canetinha na célula done) ─────────────────
 $(document).on('click', '.etapa1-editar', function (e) {
     e.stopPropagation();
-    var id = $(this).data('id');
+    var id  = $(this).data('id');
+    var row = tableempresarial ? tableempresarial.row($(this).closest('tr')).data() : null;
     if (typeof window.abrirModalPlanilha === 'function') {
-        window.abrirModalPlanilha(id, true);
+        window.abrirModalPlanilha(id, true, row ? row.tipo_contrato : null);
     }
 });
 
@@ -737,6 +765,22 @@ $('body').on('change', '#mudar_corretor_empresarial, #mudar_plano_empresarial, #
 var filtroTipoAtual  = null;
 var filtroPlanoAtual = '';
 
+function parseDateBR(str) {
+    if (!str) return null;
+    var p = str.split('/');
+    if (p.length !== 3) return null;
+    return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+}
+
+function isVencido(row) {
+    if ((parseInt(row.etapa_atual) || 0) !== 3) return false;
+    var venc = parseDateBR(row.boleto_adesao_vencimento);
+    if (!venc) return false;
+    var hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return venc < hoje;
+}
+
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     if (settings.nTable.id !== 'tabela_empresarial') return true;
     if (filtroTipoAtual === null) return true;
@@ -755,6 +799,8 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     if (!rowData) return true;
     var etapa = parseInt(rowData.etapa_atual) || 0;
     if (filtroEtapaAtual === 'andamento') return etapa < 8;
+    if (filtroEtapaAtual === 'vencidos') return isVencido(rowData);
+    if (filtroEtapaAtual === 'cancelados') return rowData.historico_cancelado == 1;
     return etapa === filtroEtapaAtual;
 });
 
@@ -767,6 +813,10 @@ function rowMatchesFiltros(row, excluir) {
         var etapa = parseInt(row.etapa_atual) || 0;
         if (filtroEtapaAtual === 'andamento') {
             if (etapa >= 8) return false;
+        } else if (filtroEtapaAtual === 'vencidos') {
+            if (!isVencido(row)) return false;
+        } else if (filtroEtapaAtual === 'cancelados') {
+            if (row.historico_cancelado != 1) return false;
         } else {
             if (etapa !== filtroEtapaAtual) return false;
         }
@@ -782,16 +832,20 @@ function atualizarContadoresEtapa() {
     var todos = tableempresarial.data().toArray();
 
     // ── Etapas: conta excluindo o filtro de etapa ──
-    var counts = {}, totalEtapa = 0, andamento = 0;
+    var counts = {}, totalEtapa = 0, andamento = 0, vencidos = 0, cancelados = 0;
     todos.forEach(function (row) {
         if (!rowMatchesFiltros(row, 'etapa')) return;
         var e = parseInt(row.etapa_atual) || 0;
         counts[e] = (counts[e] || 0) + 1;
         totalEtapa++;
         if (e < 8) andamento++;
+        if (isVencido(row)) vencidos++;
+        if (row.historico_cancelado == 1) cancelados++;
     });
     $('#count-todos').text(totalEtapa);
     $('#count-andamento').text(andamento);
+    $('#count-vencidos').text(vencidos);
+    $('#count-cancelados').text(cancelados);
     for (var i = 0; i <= 8; i++) {
         $('#count-etapa-' + i).text(counts[i] || 0);
     }
@@ -906,6 +960,20 @@ window.abrirEtapa4Boleto = function (contratoId, modoEdicao, rowData) {
     var labelStyle = 'display:block;text-align:left;font-size:.72rem;font-weight:600;'
                    + 'color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;'
                    + 'margin-bottom:5px;margin-top:14px;';
+    var readonlyBoxStyle = 'width:100%;background:#1a2540;color:#93c5fd;border:1px solid rgba(147,197,253,.3);'
+                         + 'border-radius:8px;padding:8px 12px;font-size:.9rem;font-weight:700;'
+                         + 'box-sizing:border-box;letter-spacing:.02em;';
+
+    // Resolve a data de vencimento: vem do boleto de adesão (dd/mm/yyyy)
+    var vencStr = rowData ? (rowData.boleto_adesao_vencimento || '') : '';
+    // Converte dd/mm/yyyy → yyyy-mm-dd para envio ao backend
+    var vencYmd = '';
+    if (vencStr) {
+        var vp = vencStr.split('/');
+        if (vp.length === 3) vencYmd = vp[2] + '-' + vp[1] + '-' + vp[0];
+    }
+    var vencDisplay = vencStr || '—';
+    var temVencimento = vencYmd !== '';
 
     var formaOpts   = ['Boleto', 'PIX', 'Débito Automático', 'Cartão de Crédito'];
     var oriundoOpts = ['Accert', 'Vivaz'];
@@ -916,9 +984,21 @@ window.abrirEtapa4Boleto = function (contratoId, modoEdicao, rowData) {
     var oriundoHtml = '<option value="">Selecione...</option>';
     oriundoOpts.forEach(function (o) { oriundoHtml += '<option value="' + o + '">' + o + '</option>'; });
 
+    // Bloco da data: read-only + hidden se disponível; input date se ausente (fallback)
+    var dataBlock = '<label style="' + labelStyle + 'margin-top:0;">Data de Vencimento</label>';
+    if (temVencimento) {
+        dataBlock += '<div style="' + readonlyBoxStyle + '">' + vencDisplay + '</div>'
+                   + '<input type="hidden" id="swal-boleto-data" value="' + vencYmd + '">';
+    } else {
+        dataBlock += '<div style="margin-bottom:6px;padding:7px 10px;border-radius:6px;'
+                   + 'background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);'
+                   + 'color:#fde68a;font-size:.75rem;">'
+                   + '⚠️ Data não identificada no boleto. Informe manualmente.</div>'
+                   + '<input type="date" id="swal-boleto-data" style="' + inputStyle + 'color-scheme:dark;" />';
+    }
+
     var html = '<div style="text-align:left;">'
-        + '<label style="' + labelStyle + '">Data do Vencimento</label>'
-        + '<input type="date" id="swal-boleto-data" style="' + inputStyle + 'color-scheme:dark;" />'
+        + dataBlock
         + '<label style="' + labelStyle + '">Forma de Pagamento</label>'
         + '<select id="swal-boleto-forma" style="' + inputStyle + '">' + formaHtml + '</select>'
         + '<label style="' + labelStyle + '">Oriundo</label>'
@@ -939,12 +1019,7 @@ window.abrirEtapa4Boleto = function (contratoId, modoEdicao, rowData) {
         showCancelButton: true,
         cancelButtonText: 'Cancelar',
         didOpen: function () {
-            if (modoEdicao && rowData) {
-                // data_pgto vem como dd/mm/yyyy → converter para yyyy-mm-dd
-                var parts = (rowData.data_pgto || '').split('/');
-                if (parts.length === 3) {
-                    document.getElementById('swal-boleto-data').value = parts[2] + '-' + parts[1] + '-' + parts[0];
-                }
+            if (rowData) {
                 if (rowData.forma_pagamento) {
                     document.getElementById('swal-boleto-forma').value = rowData.forma_pagamento;
                 }
@@ -1042,49 +1117,64 @@ $(document).on('click', '.btn-beneficiarios', function (e) {
             var thR = thS + 'text-align:right;';
             var tdS = 'padding:5px 8px;font-size:.78rem;color:#e2e8f0;border-top:1px solid rgba(255,255,255,.05);';
             var tdR = tdS + 'text-align:right;';
+            var icoSH = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:9px;height:9px;vertical-align:middle;margin-right:2px;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>';
+            var icoOH = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd" style="width:9px;height:9px;vertical-align:middle;margin-right:2px;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C5.6 2 3.6 3.6 3 5.9c-.5 1.8-.1 3.8 1.1 5.3.7.9 1.1 2 1.2 3.1L6 20c.2 1.2.9 2 1.9 2 .9 0 1.6-.7 1.8-1.9L10 18l.3 2.1c.2 1.2.9 1.9 1.8 1.9 1 0 1.7-.8 1.9-2l.7-5.7c.1-1.1.5-2.2 1.2-3.1C17.1 9.7 17.5 7.7 17 5.9 16.4 3.6 14.4 2 12 2H8z"/></svg>';
+
+            var benSaude  = res.data.filter(function (b) { return b.tipo_plano !== 'odonto'; });
+            var benOdonto = res.data.filter(function (b) { return b.tipo_plano === 'odonto'; });
 
             var totalSaude  = 0;
             var totalOdonto = 0;
-            res.data.forEach(function (b) {
-                totalSaude  += parseFloat(b.valor_saude  || 0);
-                totalOdonto += parseFloat(b.valor_odonto || 0);
-            });
+            benSaude.forEach(function (b)  { totalSaude  += parseFloat(b.valor_saude  || 0); });
+            benOdonto.forEach(function (b) { totalOdonto += parseFloat(b.valor_odonto || 0); });
             var totalGeral = totalSaude + totalOdonto;
 
-            var html = '<div style="max-height:360px;overflow-y:auto;">'
-                + '<table style="width:100%;border-collapse:collapse;">'
-                + '<thead><tr>'
-                + '<th style="' + thS + '">Nome</th>'
-                + '<th style="' + thS + '">Nasc.</th>'
-                + '<th style="' + thS + '">Idade</th>'
-                + '<th style="' + thS + '">Acomod.</th>'
-                + '<th style="' + thR + '">Saúde</th>'
-                + '<th style="' + thR + '">Odonto</th>'
-                + '</tr></thead><tbody>';
+            function tabelaBenef(lista, tipo) {
+                if (!lista.length) return '';
+                var icoH  = tipo === 'odonto' ? icoOH : icoSH;
+                var cor   = tipo === 'odonto' ? '#93c5fd' : '#34d399';
+                var label = tipo === 'odonto' ? 'Odonto' : 'Saúde';
+                var out = '<p style="margin:10px 0 4px;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:' + cor + ';font-weight:700;">'
+                    + icoH + label + ' — ' + lista.length + ' pessoa(s)</p>'
+                    + '<div style="max-height:260px;overflow-y:auto;">'
+                    + '<table style="width:100%;border-collapse:collapse;">'
+                    + '<thead><tr>'
+                    + '<th style="' + thS + '">Nome</th>'
+                    + '<th style="' + thS + '">Nasc.</th>'
+                    + '<th style="' + thS + '">Idade</th>';
+                if (tipo !== 'odonto') out += '<th style="' + thS + '">Acomod.</th>';
+                out += '<th style="' + thR + '">Valor</th>'
+                    + '</tr></thead><tbody>';
+                lista.forEach(function (b) {
+                    var val = tipo === 'odonto' ? parseFloat(b.valor_odonto || 0) : parseFloat(b.valor_saude || 0);
+                    out += '<tr>'
+                        + '<td style="' + tdS + '">' + (b.nome_completo || '-') + '</td>'
+                        + '<td style="' + tdS + ';white-space:nowrap;">' + (b.data_nascimento || '-') + '</td>'
+                        + '<td style="' + tdS + ';text-align:center;">' + (b.idade || '-') + '</td>';
+                    if (tipo !== 'odonto') out += '<td style="' + tdS + '">' + (b.acomodacao || '-') + '</td>';
+                    out += '<td style="' + tdR + ';color:' + cor + ';">' + fmt(val) + '</td>'
+                        + '</tr>';
+                });
+                out += '</tbody></table></div>';
+                return out;
+            }
 
-            res.data.forEach(function (b) {
-                html += '<tr>'
-                    + '<td style="' + tdS + '">' + (b.nome_completo || '-') + '</td>'
-                    + '<td style="' + tdS + ';white-space:nowrap;">' + (b.data_nascimento || '-') + '</td>'
-                    + '<td style="' + tdS + ';text-align:center;">' + (b.idade || '-') + '</td>'
-                    + '<td style="' + tdS + '">' + (b.acomodacao || '-') + '</td>'
-                    + '<td style="' + tdR + '">' + fmt(b.valor_saude) + '</td>'
-                    + '<td style="' + tdR + '">' + fmt(b.valor_odonto) + '</td>'
-                    + '</tr>';
-            });
+            var html = tabelaBenef(benSaude, 'saude') + tabelaBenef(benOdonto, 'odonto');
 
-            html += '</tbody></table></div>';
-
-            html += '<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;display:flex;flex-direction:column;gap:6px;">'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-                + '<span style="color:rgba(255,255,255,.55);font-size:.8rem;">Total Saúde</span>'
-                + '<span style="color:#34d399;font-weight:700;">' + fmt(totalSaude) + '</span>'
-                + '</div>'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-                + '<span style="color:rgba(255,255,255,.55);font-size:.8rem;">Total Odonto</span>'
-                + '<span style="color:#93c5fd;font-weight:700;">' + fmt(totalOdonto) + '</span>'
-                + '</div>'
-                + '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding-top:7px;margin-top:2px;">'
+            html += '<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;display:flex;flex-direction:column;gap:6px;">';
+            if (benSaude.length) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<span style="color:rgba(255,255,255,.55);font-size:.8rem;">' + icoSH + ' Total Saúde (' + benSaude.length + ')</span>'
+                    + '<span style="color:#34d399;font-weight:700;">' + fmt(totalSaude) + '</span>'
+                    + '</div>';
+            }
+            if (benOdonto.length) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                    + '<span style="color:rgba(255,255,255,.55);font-size:.8rem;">' + icoOH + ' Total Odonto (' + benOdonto.length + ')</span>'
+                    + '<span style="color:#93c5fd;font-weight:700;">' + fmt(totalOdonto) + '</span>'
+                    + '</div>';
+            }
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding-top:7px;margin-top:2px;">'
                 + '<span style="color:#fff;font-weight:700;font-size:.85rem;">Total Geral</span>'
                 + '<span style="color:#f0fdf4;font-weight:800;font-size:.9rem;">' + fmt(totalGeral) + '</span>'
                 + '</div>'
@@ -1117,6 +1207,10 @@ $(document).on('click', '.fin-tag', function () {
         filtroEtapaAtual = null;
     } else if (etapaStr === 'andamento') {
         filtroEtapaAtual = 'andamento';
+    } else if (etapaStr === 'vencidos') {
+        filtroEtapaAtual = 'vencidos';
+    } else if (etapaStr === 'cancelados') {
+        filtroEtapaAtual = 'cancelados';
     } else {
         filtroEtapaAtual = parseInt(etapaStr);
     }
@@ -1124,4 +1218,56 @@ $(document).on('click', '.fin-tag', function () {
     if (tableempresarial) {
         tableempresarial.draw();
     }
+});
+
+// ── Importar Histórico Sindicatos ─────────────────────────────────────────────
+
+$(document).on('click', '#btnAbrirImportarHistorico', function () {
+    $('#historicoMsgErro').hide().text('');
+    $('#historicoMsgSucesso').hide().text('');
+    $('#arquivoHistorico').val('');
+    $('#modalImportarHistorico').fadeIn(150);
+});
+
+$(document).on('click', '#fecharModalHistorico, #cancelarModalHistorico, #overlayModalHistorico', function () {
+    $('#modalImportarHistorico').fadeOut(150);
+});
+
+$(document).on('submit', '#formImportarHistorico', function (e) {
+    e.preventDefault();
+
+    var arquivo = $('#arquivoHistorico')[0].files[0];
+    if (!arquivo) {
+        $('#historicoMsgErro').text('Selecione o arquivo .xlsx.').show();
+        return;
+    }
+
+    var fd = new FormData(this);
+    fd.append('planilha', arquivo);
+
+    $('#btnImportarHistorico').prop('disabled', true).text('Importando...');
+    $('#historicoMsgErro').hide().text('');
+    $('#historicoMsgSucesso').hide().text('');
+
+    $.ajax({
+        url: urlImportarHistorico,
+        method: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function (res) {
+            $('#btnImportarHistorico').prop('disabled', false).text('Importar Planilha');
+            if (res.success) {
+                $('#historicoMsgSucesso').text(res.importados + ' contrato(s) importado(s) com sucesso!').show();
+                if (tableempresarial) tableempresarial.ajax.reload(null, false);
+            } else {
+                $('#historicoMsgErro').text(res.error || 'Erro ao importar.').show();
+            }
+        },
+        error: function (xhr) {
+            $('#btnImportarHistorico').prop('disabled', false).text('Importar Planilha');
+            var msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Erro ao importar.';
+            $('#historicoMsgErro').text(msg).show();
+        }
+    });
 });

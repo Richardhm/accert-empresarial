@@ -847,23 +847,16 @@ $(function () {
         html += '<thead>';
         html += '<tr class="cfg-th-grupo">';
         html += '<th class="th-faixa">Faixa</th>';
-        html += '<th colspan="2" class="th-copart">Com Coparticipação</th>';
-        html += '<th colspan="2" class="th-sem">Sem Coparticipação</th>';
-        html += '</tr>';
-        html += '<tr class="cfg-th-sub">';
-        html += '<th class="th-faixa"></th>';
-        html += '<th>Apart.</th><th>Enfer.</th>';
-        html += '<th>Apart.</th><th>Enfer.</th>';
+        html += '<th class="th-apart">Apartamento</th>';
+        html += '<th class="th-enfer">Enfermaria</th>';
         html += '</tr>';
         html += '</thead><tbody>';
         for (var i = 0; i <= 9; i++) {
             var v = valores[i] || {};
             html += '<tr>';
             html += '<td class="td-faixa">' + faixasLabels[i] + '</td>';
-            html += '<td>' + inputFaixaModal(i, 'com_copart_apart', v.com_copart_apart, 'inp-copart') + '</td>';
-            html += '<td>' + inputFaixaModal(i, 'com_copart_enfer', v.com_copart_enfer, 'inp-copart') + '</td>';
-            html += '<td>' + inputFaixaModal(i, 'sem_copart_apart', v.sem_copart_apart, 'inp-sem') + '</td>';
-            html += '<td>' + inputFaixaModal(i, 'sem_copart_enfer', v.sem_copart_enfer, 'inp-sem') + '</td>';
+            html += '<td>' + inputFaixaModal(i, 'apartamento', v.apartamento, 'inp-copart') + '</td>';
+            html += '<td>' + inputFaixaModal(i, 'enfermaria',  v.enfermaria,  'inp-sem')    + '</td>';
             html += '</tr>';
         }
         html += '</tbody></table>';
@@ -1030,26 +1023,17 @@ $(function () {
         var html = '<table class="cad-mini-tbl">';
         html += '<thead>';
         html += '<tr class="mth-group">';
-        html += '<th class="mth-faixa"></th>';
-        html += '<th colspan="2" class="mth-copart">Com Copart.</th>';
-        html += '<th colspan="2" class="mth-sem">Sem Copart.</th>';
-        html += '</tr>';
-        html += '<tr class="mth-sub">';
         html += '<th class="mth-faixa">Faixa</th>';
         html += '<th class="mth-apart">Apart.</th>';
         html += '<th class="mth-enfer">Enfer.</th>';
-        html += '<th class="mth-sapart">Apart.</th>';
-        html += '<th class="mth-senfer">Enfer.</th>';
         html += '</tr>';
         html += '</thead><tbody>';
         for (var i = 0; i <= 9; i++) {
             var v = valores[i] || {};
             html += '<tr>';
             html += '<td>' + faixasLabels[i] + '</td>';
-            html += '<td class="val-copart">' + fmtVal(v.com_copart_apart) + '</td>';
-            html += '<td class="val-copart">' + fmtVal(v.com_copart_enfer) + '</td>';
-            html += '<td class="val-sem">'    + fmtVal(v.sem_copart_apart) + '</td>';
-            html += '<td class="val-sem">'    + fmtVal(v.sem_copart_enfer) + '</td>';
+            html += '<td class="val-copart">' + fmtVal(v.apartamento) + '</td>';
+            html += '<td class="val-sem">'    + fmtVal(v.enfermaria)  + '</td>';
             html += '</tr>';
         }
         html += '</tbody></table>';

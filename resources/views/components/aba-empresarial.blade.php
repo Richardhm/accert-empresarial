@@ -17,6 +17,14 @@
                     <span class="chip-lbl">Total</span>
                     <span class="chip-val total_por_page_empresarial">R$ 0,00</span>
                 </div>
+                <div class="fin-stat-chip chip-teal">
+                    <span class="chip-lbl">Adesão Pago</span>
+                    <span class="chip-val total_adesao_pago">R$ 0,00</span>
+                </div>
+                <div class="fin-stat-chip chip-amber">
+                    <span class="chip-lbl">Adesão Pendente</span>
+                    <span class="chip-val total_adesao_pendente">R$ 0,00</span>
+                </div>
             </div>
 
             <div class="fin-selects-row">
@@ -27,6 +35,11 @@
                     </select>
                 </div>
                 <div id="dt-export-btn-wrap"></div>
+                <button id="btnAbrirImportarHistorico" type="button"
+                    style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:7px;color:#fbbf24;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                    Importar Histórico
+                </button>
             </div>
 
         </div>
@@ -77,6 +90,14 @@
                     <button class="fin-tag fin-tag-todos fin-tag-ativo" data-etapa="">
                         <span class="fin-tag-dot"></span>Todos
                         <span class="fin-tag-count" id="count-todos"></span>
+                    </button>
+                    <button class="fin-tag fin-tag-vencidos" data-etapa="vencidos">
+                        <span class="fin-tag-dot"></span>Adesão Vencidos
+                        <span class="fin-tag-count" id="count-vencidos"></span>
+                    </button>
+                    <button class="fin-tag fin-tag-cancelados" data-etapa="cancelados">
+                        <span class="fin-tag-dot"></span>Cancelados
+                        <span class="fin-tag-count" id="count-cancelados"></span>
                     </button>
                     <button class="fin-tag fin-tag-andamento" data-etapa="andamento">
                         <span class="fin-tag-dot"></span>Em Andamento

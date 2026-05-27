@@ -3,6 +3,7 @@
         <link rel="stylesheet" href="{{ asset('css/estilo-financeiro.css') }}"/>
     @endsection
 
+
     <script>
         var urlGeralEmpresarialPendentes    = "{{ route('contratos.listarEmpresarial.listarContratoEmpresaPendentes') }}";
         var empresarialFinanceiroInicializar = "{{ route('financeiro.modal.contrato.empresarial') }}";
@@ -23,6 +24,7 @@
         var urlSalvarPrimeiroBoleto          = "{{ route('contratos.empresarial.salvar_primeiro_boleto') }}";
         var urlUploadDocumentoBoleto         = "{{ route('contratos.empresarial.upload_documento_boleto') }}";
         var urlSalvarFinalizado              = "{{ route('contratos.empresarial.salvar_finalizado') }}";
+        var urlImportarHistorico             = "{{ route('contratos.empresarial.importar_historico') }}";
         var urlBeneficiarios                 = "{{ route('financeiro.beneficiarios', ['id' => '__ID__']) }}";
         var urlResumoValor                   = "{{ route('financeiro.resumo_valor', ['id' => '__ID__']) }}";
         var appAssetUrl                      = "{{ asset('') }}";
@@ -66,11 +68,11 @@
 
                 <p class="modal-colar-format-lbl">Campos obrigatórios (qualquer ordem):</p>
                 <div class="modal-colar-format-box">
-                    <span class="campo-key">RAZÃO SOCIAL:</span> nome da empresa<br>
+                    <span class="campo-key">RAZÃO SOCIAL:</span> NOME DA EMPRESA LTDA<br>
                     <span class="campo-key">CNPJ:</span> 00.000.000/0000-00<br>
                     <span class="campo-key">CONTATO:</span> nome do responsável<br>
-                    <span class="campo-key">TELEFONE:</span> (00) 00000-0000<br>
-                    <span class="campo-key">EMAIL:</span> email@exemplo.com
+                    <span class="campo-key">TELEFONE:</span> 00 00000-0000 ou (00) 00000-0000<br>
+                    <span class="campo-key">E-MAIL:</span> email@exemplo.com
                 </div>
 
                 <form id="formColarDados">
@@ -81,18 +83,35 @@
                         name="texto_colado"
                         rows="4"
                         class="modal-colar-textarea"
-                        placeholder="RAZÃO SOCIAL: Empresa Teste Ltda&#10;CNPJ: 00.000.000/0001-00&#10;CONTATO: João Silva&#10;TELEFONE: (11) 99999-0000&#10;EMAIL: joao@empresa.com"
+                        placeholder="RAZÃO SOCIAL: STUDIO WIC FOTOGRAFIA E CONEXAO LTDA&#10;CNPJ: 39.607.632/0001-53&#10;CONTATO: TATY&#10;TELEFONE: 62 98310-9018&#10;E-MAIL: natalia.cardoso62@gmail.com"
                     ></textarea>
 
-                    {{-- Abas Saúde / Odonto --}}
-                    {{-- Corretor único — válido para Saúde e Odonto --}}
-                    <label class="modal-colar-field-lbl">Corretor</label>
-                    <select id="colar_user_id" class="modal-colar-select">
-                        <option value="">Selecione o corretor...</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </select>
+                    {{-- Corretor · UF · Cidade na mesma linha --}}
+                    <div style="display:grid;grid-template-columns:1fr 64px 1fr;gap:8px;margin-top:6px;">
+                        <div>
+                            <label class="modal-colar-field-lbl">Corretor</label>
+                            <select id="colar_user_id" class="modal-colar-select">
+                                <option value="">Corretor...</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="modal-colar-field-lbl">UF</label>
+                            <select id="colar_uf" class="modal-colar-select">
+                                <option value="">UF</option>
+                                <option value="GO">GO</option>
+                                <option value="DF">DF</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="modal-colar-field-lbl">Cidade</label>
+                            <select id="colar_cidade" class="modal-colar-select" disabled>
+                                <option value="">Cidade...</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div style="margin-top:8px;">
                         <div class="modal-planos-tabs">
@@ -117,28 +136,6 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div style="margin-top:0;">
-                                <label class="modal-colar-field-lbl">Coparticipação</label>
-                                <select name="saude_coparticipacao" id="colar_saude_coparticipacao" class="modal-colar-select">
-                                    <option value="">Selecione...</option>
-                                    <option value="com">Com Coparticipação</option>
-                                    <option value="sem">Sem Coparticipação</option>
-                                </select>
-                            </div>
-                            <div class="modal-colar-grid-uf" style="margin-top:0;">
-                                <div>
-                                    <label class="modal-colar-field-lbl">UF</label>
-                                    <select id="colar_saude_uf" name="saude_uf" class="modal-colar-select">
-                                        <option value="">UF...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="modal-colar-field-lbl">Cidade</label>
-                                    <select id="colar_saude_cidade" name="saude_cidade" class="modal-colar-select" disabled>
-                                        <option value="">Selecione a UF primeiro...</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
 
                         {{-- Painel Odonto --}}
@@ -151,20 +148,6 @@
                                         <option value="{{ $p->id }}">{{ $p->nome }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="modal-colar-grid-uf" style="margin-top:0;">
-                                <div>
-                                    <label class="modal-colar-field-lbl">UF</label>
-                                    <select id="colar_odonto_uf" name="odonto_uf" class="modal-colar-select">
-                                        <option value="">UF...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="modal-colar-field-lbl">Cidade</label>
-                                    <select id="colar_odonto_cidade" name="odonto_cidade" class="modal-colar-select" disabled>
-                                        <option value="">Selecione a UF primeiro...</option>
-                                    </select>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -198,8 +181,10 @@
                 </button>
             </div>
             <div class="modal-colar-body">
-                <p class="modal-colar-format-lbl">Colunas esperadas na planilha:</p>
-                <div class="modal-colar-format-box">
+
+
+                <p class="modal-colar-format-lbl" id="planilhaColunasLbl">Colunas esperadas na planilha:</p>
+                <div class="modal-colar-format-box" id="planilhaColunasBox">
                     <span class="campo-key">Titular ou Dependente</span> &nbsp;·&nbsp;
                     <span class="campo-key">Nome Completo</span> &nbsp;·&nbsp;
                     <span class="campo-key">Nome Titular</span> &nbsp;·&nbsp;
@@ -207,23 +192,34 @@
                     <span class="campo-key">Data de Nascimento</span> &nbsp;·&nbsp;
                     <span class="campo-key">Idade</span> &nbsp;·&nbsp;
                     <span class="campo-key">Nome da Mãe</span><br>
-                    <span class="campo-key">SAÚDE/Acomodação</span> &nbsp;·&nbsp;
+                    <span id="planilhaColAcomo"><span class="campo-key">SAÚDE/Acomodação</span> &nbsp;·&nbsp;</span>
                     <span class="campo-key">Sexo</span> &nbsp;·&nbsp;
                     <span class="campo-key">Grau do Parentesco</span><br>
                     <span class="campo-key">Data do Casamento</span> &nbsp;·&nbsp;
                     <span class="campo-key">Telefone</span> &nbsp;·&nbsp;
                     <span class="campo-key">Valor</span>
                 </div>
+
                 <form id="formImportarPlanilha" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="planilha_contrato_id" name="contrato_id" value="">
                     <input type="hidden" id="planilha_modo_edicao" name="modo_edicao" value="">
                     <input type="hidden" id="planilha_justificativa" name="justificativa_diferenca" value="">
+                    <input type="hidden" id="planilha_tipo" name="tipo_planilha" value="saude">
+                    <input type="hidden" id="planilha_tipo_contrato" value="">
 
-                    <label class="modal-colar-field-lbl">Arquivo .xlsx <span style="color:#f87171;">*</span></label>
-                    <input type="file" id="arquivoPlanilha" name="planilha" accept=".xlsx"
-                           style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
-                                  border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
+                    <div id="planilhaSaudePanel">
+                        <label class="modal-colar-field-lbl">Arquivo .xlsx — Saúde <span style="color:#f87171;">*</span></label>
+                        <input type="file" id="arquivoPlanilhaSaude" accept=".xlsx"
+                               style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
+                                      border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
+                    </div>
+                    <div id="planilhaOdontoPanel" style="display:none;">
+                        <label class="modal-colar-field-lbl">Arquivo .xlsx — Odonto <span style="color:#f87171;">*</span></label>
+                        <input type="file" id="arquivoPlanilhaOdonto" accept=".xlsx"
+                               style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
+                                      border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
+                    </div>
 
                     <div id="planilhaMsgErro"   class="modal-colar-msg erro"></div>
                     <div id="planilhaMsgSucesso" class="modal-colar-msg sucesso"></div>
@@ -305,13 +301,10 @@
                     <input type="hidden" id="adesao_valor_planilha" value="">
                     <input type="hidden" id="adesao_modo_edicao" name="modo_edicao" value="">
 
-                    <label class="modal-colar-field-lbl">Data de Adesão <span style="color:#f87171;">*</span></label>
-                    <input type="date" id="adesaoDataInput" name="data_adesao"
-                           style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
-                                  border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;
-                                  outline:none;color-scheme:dark;">
+                    {{-- Data de Adesão: preenchida automaticamente do PDF; só aparece o input se falhar --}}
+                    <input type="hidden" id="adesaoDataInput" name="data_adesao" value="">
 
-                    <label class="modal-colar-field-lbl" style="margin-top:14px;">Boleto PDF <span style="color:#f87171;">*</span></label>
+                    <label class="modal-colar-field-lbl">Boleto PDF <span style="color:#f87171;">*</span></label>
                     <input type="file" id="arquivoAdesao" name="boleto_adesao" accept=".pdf"
                            style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
                                   border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
@@ -319,15 +312,27 @@
                     {{-- Estado: lendo o PDF --}}
                     <div id="adesaoLendoPdf" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;
                          background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);color:rgba(255,255,255,.55);font-size:.8rem;">
-                        ⏳ Lendo valor do PDF...
+                        ⏳ Lendo PDF...
                     </div>
 
-                    {{-- Valor extraído automaticamente --}}
+                    {{-- Valor + Vencimento extraídos automaticamente --}}
                     <div id="adesaoValorExtraidoWrap" style="display:none;margin-top:12px;">
-                        <label class="modal-colar-field-lbl">Valor do Documento (lido automaticamente do PDF)</label>
-                        <div id="adesaoValorExtraidoBox"
-                             style="background:#1a2540;border:1px solid rgba(52,211,153,.3);border-radius:10px;
-                                    padding:10px 14px;font-size:.95rem;font-weight:700;color:#34d399;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <div>
+                                <label class="modal-colar-field-lbl">Valor do Documento (lido do PDF)</label>
+                                <div id="adesaoValorExtraidoBox"
+                                     style="background:#1a2540;border:1px solid rgba(52,211,153,.3);border-radius:10px;
+                                            padding:10px 14px;font-size:.95rem;font-weight:700;color:#34d399;">
+                                </div>
+                            </div>
+                            <div id="adesaoVencimentoWrap" style="display:none;">
+                                <label class="modal-colar-field-lbl">Data de Adesão (lida do PDF)</label>
+                                <div id="adesaoVencimentoBox"
+                                     style="background:#1a2540;border:1px solid rgba(147,197,253,.3);border-radius:10px;
+                                            padding:10px 14px;font-size:.95rem;font-weight:700;color:#93c5fd;">
+                                </div>
+                                <input type="hidden" id="adesaoVencimentoHidden" name="boleto_adesao_vencimento" value="">
+                            </div>
                         </div>
                     </div>
 
@@ -341,6 +346,15 @@
                         <input type="text" id="adesaoBoletoValorManual" name="boleto_valor_manual" placeholder="0,00"
                                style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
                                       border-radius:10px;padding:10px 14px;font-size:.88rem;box-sizing:border-box;outline:none;">
+                    </div>
+
+                    {{-- Fallback: data manual (quando o PDF não tem data de vencimento) --}}
+                    <div id="adesaoDataManualWrap" style="display:none;margin-top:12px;">
+                        <label class="modal-colar-field-lbl">Data de Adesão <span style="color:#f87171;">*</span></label>
+                        <input type="date" id="adesaoDataManualInput"
+                               style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
+                                      border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;
+                                      outline:none;color-scheme:dark;">
                     </div>
 
                     {{-- Alerta de diferença de valor --}}
@@ -648,6 +662,57 @@
         </div>
     </div>
 
+    {{-- ── Modal Importar Histórico Sindicatos ── --}}
+    <div id="modalImportarHistorico" style="display:none;">
+        <div class="modal-colar-overlay" id="overlayModalHistorico"></div>
+        <div class="modal-colar-box">
+            <div class="modal-colar-header">
+                <div>
+                    <p class="modal-colar-title">Importar Histórico — Sindicatos</p>
+                    <p class="modal-colar-sub">Importação única de contratos antigos. Etapa 8 · Sem comissão.</p>
+                </div>
+                <button type="button" class="modal-colar-close" id="fecharModalHistorico">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-colar-body">
+                <p class="modal-colar-format-lbl">Colunas esperadas na planilha:</p>
+                <div class="modal-colar-format-box" style="font-size:.65rem;line-height:1.7;">
+                    <span class="campo-key">A</span> Plano &nbsp;·&nbsp;
+                    <span class="campo-key">B</span> Data &nbsp;·&nbsp;
+                    <span class="campo-key">C</span> Vendedor &nbsp;·&nbsp;
+                    <span class="campo-key">D</span> Razão Social<br>
+                    <span class="campo-key">E</span> CNPJ &nbsp;·&nbsp;
+                    <span class="campo-key">F</span> Telefone &nbsp;·&nbsp;
+                    <span class="campo-key">G</span> Vidas saúde<br>
+                    <span class="campo-key">I</span> Código saúde &nbsp;·&nbsp;
+                    <span class="campo-key">J</span> Código odonto &nbsp;·&nbsp;
+                    <span class="campo-key">K</span> Valor saúde<br>
+                    <span class="campo-key">M</span> Boleto Adesão &nbsp;·&nbsp;
+                    <span class="campo-key">N</span> Status (Ativo/Cancelado)
+                </div>
+
+                <form id="formImportarHistorico" enctype="multipart/form-data">
+                    @csrf
+                    <label class="modal-colar-field-lbl" style="margin-top:14px;">Arquivo .xlsx <span style="color:#f87171;">*</span></label>
+                    <input type="file" id="arquivoHistorico" name="planilha" accept=".xlsx"
+                           style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
+                                  border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
+
+                    <div id="historicoMsgErro"   class="modal-colar-msg erro"   style="margin-top:10px;"></div>
+                    <div id="historicoMsgSucesso" class="modal-colar-msg sucesso" style="margin-top:10px;"></div>
+
+                    <div class="modal-colar-actions">
+                        <button type="button" id="cancelarModalHistorico" class="modal-colar-btn-cancel">Cancelar</button>
+                        <button type="submit" id="btnImportarHistorico" class="modal-colar-btn-submit">Importar Planilha</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     {{-- ── Modal Guia de Etapas ── --}}
     <div id="modalGuiaEtapas" style="display:none;">
         <div class="modal-colar-overlay" id="overlayModalGuia"></div>
@@ -881,14 +946,6 @@
                                     @foreach($planos as $p)
                                         <option value="{{ $p->id }}">{{ $p->nome }}</option>
                                     @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="modal-colar-field-lbl">Coparticipação</label>
-                                <select name="saude_coparticipacao" id="editar_saude_coparticipacao" class="modal-colar-select">
-                                    <option value="">Selecione...</option>
-                                    <option value="com">Com Coparticipação</option>
-                                    <option value="sem">Sem Coparticipação</option>
                                 </select>
                             </div>
                             <div>
@@ -1246,7 +1303,6 @@
 
                 // Pré-popular campos Saúde
                 $('#editar_saude_plano_id').val(row.plano_saude_id || '');
-                $('#editar_saude_coparticipacao').val(row.saude_coparticipacao || '');
                 popularUFsCidade('#editar_saude_uf', '#editar_saude_cidade',
                     row.saude_uf || row.uf || '', row.saude_cidade || row.cidade || '');
 
@@ -1340,20 +1396,17 @@
 
             function fecharModalColar() {
                 $('#modalColarDados').hide();
+            }
+
+            function limparModalColar() {
                 $('#textoColar').val('');
                 $('#colar_user_id').val('');
-                // Saúde
+                $('#colar_uf').val('');
+                $('#colar_cidade').html('<option value="">Selecione a UF primeiro...</option>').prop('disabled', true);
                 $('#colar_saude_plano_id').val('');
-                $('#colar_saude_coparticipacao').val('');
-                $('#colar_saude_uf').val('');
-                $('#colar_saude_cidade').html('<option value="">Selecione a UF primeiro...</option>').prop('disabled', true);
                 $('#dot-saude').removeClass('modal-tab-dot-ativo');
-                // Odonto
                 $('#colar_odonto_plano_id').val('');
-                $('#colar_odonto_uf').val('');
-                $('#colar_odonto_cidade').html('<option value="">Selecione a UF primeiro...</option>').prop('disabled', true);
                 $('#dot-odonto').removeClass('modal-tab-dot-ativo');
-                // Reset to saúde tab
                 $('.modal-tab-btn').removeClass('modal-tab-ativo');
                 $('.modal-tab-btn[data-tab="saude"]').addClass('modal-tab-ativo');
                 $('#painel-saude').show();
@@ -1365,18 +1418,33 @@
 
             $('#btnNovoContrato').on('click', abrirModalColar);
             $('#fecharModalColar').on('click', fecharModalColar);
-            $('#cancelarModalColar').on('click', fecharModalColar);
             $('#overlayModalColar').on('click', fecharModalColar);
+            $('#cancelarModalColar').on('click', function () { fecharModalColar(); limparModalColar(); });
 
             // ── Cidades restritas por UF ────────────────────────────────────
             // Para limitar as cidades de uma UF, adicione a sigla e o array aqui.
             // Deixe a UF fora do objeto para exibir todas as cidades do JSON.
             var cidadesRestritas = {
-                'GO': ['Anápolis', 'Goiânia', 'Rio Verde']
-                // 'SP': ['São Paulo', 'Campinas'],  ← exemplo para adicionar outra UF
+                'GO': ['Anápolis', 'Goiânia', 'Rio Verde'],
+                'DF': ['Brasília']
             };
 
-            // UF → Cidade cascade (carrega JSON uma vez, reutilizável para todos os modals)
+            // Cascade UF compartilhado (modal Novo Contrato)
+            $('#colar_uf').on('change', function () {
+                var uf = $(this).val();
+                var $cid = $('#colar_cidade');
+                if (!uf || !cidadesRestritas[uf]) {
+                    $cid.html('<option value="">Selecione a UF primeiro...</option>').prop('disabled', true);
+                    return;
+                }
+                var opts = '<option value="">Selecione a cidade...</option>';
+                $.each(cidadesRestritas[uf], function (i, c) {
+                    opts += '<option value="' + c + '">' + c + '</option>';
+                });
+                $cid.html(opts).prop('disabled', false);
+            });
+
+            // UF → Cidade cascade (modal Editar — carrega JSON para todos os estados)
             $.getJSON("{{ asset('js/estados_cidades.json') }}", function (estadosCidades) {
                 window._estadosCidades = estadosCidades;
 
@@ -1384,7 +1452,7 @@
                 $.each(estadosCidades, function (i, estado) {
                     ufOptions += '<option value="' + estado.sigla + '">' + estado.sigla + '</option>';
                 });
-                $('#colar_saude_uf, #colar_odonto_uf, #editar_saude_uf, #editar_odonto_uf').html(ufOptions);
+                $('#editar_saude_uf, #editar_odonto_uf').html(ufOptions);
 
                 window._carregarCidades = function (ufSelect, cidadeSelect, cidadeAtual) {
                     var uf = ufSelect.val();
@@ -1406,12 +1474,6 @@
                     });
                 };
 
-                $('#colar_saude_uf').on('change', function () {
-                    window._carregarCidades($(this), $('#colar_saude_cidade'));
-                });
-                $('#colar_odonto_uf').on('change', function () {
-                    window._carregarCidades($(this), $('#colar_odonto_cidade'));
-                });
                 $('#editar_saude_uf').on('change', function () {
                     window._carregarCidades($(this), $('#editar_saude_cidade'));
                 });
@@ -1438,21 +1500,33 @@
             });
 
             // ── Modal Importar Planilha ──
-            window.abrirModalPlanilha = function (contratoId, modoEdicao) {
+            window.abrirModalPlanilha = function (contratoId, modoEdicao, tipoContrato) {
+                var ehAmbos = (tipoContrato === 'ambos');
                 $('#planilha_contrato_id').val(contratoId);
                 $('#planilha_modo_edicao').val(modoEdicao ? '1' : '');
                 $('#planilha_justificativa').val('');
-                $('#arquivoPlanilha').val('');
+                $('#arquivoPlanilhaSaude').val('');
+                $('#arquivoPlanilhaOdonto').val('');
+                $('#planilha_tipo_contrato').val(tipoContrato || '');
+                $('#planilha_tipo').val(tipoContrato === 'odonto' ? 'odonto' : 'saude');
                 $('#planilhaMsgErro').hide().text('');
                 $('#planilhaMsgSucesso').hide().text('');
-                $('#btnImportarPlanilha').prop('disabled', false).text('Importar Planilha');
-                if (modoEdicao) {
-                    $('#modalPlanilhaTitulo').text('Re-importar Planilha');
-                    $('#modalPlanilhaSub').text('Recalcula vidas e valor sem avançar etapa');
+                $('#btnImportarPlanilha').prop('disabled', false);
+
+                // Mostrar painéis corretos
+                $('#planilhaSaudePanel').toggle(tipoContrato !== 'odonto');
+                $('#planilhaOdontoPanel').toggle(tipoContrato !== 'saude');
+                $('#planilhaColAcomo').toggle(tipoContrato !== 'odonto');
+
+                if (ehAmbos) {
+                    $('#btnImportarPlanilha').text('Enviar Planilhas');
+                    $('#modalPlanilhaSub').text(modoEdicao ? 'Recalcula vidas e valor sem avançar etapa' : 'Selecione os dois arquivos .xlsx (Saúde e Odonto)');
                 } else {
-                    $('#modalPlanilhaTitulo').text('Importar Planilha de Beneficiários');
-                    $('#modalPlanilhaSub').text('Selecione o arquivo .xlsx no formato SIAEG');
+                    $('#btnImportarPlanilha').text('Importar Planilha');
+                    $('#modalPlanilhaSub').text(modoEdicao ? 'Recalcula vidas e valor sem avançar etapa' : 'Selecione o arquivo .xlsx no formato SIAEG');
                 }
+
+                $('#modalPlanilhaTitulo').text(modoEdicao ? 'Re-importar Planilha' : 'Importar Planilha de Beneficiários');
                 $('#modalImportarPlanilha').show();
             };
 
@@ -1496,8 +1570,14 @@
                 $('#adesaoLendoPdf').hide();
                 $('#adesaoValorExtraidoWrap').hide();
                 $('#adesaoValorExtraidoBox').text('');
+                $('#adesaoVencimentoWrap').hide();
+                $('#adesaoVencimentoBox').text('');
+                $('#adesaoVencimentoHidden').val('');
+                $('#adesaoDataInput').val('');
                 $('#adesaoValorManualWrap').hide();
                 $('#adesaoBoletoValorManual').val('');
+                $('#adesaoDataManualWrap').hide();
+                $('#adesaoDataManualInput').val('');
                 $('#adesaoAlertaDiferenca').hide();
                 $('#adesaoJustificativaWrap').hide();
                 $('#adesaoJustificativa').val('');
@@ -1533,6 +1613,10 @@
                 $('#adesaoValorManualWrap').show();
                 if (typeof $.fn.mask === 'function') {
                     $('#adesaoBoletoValorManual').mask('#.##0,00', { reverse: true });
+                }
+                // Mostra campo de data manual só se a data não foi extraída do PDF
+                if (!$('#adesaoDataInput').val()) {
+                    $('#adesaoDataManualWrap').show();
                 }
             }
 
@@ -1575,18 +1659,39 @@
                         var fmt = valorExtraido.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                         $('#adesaoValorExtraidoBox').text('R$ ' + fmt);
                         $('#adesaoValorExtraidoWrap').show();
+                        if (res.data_vencimento) {
+                            var p = res.data_vencimento.split('-');
+                            $('#adesaoVencimentoBox').text(p[2] + '/' + p[1] + '/' + p[0]);
+                            $('#adesaoVencimentoHidden').val(res.data_vencimento);
+                            $('#adesaoDataInput').val(res.data_vencimento);
+                            $('#adesaoVencimentoWrap').show();
+                        } else {
+                            $('#adesaoDataManualWrap').show();
+                        }
                         verificarDiferencaAdesao(valorExtraido);
                     },
                     error: function (xhr) {
-                        // Qualquer falha na leitura → mostra campo manual
                         $('#adesaoLendoPdf').hide();
                         var resp = xhr.responseJSON || {};
                         if (resp.preview)  console.log('[PDF texto original]', resp.preview);
                         if (resp.dekerned) console.log('[PDF dekerned]',       resp.dekerned);
                         if (resp.compact)  console.log('[PDF compact]',        resp.compact);
+                        if (resp.data_vencimento) {
+                            var p = resp.data_vencimento.split('-');
+                            $('#adesaoVencimentoBox').text(p[2] + '/' + p[1] + '/' + p[0]);
+                            $('#adesaoVencimentoHidden').val(resp.data_vencimento);
+                            $('#adesaoDataInput').val(resp.data_vencimento);
+                            $('#adesaoVencimentoWrap').show();
+                            $('#adesaoValorExtraidoWrap').show();
+                        }
                         mostrarCampoManual();
                     }
                 });
+            });
+
+            // Data manual: sincroniza ao campo hidden para envio ao servidor
+            $(document).on('change', '#adesaoDataManualInput', function () {
+                $('#adesaoDataInput').val($(this).val());
             });
 
             // Campo manual: verifica diferença ao sair do campo
@@ -1942,81 +2047,146 @@
                 });
             });
 
-            function submeterPlanilha() {
-                $('#planilhaMsgErro').hide().text('');
-                $('#planilhaMsgSucesso').hide().text('');
+            // ── Helper: SweetAlert de divergência de valor ──────────────────
+            function mostrarDivergencia(res, onConfirm) {
+                var fmtV = function (v) { return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); };
+                var inputStyle = 'width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.15);'
+                               + 'border-radius:8px;padding:8px 12px;font-size:.84rem;outline:none;box-sizing:border-box;margin-top:6px;';
+                Swal.fire({
+                    title: '<span style="font-size:.92rem;font-weight:700;color:#fbbf24;">Divergência de Valor</span>',
+                    html: '<p style="font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:10px;">'
+                        + 'Valor anterior (boleto): <strong style="color:#f87171;">' + fmtV(res.valor_anterior) + '</strong><br>'
+                        + 'Novo valor (planilha): <strong style="color:#34d399;">' + fmtV(res.valor_novo) + '</strong>'
+                        + '</p>'
+                        + '<textarea id="swal-just-planilha" rows="3" placeholder="Informe a justificativa da diferença de valor..." style="' + inputStyle + '"></textarea>',
+                    background: '#0f1e38', color: '#e2e8f0',
+                    confirmButtonColor: '#4f8ef7', confirmButtonText: 'Salvar com Justificativa',
+                    showCancelButton: true, cancelButtonText: 'Cancelar',
+                    preConfirm: function () {
+                        var just = document.getElementById('swal-just-planilha').value.trim();
+                        if (!just) { Swal.showValidationMessage('A justificativa é obrigatória.'); return false; }
+                        return just;
+                    }
+                }).then(function (result) {
+                    if (result.isConfirmed) onConfirm(result.value);
+                });
+            }
 
-                var file = $('#arquivoPlanilha')[0].files[0];
-                if (!file) {
-                    $('#planilhaMsgErro').text('Selecione um arquivo .xlsx antes de importar.').show();
-                    return;
+            // ── Submeter planilha(s) ─────────────────────────────────────────
+            function submeterPlanilha(justSaude, justOdonto) {
+                var tipoContrato = $('#planilha_tipo_contrato').val();
+                var modoEd       = $('#planilha_modo_edicao').val() === '1';
+                var cid          = $('#planilha_contrato_id').val();
+                var $btn         = $('#btnImportarPlanilha');
+                var $erro        = $('#planilhaMsgErro');
+                var $suc         = $('#planilhaMsgSucesso');
+                $erro.hide().text('');
+                $suc.hide().text('');
+
+                function concluir() {
+                    $suc.text(tipoContrato === 'ambos' ? 'Planilhas Saúde e Odonto importadas!' : 'Importado com sucesso!').show();
+                    setTimeout(function () {
+                        if (modoEd) {
+                            fecharModalPlanilha();
+                            tableempresarial && tableempresarial.ajax.reload(null, false);
+                        } else if (window.transicaoEtapa) {
+                            window.transicaoEtapa(1, cid, fecharModalPlanilha);
+                        } else {
+                            fecharModalPlanilha();
+                            tableempresarial && tableempresarial.ajax.reload(null, false);
+                        }
+                    }, 500);
                 }
 
-                var formData = new FormData(document.getElementById('formImportarPlanilha'));
-                $('#btnImportarPlanilha').prop('disabled', true).text('Importando...');
+                function buildFd(tipoPlanilha, arquivo, justificativa) {
+                    var fd = new FormData();
+                    fd.append('_token',                $('input[name="_token"]').first().val());
+                    fd.append('contrato_id',           cid);
+                    fd.append('modo_edicao',           modoEd ? '1' : '');
+                    fd.append('justificativa_diferenca', justificativa || '');
+                    fd.append('tipo_planilha',         tipoPlanilha);
+                    fd.append('planilha',              arquivo);
+                    return fd;
+                }
 
-                $.ajax({
-                    url: urlImportarPlanilha,
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (res) {
-                        if (res.divergencia) {
-                            $('#btnImportarPlanilha').prop('disabled', false).text('Importar Planilha');
-                            var fmtV = function (v) {
-                                return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                            };
-                            var inputStyle = 'width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.15);'
-                                           + 'border-radius:8px;padding:8px 12px;font-size:.84rem;outline:none;box-sizing:border-box;margin-top:6px;';
-                            Swal.fire({
-                                title: '<span style="font-size:.92rem;font-weight:700;color:#fbbf24;">Divergência de Valor</span>',
-                                html: '<p style="font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:10px;">'
-                                    + 'Valor anterior (boleto): <strong style="color:#f87171;">' + fmtV(res.valor_anterior) + '</strong><br>'
-                                    + 'Novo valor (planilha): <strong style="color:#34d399;">' + fmtV(res.valor_novo) + '</strong>'
-                                    + '</p>'
-                                    + '<textarea id="swal-just-planilha" rows="3" placeholder="Informe a justificativa da diferença de valor..." style="' + inputStyle + '"></textarea>',
-                                background: '#0f1e38',
-                                color: '#e2e8f0',
-                                confirmButtonColor: '#4f8ef7',
-                                confirmButtonText: 'Salvar com Justificativa',
-                                showCancelButton: true,
-                                cancelButtonText: 'Cancelar',
-                                preConfirm: function () {
-                                    var just = document.getElementById('swal-just-planilha').value.trim();
-                                    if (!just) { Swal.showValidationMessage('A justificativa é obrigatória.'); return false; }
-                                    return just;
+                // ── Modo AMBOS: 2 arquivos, 1 clique ────────────────────────
+                if (tipoContrato === 'ambos') {
+                    var fileSaude  = $('#arquivoPlanilhaSaude')[0].files[0];
+                    var fileOdonto = $('#arquivoPlanilhaOdonto')[0].files[0];
+                    if (!fileSaude)  { $erro.text('Selecione a planilha de Saúde.').show();  return; }
+                    if (!fileOdonto) { $erro.text('Selecione a planilha de Odonto.').show(); return; }
+
+                    function uploadOdonto() {
+                        $btn.text('Importando Odonto...');
+                        $.ajax({
+                            url: urlImportarPlanilha, method: 'POST',
+                            data: buildFd('odonto', fileOdonto, justOdonto),
+                            processData: false, contentType: false,
+                            success: function (res) {
+                                if (res.divergencia) {
+                                    $btn.prop('disabled', false).text('Enviar Planilhas');
+                                    mostrarDivergencia(res, function (just) { justOdonto = just; uploadOdonto(); });
+                                    return;
                                 }
-                            }).then(function (result) {
-                                if (!result.isConfirmed) return;
-                                $('#planilha_justificativa').val(result.value);
-                                submeterPlanilha();
-                            });
-                            return;
-                        }
-                        var cid = $('#planilha_contrato_id').val();
-                        var modoEd = $('#planilha_modo_edicao').val() === '1';
-                        $('#planilhaMsgSucesso').text(res.message || 'Importado com sucesso!').show();
-                        setTimeout(function () {
-                            if (modoEd) {
-                                fecharModalPlanilha();
-                                tableempresarial && tableempresarial.ajax.reload(null, false);
-                            } else if (window.transicaoEtapa) {
-                                window.transicaoEtapa(1, cid, fecharModalPlanilha);
-                            } else {
-                                fecharModalPlanilha();
-                                tableempresarial && tableempresarial.ajax.reload(null, false);
+                                concluir();
+                            },
+                            error: function (xhr) {
+                                var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro ao importar Odonto.';
+                                $erro.text('Odonto: ' + msg).show();
+                                $btn.prop('disabled', false).text('Enviar Planilhas');
                             }
-                        }, 500);
-                    },
-                    error: function (xhr) {
-                        var msg = (xhr.responseJSON && xhr.responseJSON.error)
-                            ? xhr.responseJSON.error
-                            : 'Erro ao importar. Tente novamente.';
-                        $('#planilhaMsgErro').text(msg).show();
-                        $('#btnImportarPlanilha').prop('disabled', false).text('Importar Planilha');
+                        });
                     }
-                });
+
+                    $btn.prop('disabled', true).text('Importando Saúde...');
+                    $.ajax({
+                        url: urlImportarPlanilha, method: 'POST',
+                        data: buildFd('saude', fileSaude, justSaude),
+                        processData: false, contentType: false,
+                        success: function (res) {
+                            if (res.divergencia) {
+                                $btn.prop('disabled', false).text('Enviar Planilhas');
+                                mostrarDivergencia(res, function (just) { justSaude = just; submeterPlanilha(justSaude, justOdonto); });
+                                return;
+                            }
+                            uploadOdonto();
+                        },
+                        error: function (xhr) {
+                            var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro ao importar Saúde.';
+                            $erro.text('Saúde: ' + msg).show();
+                            $btn.prop('disabled', false).text('Enviar Planilhas');
+                        }
+                    });
+
+                // ── Modo ÚNICO: saúde ou odonto ──────────────────────────────
+                } else {
+                    var tipo   = $('#planilha_tipo').val();
+                    var file   = tipo === 'odonto' ? $('#arquivoPlanilhaOdonto')[0].files[0] : $('#arquivoPlanilhaSaude')[0].files[0];
+                    if (!file) { $erro.text('Selecione um arquivo .xlsx antes de importar.').show(); return; }
+
+                    $btn.prop('disabled', true).text('Importando...');
+                    $.ajax({
+                        url: urlImportarPlanilha, method: 'POST',
+                        data: buildFd(tipo, file, $('#planilha_justificativa').val()),
+                        processData: false, contentType: false,
+                        success: function (res) {
+                            if (res.divergencia) {
+                                $btn.prop('disabled', false).text('Importar Planilha');
+                                mostrarDivergencia(res, function (just) {
+                                    $('#planilha_justificativa').val(just);
+                                    submeterPlanilha();
+                                });
+                                return;
+                            }
+                            concluir();
+                        },
+                        error: function (xhr) {
+                            var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro ao importar. Tente novamente.';
+                            $erro.text(msg).show();
+                            $btn.prop('disabled', false).text('Importar Planilha');
+                        }
+                    });
+                }
             }
 
             $('#formImportarPlanilha').on('submit', function (e) {
@@ -2376,41 +2546,30 @@
                 if (!texto) { $('#colarMsgErro').text('Cole os dados no campo de texto.').show(); return; }
 
                 var corritorId = $('#colar_user_id').val();
+                var ufShared     = $('#colar_uf').val();
+                var cidadeShared = $('#colar_cidade').val();
                 var saude = {
-                    plano_id:       $('#colar_saude_plano_id').val(),
-                    coparticipacao: $('#colar_saude_coparticipacao').val(),
-                    uf:             $('#colar_saude_uf').val(),
-                    cidade:         $('#colar_saude_cidade').val(),
-                    user_id:        corritorId
+                    plano_id: $('#colar_saude_plano_id').val(),
                 };
                 var odonto = {
                     plano_id: $('#colar_odonto_plano_id').val(),
-                    uf:       $('#colar_odonto_uf').val(),
-                    cidade:   $('#colar_odonto_cidade').val(),
-                    user_id:  corritorId
                 };
 
-                var temSaude  = saude.plano_id || saude.uf || saude.cidade;
-                var temOdonto = odonto.plano_id || odonto.uf || odonto.cidade;
+                var temSaude  = !!saude.plano_id;
+                var temOdonto = !!odonto.plano_id;
 
                 if (!temSaude && !temOdonto) {
-                    $('#colarMsgErro').text('Preencha pelo menos uma aba (Saúde ou Odonto).').show(); return;
+                    $('#colarMsgErro').text('Selecione pelo menos um plano (Saúde ou Odonto).').show(); return;
                 }
                 if (!corritorId) {
                     $('#colarMsgErro').text('Selecione o corretor.').show(); return;
                 }
-                if (temSaude) {
-                    if (!saude.plano_id)       { $('.modal-tab-btn[data-tab="saude"]').click(); $('#colarMsgErro').text('Selecione o plano de Saúde.').show(); return; }
-                    if (!saude.coparticipacao) { $('.modal-tab-btn[data-tab="saude"]').click(); $('#colarMsgErro').text('Selecione a Coparticipação do plano de Saúde.').show(); return; }
-                    if (!saude.uf)             { $('.modal-tab-btn[data-tab="saude"]').click(); $('#colarMsgErro').text('Selecione a UF do plano de Saúde.').show(); return; }
-                    if (!saude.cidade)         { $('.modal-tab-btn[data-tab="saude"]').click(); $('#colarMsgErro').text('Selecione a cidade do plano de Saúde.').show(); return; }
+                if (!ufShared) {
+                    $('#colarMsgErro').text('Selecione a UF.').show(); return;
                 }
-                if (temOdonto) {
-                    if (!odonto.plano_id) { $('.modal-tab-btn[data-tab="odonto"]').click(); $('#colarMsgErro').text('Selecione o plano Odontológico.').show(); return; }
-                    if (!odonto.uf)       { $('.modal-tab-btn[data-tab="odonto"]').click(); $('#colarMsgErro').text('Selecione a UF do plano Odontológico.').show(); return; }
-                    if (!odonto.cidade)   { $('.modal-tab-btn[data-tab="odonto"]').click(); $('#colarMsgErro').text('Selecione a cidade do plano Odontológico.').show(); return; }
+                if (!cidadeShared) {
+                    $('#colarMsgErro').text('Selecione a cidade.').show(); return;
                 }
-
                 $('#btnCadastrarColar').prop('disabled', true).text('Cadastrando...');
 
                 $.ajax({
@@ -2419,19 +2578,19 @@
                     data: {
                         texto_colado:          texto,
                         saude_plano_id:        saude.plano_id       || '',
-                        saude_coparticipacao:  saude.coparticipacao || '',
-                        saude_uf:              saude.uf             || '',
-                        saude_cidade:          saude.cidade         || '',
+                        saude_uf:              temSaude ? ufShared     : '',
+                        saude_cidade:          temSaude ? cidadeShared : '',
                         saude_user_id:         corritorId           || '',
                         odonto_plano_id:       odonto.plano_id      || '',
-                        odonto_uf:             odonto.uf            || '',
-                        odonto_cidade:         odonto.cidade        || '',
+                        odonto_uf:             temOdonto ? ufShared     : '',
+                        odonto_cidade:         temOdonto ? cidadeShared : '',
                         odonto_user_id:        corritorId           || '',
                     },
                     success: function (res) {
                         $('#colarMsgSucesso').text(res.message || 'Contrato cadastrado com sucesso!').show();
                         setTimeout(function () {
                             fecharModalColar();
+                            limparModalColar();
                             location.reload();
                         }, 1500);
                     },

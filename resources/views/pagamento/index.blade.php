@@ -124,6 +124,13 @@
                                 <span class="status-tag-count">0</span>
                             </button>
 
+                            <button class="status-tag-btn" data-status="tem_pagamento"
+                                data-bg="rgba(34,197,94,.1)" data-border="rgba(34,197,94,.4)" data-text="#86efac" data-active="#22c55e"
+                                style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#86efac;">
+                                <span class="plano-tag-dot" style="background:#22c55e;"></span>Recebeu Algo
+                                <span class="status-tag-count">0</span>
+                            </button>
+
                             <button class="status-tag-btn" data-status="sem_pagamento"
                                 data-bg="rgba(248,113,113,.1)" data-border="rgba(248,113,113,.4)" data-text="#fca5a5" data-active="#ef4444"
                                 style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fca5a5;">

@@ -10,8 +10,7 @@ class FaixaEtariaValor extends Model
 
     protected $fillable = [
         'plano_id', 'cidade_id', 'faixa',
-        'com_copart_apart', 'com_copart_enfer',
-        'sem_copart_apart', 'sem_copart_enfer',
+        'apartamento', 'enfermaria',
     ];
 
     public static array $labels = [

@@ -103,6 +103,8 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
     var totalC = parseFloat(rowData.total_comissoes       || 0);
 
     switch (filtroStatusPag) {
+        case 'tem_pagamento':
+            return totalC > 0;
         case 'sem_pagamento':
             return totalC === 0;
         case 'saude_so_agenciamento':
@@ -239,7 +241,7 @@ function inicializarPagamento() {
 
             // Counts dos botões de Status
             var allRows = this.api().data().toArray();
-            var sc = { '': allRows.length, sem_pagamento: 0, saude_so_agenciamento: 0,
+            var sc = { '': allRows.length, tem_pagamento: 0, sem_pagamento: 0, saude_so_agenciamento: 0,
                        saude_so_recorrencia: 0, odonto_so_agenciamento: 0,
                        odonto_so_recorrencia: 0, gap_recorrencia: 0 };
             allRows.forEach(function (r) {
@@ -250,6 +252,7 @@ function inicializarPagamento() {
                 var temReO = parseInt(r.tem_recorrencia_odonto  || 0);
                 var temGap = parseInt(r.tem_gap_recorrencia     || 0);
                 var totalC = parseFloat(r.total_comissoes       || 0);
+                if (totalC > 0) sc.tem_pagamento++;
                 if (totalC === 0) sc.sem_pagamento++;
                 if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 1 && temReS === 0) sc.saude_so_agenciamento++;
                 if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 0 && temReS === 1) sc.saude_so_recorrencia++;

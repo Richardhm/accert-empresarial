@@ -318,15 +318,8 @@ $(function () {
         html += '<thead>';
         html += '<tr class="cfg-th-grupo">';
         html += '<th class="th-faixa">Faixa Etária</th>';
-        html += '<th colspan="2" class="th-copart">Com Coparticipação</th>';
-        html += '<th colspan="2" class="th-sem">Sem Coparticipação</th>';
-        html += '</tr>';
-        html += '<tr class="cfg-th-sub">';
-        html += '<th class="th-faixa"></th>';
         html += '<th class="th-apart">Apartamento</th>';
         html += '<th class="th-enfer">Enfermaria</th>';
-        html += '<th class="th-sapart">Apartamento</th>';
-        html += '<th class="th-senfer">Enfermaria</th>';
         html += '</tr>';
         html += '</thead><tbody>';
 
@@ -334,10 +327,8 @@ $(function () {
             var v = valores[i] || {};
             html += '<tr>';
             html += '<td class="td-faixa">' + faixasLabels[i] + '</td>';
-            html += '<td>' + inputFaixa(i, 'com_copart_apart', v.com_copart_apart, 'input-copart') + '</td>';
-            html += '<td>' + inputFaixa(i, 'com_copart_enfer', v.com_copart_enfer, 'input-copart') + '</td>';
-            html += '<td>' + inputFaixa(i, 'sem_copart_apart', v.sem_copart_apart, 'input-sem') + '</td>';
-            html += '<td>' + inputFaixa(i, 'sem_copart_enfer', v.sem_copart_enfer, 'input-sem') + '</td>';
+            html += '<td>' + inputFaixa(i, 'apartamento', v.apartamento, 'input-copart') + '</td>';
+            html += '<td>' + inputFaixa(i, 'enfermaria',  v.enfermaria,  'input-sem')    + '</td>';
             html += '</tr>';
         }
         html += '</tbody></table>';
