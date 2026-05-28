@@ -342,28 +342,7 @@
                 <div id="modal-detalhe-loading" style="display:flex;justify-content:center;padding:40px;">
                     <div class="dot-flashing"><div></div><div></div><div></div></div>
                 </div>
-                <div id="modal-detalhe-content" style="display:none;overflow-x:auto;padding:0 22px;">
-                    <table id="tabela-detalhe-pagamentos"
-                        style="width:100%;border-collapse:collapse;font-size:.73rem;color:#cbd5e1;">
-                        <thead>
-                            <tr style="border-bottom:1px solid rgba(255,255,255,.1);text-align:left;">
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;">Tipo</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;">Parcela</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;">Vencimento</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;text-align:right;">VL Base</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;text-align:right;">% Imp.</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;text-align:right;">VL Líquido</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;text-align:right;">% Dist.</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;text-align:right;">VL a Pagar</th>
-                                <th style="padding:8px 6px;color:rgba(255,255,255,.4);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;">Arquivo</th>
-                            </tr>
-                        </thead>
-                        <tbody id="modal-detalhe-tbody"></tbody>
-                    </table>
-                    <div id="modal-detalhe-vazio" style="display:none;text-align:center;padding:32px;color:rgba(255,255,255,.3);font-size:.82rem;">
-                        Nenhum pagamento encontrado para este contrato.
-                    </div>
-                </div>
+                <div id="modal-detalhe-content" style="display:none;overflow-x:auto;padding:0 22px 4px;"></div>
             </div>
         </div>
     </div>
@@ -475,7 +454,7 @@
     </div>
 
     @section('scripts')
-        <script src="{{ asset('js/pagamento-inicializar.js') }}"></script>
+        <script src="{{ asset('js/pagamento-inicializar.js') }}?v={{ filemtime(public_path('js/pagamento-inicializar.js')) }}"></script>
     @endsection
 
 </x-app-layout>

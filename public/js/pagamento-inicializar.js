@@ -106,7 +106,7 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
         case 'tem_pagamento':
             return totalC > 0;
         case 'sem_pagamento':
-            return totalC === 0;
+            return temAgS === 0 && temAgO === 0 && temReS === 0 && temReO === 0;
         case 'saude_so_agenciamento':
             return (tipo === 'saude' || tipo === 'ambos') && temAgS === 1 && temReS === 0;
         case 'saude_so_recorrencia':
@@ -118,7 +118,9 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
         case 'so_agenciamento':
             return (temAgS === 1 || temAgO === 1) && temReS === 0 && temReO === 0;
         case 'so_recorrencia':
-            return (temReS === 1 || temReO === 1) && temAgS === 0 && temAgO === 0;
+            return (temReS === 1 || temReO === 1) && temAgS === 0 && temAgO === 0 && temGap !== 1;
+        case 'agenc_recorr':
+            return (temAgS === 1 || temAgO === 1) && (temReS === 1 || temReO === 1) && temGap !== 1;
         case 'gap_recorrencia':
             return temGap === 1;
         default:
@@ -253,7 +255,7 @@ function inicializarPagamento() {
                 var temGap = parseInt(r.tem_gap_recorrencia     || 0);
                 var totalC = parseFloat(r.total_comissoes       || 0);
                 if (totalC > 0) sc.tem_pagamento++;
-                if (totalC === 0) sc.sem_pagamento++;
+                if (!temAgS && !temAgO && !temReS && !temReO) sc.sem_pagamento++;
                 if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 1 && temReS === 0) sc.saude_so_agenciamento++;
                 if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 0 && temReS === 1) sc.saude_so_recorrencia++;
                 if ((tipo === 'odonto' || tipo === 'ambos') && temAgO === 1 && temReO === 0) sc.odonto_so_agenciamento++;
@@ -269,14 +271,15 @@ function inicializarPagamento() {
             var mData = {}, mPlans = [];
             allRows.forEach(function (r) {
                 var pl = r.plano || '—';
-                if (!mData[pl]) { mData[pl] = { total:0, sem_pagamento:0, so_agenciamento:0, so_recorrencia:0, gap_recorrencia:0 }; mPlans.push(pl); }
+                if (!mData[pl]) { mData[pl] = { total:0, sem_pagamento:0, so_agenciamento:0, so_recorrencia:0, agenc_recorr:0, gap_recorrencia:0 }; mPlans.push(pl); }
                 var agS = parseInt(r.tem_agenciamento_saude  || 0), reS = parseInt(r.tem_recorrencia_saude   || 0);
                 var agO = parseInt(r.tem_agenciamento_odonto || 0), reO = parseInt(r.tem_recorrencia_odonto  || 0);
-                var gap = parseInt(r.tem_gap_recorrencia || 0), tot = parseFloat(r.total_comissoes || 0);
+                var gap = parseInt(r.tem_gap_recorrencia || 0);
                 mData[pl].total++;
-                if (tot === 0)                                         mData[pl].sem_pagamento++;
+                if (!agS && !agO && !reS && !reO)                      mData[pl].sem_pagamento++;
                 if ((agS||agO) && !reS && !reO)                        mData[pl].so_agenciamento++;
-                if ((reS||reO) && !agS && !agO)                        mData[pl].so_recorrencia++;
+                if ((reS||reO) && !agS && !agO && !gap)                mData[pl].so_recorrencia++;
+                if ((agS||agO) && (reS||reO) && !gap)                  mData[pl].agenc_recorr++;
                 if (gap === 1)                                          mData[pl].gap_recorrencia++;
             });
             mPlans.sort();
@@ -285,6 +288,7 @@ function inicializarPagamento() {
                 { key:'sem_pagamento',   label:'Sem Pag',    color:'#fca5a5', activeBg:'rgba(248,113,113,.18)' },
                 { key:'so_agenciamento', label:'Só Agenc',   color:'#86efac', activeBg:'rgba(34,197,94,.18)'   },
                 { key:'so_recorrencia',  label:'Só Recorr',  color:'#93c5fd', activeBg:'rgba(59,130,246,.18)'  },
+                { key:'agenc_recorr',    label:'Ag+Recorr',  color:'#fcd34d', activeBg:'rgba(245,158,11,.18)'  },
                 { key:'gap_recorrencia', label:'Gap',         color:'#fde68a', activeBg:'rgba(251,191,36,.18)'  },
             ];
 
@@ -705,12 +709,104 @@ $('#btn-enviar-upload-excel').on('click', function () {
     });
 });
 
+// ── Detalhe: renderiza duas seções (Agenciamento / Recorrência) ──────────────
+function renderDetalheModal(pagamentos) {
+    var $content = $('#modal-detalhe-content').empty();
+
+    var fmt = function (v) {
+        if (v === null || v === undefined || v === '') return '—';
+        return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    var fmtPct = function (v) {
+        if (v === null || v === undefined || v === '') return '—';
+        return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+    };
+
+    if (!pagamentos || pagamentos.length === 0) {
+        $content.append('<div style="text-align:center;padding:32px;color:rgba(255,255,255,.3);font-size:.82rem;">Nenhum pagamento encontrado para este contrato.</div>');
+        $content.show();
+        return;
+    }
+
+    var agenc  = pagamentos.filter(function (p) { return p.tipo_planilha.indexOf('agenciamento') === 0; });
+    var recorr = pagamentos.filter(function (p) { return p.tipo_planilha.indexOf('recorrencia')  === 0; });
+
+    var TH = 'padding:5px 6px;color:rgba(255,255,255,.32);font-size:.62rem;text-transform:uppercase;font-weight:600;letter-spacing:.04em;';
+
+    function buildSection(titulo, corTitulo, bordaCor, registros) {
+        if (!registros.length) return '';
+        var total = registros.reduce(function (s, p) { return s + (parseFloat(p.vl_a_pagar) || 0); }, 0);
+
+        var h = '<div style="margin-bottom:20px;">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0 7px;margin-bottom:6px;border-bottom:1px solid ' + bordaCor + ';">'
+            + '<span style="color:' + corTitulo + ';font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">' + titulo + '</span>'
+            + '<span style="color:' + corTitulo + ';font-size:.8rem;font-weight:700;">' + fmt(total) + '</span>'
+            + '</div>'
+            + '<table style="width:100%;border-collapse:collapse;font-size:.72rem;color:#cbd5e1;">'
+            + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.07);">'
+            + '<th style="' + TH + 'white-space:nowrap;">Tipo</th>'
+            + '<th style="' + TH + 'text-align:center;">Parcela</th>'
+            + '<th style="' + TH + 'white-space:nowrap;">Vencimento</th>'
+            + '<th style="' + TH + 'text-align:right;white-space:nowrap;">VL Base</th>'
+            + '<th style="' + TH + 'text-align:right;">% Imp.</th>'
+            + '<th style="' + TH + 'text-align:right;white-space:nowrap;">VL Líquido</th>'
+            + '<th style="' + TH + 'text-align:right;">% Dist.</th>'
+            + '<th style="' + TH + 'text-align:right;white-space:nowrap;">VL a Pagar</th>'
+            + '<th style="' + TH + '">Arquivo</th>'
+            + '</tr></thead><tbody>';
+
+        registros.forEach(function (p) {
+            var ti   = TIPO_LABELS[p.tipo_planilha] || { sub: p.tipo_planilha, cor: '#fff' };
+            var venc = p.vencimento ? p.vencimento.split('-').reverse().join('/') : '—';
+            var isAgenc = p.tipo_planilha.indexOf('agenciamento') === 0;
+            var parc;
+            if (isAgenc) {
+                var orig = p.parcela && parseInt(p.parcela) !== 1
+                    ? ' <span style="color:rgba(255,255,255,.3);font-size:.6rem;font-weight:400;">(' + p.parcela + 'ª pl.)</span>'
+                    : '';
+                parc = '1ª' + orig;
+            } else {
+                parc = p.parcela ? (p.parcela + 'ª') : '—';
+            }
+            h += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">'
+               + '<td style="padding:6px 6px;white-space:nowrap;"><span style="color:' + ti.cor + ';font-size:.7rem;font-weight:700;">' + ti.sub + '</span></td>'
+               + '<td style="padding:6px 6px;text-align:center;font-weight:700;color:rgba(255,255,255,.7);">' + parc + '</td>'
+               + '<td style="padding:6px 6px;white-space:nowrap;">' + venc + '</td>'
+               + '<td style="padding:6px 6px;text-align:right;white-space:nowrap;">' + fmt(p.vl_base_com) + '</td>'
+               + '<td style="padding:6px 6px;text-align:right;">' + fmtPct(p.pct_imposto) + '</td>'
+               + '<td style="padding:6px 6px;text-align:right;white-space:nowrap;">' + fmt(p.vl_liquido) + '</td>'
+               + '<td style="padding:6px 6px;text-align:right;">' + fmtPct(p.pc_dist) + '</td>'
+               + '<td style="padding:6px 6px;text-align:right;white-space:nowrap;color:#34d399;font-weight:700;">' + fmt(p.vl_a_pagar) + '</td>'
+               + '<td style="padding:6px 6px;color:rgba(255,255,255,.28);font-size:.65rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;" title="' + (p.arquivo_original || '') + '">' + (p.arquivo_original || '—') + '</td>'
+               + '</tr>';
+        });
+
+        h += '</tbody></table></div>';
+        return h;
+    }
+
+    $content.append(buildSection('Agenciamento', '#86efac', 'rgba(34,197,94,.3)',   agenc));
+    $content.append(buildSection('Recorrência',  '#93c5fd', 'rgba(59,130,246,.3)',  recorr));
+
+    if (agenc.length && recorr.length) {
+        var totalGeral = pagamentos.reduce(function (s, p) { return s + (parseFloat(p.vl_a_pagar) || 0); }, 0);
+        $content.append(
+            '<div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:8px 0 4px;border-top:1px solid rgba(255,255,255,.1);">'
+            + '<span style="color:rgba(255,255,255,.4);font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Total Geral</span>'
+            + '<span style="color:#fcd34d;font-weight:700;font-size:.9rem;">' + fmt(totalGeral) + '</span>'
+            + '</div>'
+        );
+    }
+
+    $content.show();
+}
+
 // ── Detalhe: olhinho ──────────────────────────────────────────────────────────
 var TIPO_LABELS = {
-    agenciamento_saude:  { label: 'Agenciamento',  cor: '#34d399' },
-    agenciamento_odonto: { label: 'Agenciamento',  cor: '#93c5fd' },
-    recorrencia_saude:   { label: 'Recorrência',   cor: '#6ee7b7' },
-    recorrencia_odonto:  { label: 'Recorrência',   cor: '#a5b4fc' },
+    agenciamento_saude:  { sub: 'Saúde',  cor: '#34d399' },
+    agenciamento_odonto: { sub: 'Odonto', cor: '#93c5fd' },
+    recorrencia_saude:   { sub: 'Saúde',  cor: '#6ee7b7' },
+    recorrencia_odonto:  { sub: 'Odonto', cor: '#a5b4fc' },
 };
 
 $(document).on('click', '.btn-detalhe-pagamento', function (e) {
@@ -718,7 +814,7 @@ $(document).on('click', '.btn-detalhe-pagamento', function (e) {
     var id = $(this).data('id');
 
     $('#modal-detalhe-loading').show();
-    $('#modal-detalhe-content').hide();
+    $('#modal-detalhe-content').hide().empty();
     $('#modal-detalhe-titulo').text('Pagamentos do Contrato');
     $('#modal-detalhe-sub').text('');
     $('#modal-detalhe-overlay').fadeIn(180);
@@ -735,58 +831,12 @@ $(document).on('click', '.btn-detalhe-pagamento', function (e) {
             $('#modal-detalhe-sub').text(codigos.join(' | ') + (c.cnpj ? '  •  CNPJ: ' + c.cnpj : ''));
         }
 
-        var $tbody = $('#modal-detalhe-tbody').empty();
-        var pagamentos = res.pagamentos || [];
-
-        if (pagamentos.length === 0) {
-            $('#modal-detalhe-vazio').show();
-            $('#tabela-detalhe-pagamentos').hide();
-        } else {
-            $('#modal-detalhe-vazio').hide();
-            $('#tabela-detalhe-pagamentos').show();
-
-            var fmt = function (v) {
-                if (!v && v !== 0) return '—';
-                return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-            };
-            var fmtPct = function (v) {
-                if (!v && v !== 0) return '—';
-                return parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) + '%';
-            };
-
-            pagamentos.forEach(function (p) {
-                var info = TIPO_LABELS[p.tipo_planilha] || { label: p.tipo_planilha, cor: '#fff' };
-                var venc = p.vencimento
-                    ? p.vencimento.split('-').reverse().join('/')
-                    : '—';
-                var isAgenc = p.tipo_planilha.startsWith('agenciamento');
-                var parcelaStr = isAgenc
-                    ? '<span style="color:#fbbf24;font-weight:700;">1ª</span>'
-                    : '<span style="font-weight:700;">' + (p.parcela || '—') + 'ª</span>';
-
-                $tbody.append(
-                    '<tr style="border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s;" '
-                  + 'onmouseover="this.style.background=\'rgba(79,142,247,.07)\'" '
-                  + 'onmouseout="this.style.background=\'\'">'
-                  + '<td style="padding:7px 6px;"><span style="color:' + info.cor + ';font-size:.7rem;font-weight:700;">' + info.label + '</span></td>'
-                  + '<td style="padding:7px 6px;">' + parcelaStr + '</td>'
-                  + '<td style="padding:7px 6px;white-space:nowrap;">' + venc + '</td>'
-                  + '<td style="padding:7px 6px;text-align:right;white-space:nowrap;">' + fmt(p.vl_base_com) + '</td>'
-                  + '<td style="padding:7px 6px;text-align:right;">' + fmtPct(p.pct_imposto) + '</td>'
-                  + '<td style="padding:7px 6px;text-align:right;white-space:nowrap;">' + fmt(p.vl_liquido) + '</td>'
-                  + '<td style="padding:7px 6px;text-align:right;">' + fmtPct(p.pc_dist) + '</td>'
-                  + '<td style="padding:7px 6px;text-align:right;white-space:nowrap;color:#34d399;font-weight:700;">' + fmt(p.vl_a_pagar) + '</td>'
-                  + '<td style="padding:7px 6px;color:rgba(255,255,255,.35);font-size:.65rem;white-space:nowrap;">' + (p.arquivo_original || '—') + '</td>'
-                  + '</tr>'
-                );
-            });
-        }
-
-        $('#modal-detalhe-content').show();
+        renderDetalheModal(res.pagamentos || []);
     }).fail(function () {
         $('#modal-detalhe-loading').hide();
-        $('#modal-detalhe-content').show();
-        $('#modal-detalhe-vazio').show().text('Erro ao carregar pagamentos.');
+        $('#modal-detalhe-content')
+            .html('<div style="text-align:center;padding:32px;color:#f87171;font-size:.82rem;">Erro ao carregar pagamentos.</div>')
+            .show();
     });
 });
 

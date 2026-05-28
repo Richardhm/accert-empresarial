@@ -39,9 +39,16 @@ class PagamentoController extends Controller
                 'contrato_empresarial.codigo_saude as codigo_saude',
                 'contrato_empresarial.codigo_odonto as codigo_odonto',
                 DB::raw("(
-                    SELECT MAX(p.parcela)
-                    FROM pagamentos p
-                    WHERE p.contrato_empresarial_id = contrato_empresarial.id
+                    SELECT COALESCE(
+                        (SELECT MAX(p2.parcela) FROM pagamentos p2
+                         WHERE p2.contrato_empresarial_id = contrato_empresarial.id
+                         AND p2.tipo_planilha LIKE 'recorrencia_%'),
+                        CASE WHEN EXISTS(
+                            SELECT 1 FROM pagamentos p3
+                            WHERE p3.contrato_empresarial_id = contrato_empresarial.id
+                            AND p3.tipo_planilha LIKE 'agenciamento_%'
+                        ) THEN 1 ELSE NULL END
+                    )
                 ) as ultima_parcela"),
                 DB::raw("(
                     SELECT COALESCE(SUM(p.vl_a_pagar), 0)
