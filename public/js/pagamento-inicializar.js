@@ -94,27 +94,15 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
     if (!filtroStatusPag) return true;
     if (!rowData) return true;
 
-    var tipo   = rowData.tipo_contrato || '';
     var temAgS = parseInt(rowData.tem_agenciamento_saude  || 0);
     var temReS = parseInt(rowData.tem_recorrencia_saude   || 0);
     var temAgO = parseInt(rowData.tem_agenciamento_odonto || 0);
     var temReO = parseInt(rowData.tem_recorrencia_odonto  || 0);
     var temGap = parseInt(rowData.tem_gap_recorrencia     || 0);
-    var totalC = parseFloat(rowData.total_comissoes       || 0);
 
     switch (filtroStatusPag) {
-        case 'tem_pagamento':
-            return totalC > 0;
         case 'sem_pagamento':
             return temAgS === 0 && temAgO === 0 && temReS === 0 && temReO === 0;
-        case 'saude_so_agenciamento':
-            return (tipo === 'saude' || tipo === 'ambos') && temAgS === 1 && temReS === 0;
-        case 'saude_so_recorrencia':
-            return (tipo === 'saude' || tipo === 'ambos') && temAgS === 0 && temReS === 1;
-        case 'odonto_so_agenciamento':
-            return (tipo === 'odonto' || tipo === 'ambos') && temAgO === 1 && temReO === 0;
-        case 'odonto_so_recorrencia':
-            return (tipo === 'odonto' || tipo === 'ambos') && temAgO === 0 && temReO === 1;
         case 'so_agenciamento':
             return (temAgS === 1 || temAgO === 1) && temReS === 0 && temReO === 0;
         case 'so_recorrencia':
@@ -243,24 +231,18 @@ function inicializarPagamento() {
 
             // Counts dos botões de Status
             var allRows = this.api().data().toArray();
-            var sc = { '': allRows.length, tem_pagamento: 0, sem_pagamento: 0, saude_so_agenciamento: 0,
-                       saude_so_recorrencia: 0, odonto_so_agenciamento: 0,
-                       odonto_so_recorrencia: 0, gap_recorrencia: 0 };
+            var sc = { '': allRows.length, sem_pagamento: 0, so_agenciamento: 0, so_recorrencia: 0, agenc_recorr: 0, gap_recorrencia: 0 };
             allRows.forEach(function (r) {
-                var tipo   = r.tipo_contrato || '';
                 var temAgS = parseInt(r.tem_agenciamento_saude  || 0);
                 var temReS = parseInt(r.tem_recorrencia_saude   || 0);
                 var temAgO = parseInt(r.tem_agenciamento_odonto || 0);
                 var temReO = parseInt(r.tem_recorrencia_odonto  || 0);
                 var temGap = parseInt(r.tem_gap_recorrencia     || 0);
-                var totalC = parseFloat(r.total_comissoes       || 0);
-                if (totalC > 0) sc.tem_pagamento++;
-                if (!temAgS && !temAgO && !temReS && !temReO) sc.sem_pagamento++;
-                if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 1 && temReS === 0) sc.saude_so_agenciamento++;
-                if ((tipo === 'saude' || tipo === 'ambos') && temAgS === 0 && temReS === 1) sc.saude_so_recorrencia++;
-                if ((tipo === 'odonto' || tipo === 'ambos') && temAgO === 1 && temReO === 0) sc.odonto_so_agenciamento++;
-                if ((tipo === 'odonto' || tipo === 'ambos') && temAgO === 0 && temReO === 1) sc.odonto_so_recorrencia++;
-                if (temGap === 1) sc.gap_recorrencia++;
+                if (!temAgS && !temAgO && !temReS && !temReO)          sc.sem_pagamento++;
+                if ((temAgS||temAgO) && !temReS && !temReO)            sc.so_agenciamento++;
+                if ((temReS||temReO) && !temAgS && !temAgO && !temGap) sc.so_recorrencia++;
+                if ((temAgS||temAgO) && (temReS||temReO) && !temGap)   sc.agenc_recorr++;
+                if (temGap === 1)                                       sc.gap_recorrencia++;
             });
             $('#pagamento-page .status-tag-btn').each(function () {
                 var key = $(this).data('status') !== undefined ? ($(this).data('status') || '') : '';
@@ -311,6 +293,7 @@ function inicializarPagamento() {
             mH += '</tbody></table>';
             $('#pag-matrix-container').html(mH);
             $('#pag-matrix-section').show();
+            $('#pag-resumo-section').show();
 
             // ── Select de mês ──────────────────────────────────────────────────
             var mesesSet = {};
@@ -369,6 +352,40 @@ function inicializarPagamento() {
             $('.pag-total-contratos').html(totalLinhas);
             $('.pag-total-vidas').html(totalVidas);
             $('.pag-total-valor').html(fmt(totalValor));
+
+            // Resumo Saúde + Odonto (atualiza a cada draw/filtro)
+            var rS = { recebido: 0, falta: 0, total: 0 };
+            var rO = { recebido: 0, falta: 0, total: 0 };
+            api.rows({ search: 'applied' }).data().each(function (r) {
+                var semPag = !parseInt(r.tem_agenciamento_saude  || 0)
+                          && !parseInt(r.tem_agenciamento_odonto || 0)
+                          && !parseInt(r.tem_recorrencia_saude   || 0)
+                          && !parseInt(r.tem_recorrencia_odonto  || 0);
+                rS.recebido += toNum(r.total_comissoes_saude);
+                rO.recebido += toNum(r.total_comissoes_odonto);
+                if (semPag) {
+                    rS.falta += toNum(r.valor_saude);
+                    rO.falta += toNum(r.valor_odonto);
+                } else {
+                    rS.total += toNum(r.valor_saude);
+                    rO.total += toNum(r.valor_odonto);
+                }
+            });
+            var rT = { recebido: rS.recebido + rO.recebido, falta: rS.falta + rO.falta, total: rS.total + rO.total };
+
+            var fmtRecebido = function (v) { return '<span style="color:#34d399;font-weight:700;">' + fmt(v) + '</span>'; };
+            var fmtFaltaR   = function (v) { return '<span style="color:#f87171;font-weight:700;">' + fmt(v) + '</span>'; };
+            var fmtTotalR   = function (v) { return '<span style="color:rgba(255,255,255,.5);">'    + fmt(v) + '</span>'; };
+
+            $('#res-total-pago').html(fmtRecebido(rT.recebido));
+            $('#res-total-falta').html(fmtFaltaR(rT.falta));
+            $('#res-total-plano').html(fmtTotalR(rT.total));
+            $('#res-saude-pago').html(fmtRecebido(rS.recebido));
+            $('#res-saude-falta').html(fmtFaltaR(rS.falta));
+            $('#res-saude-plano').html(fmtTotalR(rS.total));
+            $('#res-odonto-pago').html(fmtRecebido(rO.recebido));
+            $('#res-odonto-falta').html(fmtFaltaR(rO.falta));
+            $('#res-odonto-plano').html(fmtTotalR(rO.total));
         }
     });
 }
@@ -405,9 +422,15 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
     return meses.indexOf(filtroMesPag) !== -1;
 });
 
-// ── Matriz: toggle ───────────────────────────────────────────────────────────
+// ── Painel: toggles ───────────────────────────────────────────────────────────
 $(document).on('click', '#pag-matrix-toggle-btn', function () {
     var $body = $('#pag-matrix-body');
+    var collapsed = $body.is(':hidden');
+    $body.slideToggle(180);
+    $(this).text(collapsed ? '▲ Recolher' : '▼ Expandir');
+});
+$(document).on('click', '#pag-resumo-toggle-btn', function () {
+    var $body = $('#pag-resumo-body');
     var collapsed = $body.is(':hidden');
     $body.slideToggle(180);
     $(this).text(collapsed ? '▲ Recolher' : '▼ Expandir');
@@ -672,21 +695,16 @@ $('#btn-enviar-upload-excel').on('click', function () {
         success: function (res) {
             fecharModalUploadExcel();
             var cor = res.nao_vinculados > 0 ? '#fbbf24' : '#34d399';
-            var msg = res.mensagem;
             $('<div>')
-                .text(msg)
+                .text(res.mensagem)
                 .css({
                     position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%)',
                     background:'#1a2540', border:'1px solid ' + cor, color: cor,
                     padding:'10px 22px', borderRadius:'10px', fontSize:'.82rem',
                     fontWeight:'700', zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.4)'
                 })
-                .appendTo('body')
-                .delay(4000).fadeOut(400, function () { $(this).remove(); });
-
-            // Recarrega a tabela principal para atualizar última parcela
-            if (tablePagamento) tablePagamento.ajax.reload(null, false);
-            carregarContadorNaoVinculados();
+                .appendTo('body');
+            setTimeout(function () { location.reload(); }, 1800);
         },
         error: function (xhr) {
             var msg = xhr.responseJSON && xhr.responseJSON.message

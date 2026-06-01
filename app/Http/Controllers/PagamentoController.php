@@ -57,6 +57,8 @@ class PagamentoController extends Controller
                 ) as total_comissoes"),
                 DB::raw("(SELECT COALESCE(SUM(p.vl_a_pagar), 0) FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha LIKE 'agenciamento_%') as total_agenciamento"),
                 DB::raw("(SELECT COALESCE(SUM(p.vl_a_pagar), 0) FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha LIKE 'recorrencia_%') as total_recorrencia"),
+                DB::raw("(SELECT COALESCE(SUM(p.vl_a_pagar), 0) FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha LIKE '%_saude') as total_comissoes_saude"),
+                DB::raw("(SELECT COALESCE(SUM(p.vl_a_pagar), 0) FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha LIKE '%_odonto') as total_comissoes_odonto"),
                 DB::raw("(SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha = 'agenciamento_saude') as tem_agenciamento_saude"),
                 DB::raw("(SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha = 'recorrencia_saude') as tem_recorrencia_saude"),
                 DB::raw("(SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pagamentos p WHERE p.contrato_empresarial_id = contrato_empresarial.id AND p.tipo_planilha = 'agenciamento_odonto') as tem_agenciamento_odonto"),

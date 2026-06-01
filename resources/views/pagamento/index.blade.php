@@ -87,31 +87,7 @@
                         <div id="plano-filter-btns-pag" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
                     </fieldset>
 
-                    {{-- Saúde e Odonto --}}
-                    <fieldset class="fin-filter-fieldset" style="border-color:rgba(52,211,153,.35);">
-                        <legend class="fin-filter-legend" style="color:rgba(52,211,153,.7);">Saúde e Odonto</legend>
-                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                            <button class="tipo-tag-btn tipo-tag-ativo" data-tipo=""
-                                style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.65);">
-                                <span class="plano-tag-dot" style="background:rgba(255,255,255,.4);"></span>Todos
-                            </button>
-                            <button class="tipo-tag-btn" data-tipo="ambos"
-                                data-bg="rgba(139,92,246,.1)" data-border="rgba(139,92,246,.4)" data-text="#c4b5fd" data-active="#8b5cf6" data-dot="#8b5cf6"
-                                style="background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.4);color:#c4b5fd;">
-                                <span class="plano-tag-dot" style="background:#8b5cf6;"></span>Saúde + Odonto
-                            </button>
-                            <button class="tipo-tag-btn" data-tipo="saude"
-                                data-bg="rgba(34,197,94,.1)" data-border="rgba(34,197,94,.4)" data-text="#86efac" data-active="#22c55e" data-dot="#22c55e"
-                                style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#86efac;">
-                                <span class="plano-tag-dot" style="background:#22c55e;"></span>Saúde
-                            </button>
-                            <button class="tipo-tag-btn" data-tipo="odonto"
-                                data-bg="rgba(59,130,246,.1)" data-border="rgba(59,130,246,.4)" data-text="#93c5fd" data-active="#3b82f6" data-dot="#3b82f6"
-                                style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4);color:#93c5fd;">
-                                <span class="plano-tag-dot" style="background:#3b82f6;"></span>Odonto
-                            </button>
-                        </div>
-                    </fieldset>
+                    {{-- Saúde e Odonto (oculto) --}}
 
                     {{-- Status de Recebimento --}}
                     <fieldset class="fin-filter-fieldset" style="flex:1;min-width:0;border-color:rgba(251,191,36,.35);">
@@ -124,52 +100,38 @@
                                 <span class="status-tag-count">0</span>
                             </button>
 
-                            <button class="status-tag-btn" data-status="tem_pagamento"
-                                data-bg="rgba(34,197,94,.1)" data-border="rgba(34,197,94,.4)" data-text="#86efac" data-active="#22c55e"
-                                style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#86efac;">
-                                <span class="plano-tag-dot" style="background:#22c55e;"></span>Recebeu Algo
-                                <span class="status-tag-count">0</span>
-                            </button>
-
                             <button class="status-tag-btn" data-status="sem_pagamento"
                                 data-bg="rgba(248,113,113,.1)" data-border="rgba(248,113,113,.4)" data-text="#fca5a5" data-active="#ef4444"
                                 style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fca5a5;">
-                                <span class="plano-tag-dot" style="background:#f87171;"></span>Sem Pagamento
+                                <span class="plano-tag-dot" style="background:#f87171;"></span>Sem Pag
                                 <span class="status-tag-count">0</span>
                             </button>
 
-                            <button class="status-tag-btn" data-status="saude_so_agenciamento"
+                            <button class="status-tag-btn" data-status="so_agenciamento"
                                 data-bg="rgba(34,197,94,.1)" data-border="rgba(34,197,94,.4)" data-text="#86efac" data-active="#22c55e"
                                 style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.4);color:#86efac;">
-                                <span class="plano-tag-dot" style="background:#22c55e;"></span>Saúde · Agenciamento
+                                <span class="plano-tag-dot" style="background:#22c55e;"></span>Só Agenc
                                 <span class="status-tag-count">0</span>
                             </button>
 
-                            <button class="status-tag-btn" data-status="saude_so_recorrencia"
-                                data-bg="rgba(52,211,153,.1)" data-border="rgba(52,211,153,.4)" data-text="#6ee7b7" data-active="#10b981"
-                                style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.4);color:#6ee7b7;">
-                                <span class="plano-tag-dot" style="background:#10b981;"></span>Saúde · Recorrência
-                                <span class="status-tag-count">0</span>
-                            </button>
-
-                            <button class="status-tag-btn" data-status="odonto_so_agenciamento"
+                            <button class="status-tag-btn" data-status="so_recorrencia"
                                 data-bg="rgba(59,130,246,.1)" data-border="rgba(59,130,246,.4)" data-text="#93c5fd" data-active="#3b82f6"
                                 style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.4);color:#93c5fd;">
-                                <span class="plano-tag-dot" style="background:#3b82f6;"></span>Odonto · Agenciamento
+                                <span class="plano-tag-dot" style="background:#3b82f6;"></span>Só Recorr
                                 <span class="status-tag-count">0</span>
                             </button>
 
-                            <button class="status-tag-btn" data-status="odonto_so_recorrencia"
-                                data-bg="rgba(99,102,241,.1)" data-border="rgba(99,102,241,.4)" data-text="#a5b4fc" data-active="#6366f1"
-                                style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.4);color:#a5b4fc;">
-                                <span class="plano-tag-dot" style="background:#6366f1;"></span>Odonto · Recorrência
+                            <button class="status-tag-btn" data-status="agenc_recorr"
+                                data-bg="rgba(245,158,11,.1)" data-border="rgba(245,158,11,.4)" data-text="#fcd34d" data-active="#f59e0b"
+                                style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4);color:#fcd34d;">
+                                <span class="plano-tag-dot" style="background:#f59e0b;"></span>Ag+Recorr
                                 <span class="status-tag-count">0</span>
                             </button>
 
                             <button class="status-tag-btn" data-status="gap_recorrencia"
-                                data-bg="rgba(251,191,36,.1)" data-border="rgba(251,191,36,.4)" data-text="#fde68a" data-active="#f59e0b"
+                                data-bg="rgba(251,191,36,.1)" data-border="rgba(251,191,36,.4)" data-text="#fde68a" data-active="#eab308"
                                 style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.4);color:#fde68a;">
-                                <span class="plano-tag-dot" style="background:#fbbf24;"></span>Gap na Recorrência
+                                <span class="plano-tag-dot" style="background:#fbbf24;"></span>Gap
                                 <span class="status-tag-count">0</span>
                             </button>
 
@@ -178,17 +140,67 @@
 
                 </div>
 
-                {{-- ── Matriz Visão por Plano ── --}}
-                <div id="pag-matrix-section" class="pag-matrix-section" style="display:none;">
+                {{-- ── Painéis lado a lado ── --}}
+                <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+
+                {{-- Visão por Plano ── --}}
+                <div id="pag-matrix-section" class="pag-matrix-section" style="display:none;flex:1;min-width:280px;">
                     <div class="pag-matrix-head">
                         <span class="pag-matrix-title">Visão por Plano</span>
-                        <button id="pag-matrix-toggle-btn" class="pag-matrix-toggle">▲ Recolher</button>
+                        <button id="pag-matrix-toggle-btn" class="pag-matrix-toggle">▼ Expandir</button>
                     </div>
-                    <div id="pag-matrix-body" class="pag-matrix-body">
+                    <div id="pag-matrix-body" class="pag-matrix-body" style="display:none;">
                         <div id="pag-matrix-container"></div>
                     </div>
                 </div>
 
+                {{-- ── Resumo Saúde + Odonto ── --}}
+                <div id="pag-resumo-section" class="pag-matrix-section" style="display:none;flex:1;min-width:280px;">
+                    <div class="pag-matrix-head">
+                        <span class="pag-matrix-title">Resumo Saúde + Odonto</span>
+                        <button id="pag-resumo-toggle-btn" class="pag-matrix-toggle">▼ Expandir</button>
+                    </div>
+                    <div id="pag-resumo-body" style="display:none;padding:10px 0 4px;">
+                        <table style="width:100%;border-collapse:collapse;font-size:.76rem;color:#cbd5e1;">
+                            <thead>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,.08);">
+                                    <th style="padding:5px 8px;color:rgba(255,255,255,.32);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;width:20%;"></th>
+                                    <th style="padding:5px 8px;color:#34d399;font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Comissão Recebida</th>
+                                    <th style="padding:5px 8px;color:#f87171;font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Falta</th>
+                                    <th style="padding:5px 8px;color:rgba(255,255,255,.32);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;text-align:right;">Total Plano</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                                    <td style="padding:7px 8px;font-weight:700;color:#e2e8f0;">Saúde + Odonto</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-total-pago">—</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-total-falta">—</td>
+                                    <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-total-plano">—</td>
+                                </tr>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                                    <td style="padding:7px 8px;font-weight:600;color:#34d399;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>
+                                        Saúde
+                                    </td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-saude-pago">—</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-saude-falta">—</td>
+                                    <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-saude-plano">—</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:7px 8px;font-weight:600;color:#93c5fd;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#93c5fd" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C5.6 2 3.6 3.6 3 5.9c-.5 1.8-.1 3.8 1.1 5.3.7.9 1.1 2 1.2 3.1L6 20c.2 1.2.9 2 1.9 2 .9 0 1.6-.7 1.8-1.9L10 18l.3 2.1c.2 1.2.9 1.9 1.8 1.9 1 0 1.7-.8 1.9-2l.7-5.7c.1-1.1.5-2.2 1.2-3.1C17.1 9.7 17.5 7.7 17 5.9 16.4 3.6 14.4 2 12 2H8z"/></svg>
+                                        Odonto
+                                    </td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-odonto-pago">—</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-odonto-falta">—</td>
+                                    <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-odonto-plano">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                </div>{{-- fim flex painéis --}}
 
                 {{-- ── Tabela ── --}}
                 <table id="tabela_pagamento"
