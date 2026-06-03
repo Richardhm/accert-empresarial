@@ -88,132 +88,153 @@ class PagamentoController extends Controller
         if (!$request->ajax()) abort(403);
 
         $request->validate([
-            'arquivo' => 'required|file|extensions:xlsx,xls,csv',
-            'tipo'    => 'required|in:agenciamento_saude,recorrencia_saude,agenciamento_odonto,recorrencia_odonto',
+            'arquivo'   => 'required|array|min:1',
+            'arquivo.*' => 'required|file',
+            'tipo'      => 'required|in:agenciamento_saude,recorrencia_saude,agenciamento_odonto,recorrencia_odonto',
         ]);
 
-        $file = $request->file('arquivo');
-        $tipo = $request->input('tipo');
+        $files = $request->file('arquivo');
+        $tipo  = $request->input('tipo');
 
-        // ── Leitura da planilha ──────────────────────────────────────────────────
-        $ext = strtolower($file->getClientOriginalExtension());
-
-        if ($ext === 'csv') {
-            $reader = IOFactory::createReader('Csv');
-            $reader->setDelimiter(';');
-            $reader->setEnclosure('"');
-        } else {
-            $reader = IOFactory::createReaderForFile($file->getPathname());
-        }
-
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load($file->getPathname());
-        $sheet       = $spreadsheet->getActiveSheet();
-        $rows        = $sheet->toArray(null, true, true, false);
-
-        // ── Detectar linha de cabeçalho e início dos dados ───────────────────────
-        $dataStart = 0;
-        foreach ($rows as $i => $row) {
-            $first = strtoupper(trim((string)($row[0] ?? '')));
-            if (str_contains($first, 'COD') || str_contains($first, 'COMISSIONADO') || str_contains($first, 'EMPRESA')) {
-                $dataStart = $i + 1;
-                break;
-            }
-        }
-
-        $inseridos   = 0;
+        $inseridos     = 0;
         $naoVinculados = 0;
-        $ignorados   = 0;
+        $ignorados     = 0;
+        $duplicados    = 0;
 
-        foreach (array_slice($rows, $dataStart) as $row) {
-            // Col index: 0=COD.COMISSIONADO 1=NOME 2=CD_ORIGEM 3=EMPRESA_CONVENIADA
-            //            4=VENCIMENTO 5=PARCELA 6=VL_BASE 7=PCT_IMP 8=VL_LIQ 9=PC_DIST 10=VL_PAGAR
-            $empresaRaw = trim((string)($row[3] ?? ''));
+        $toNum = fn($v) => $v !== null && $v !== '' ? (float)str_replace(['.', ','], ['', '.'], (string)$v) : null;
 
-            // Linha vazia — pular
-            if ($empresaRaw === '' && empty(array_filter($row))) {
-                $ignorados++;
-                continue;
-            }
+        foreach ($files as $file) {
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (!in_array($ext, ['xlsx', 'xls', 'csv'])) continue;
 
-            // ── Extração do código e razão social ────────────────────────────────
-            $codigoIdentificado  = null;
-            $razaoSocialPlanilha = null;
-
-            if (str_contains($empresaRaw, ' - ')) {
-                $partes = explode(' - ', $empresaRaw, 2);
-                $codigoIdentificado  = strtoupper(trim($partes[0]));
-                $razaoSocialPlanilha = trim($partes[1]);
+            // ── Leitura da planilha ──────────────────────────────────────────────
+            if ($ext === 'csv') {
+                $reader = IOFactory::createReader('Csv');
+                $reader->setDelimiter(';');
+                $reader->setEnclosure('"');
             } else {
-                $codigoIdentificado = strtoupper(trim($empresaRaw));
+                $reader = IOFactory::createReaderForFile($file->getPathname());
             }
 
-            // ── Tentativa de vincular ao contrato ────────────────────────────────
-            $contratoId = null;
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file->getPathname());
+            $sheet       = $spreadsheet->getActiveSheet();
+            $rows        = $sheet->toArray(null, true, true, false);
 
-            if ($codigoIdentificado) {
-                $contrato = DB::table('contrato_empresarial')
-                    ->where('codigo_saude', $codigoIdentificado)
-                    ->select('id')
-                    ->first();
+            // ── Detectar linha de cabeçalho ──────────────────────────────────────
+            $dataStart = 0;
+            foreach ($rows as $i => $row) {
+                $first = strtoupper(trim((string)($row[0] ?? '')));
+                if (str_contains($first, 'COD') || str_contains($first, 'COMISSIONADO') || str_contains($first, 'EMPRESA')) {
+                    $dataStart = $i + 1;
+                    break;
+                }
+            }
 
-                if (!$contrato && $razaoSocialPlanilha) {
-                    $contrato = DB::table('contrato_empresarial')
-                        ->where('razao_social', 'like', '%' . $razaoSocialPlanilha . '%')
-                        ->select('id')
-                        ->first();
+            foreach (array_slice($rows, $dataStart) as $row) {
+                $empresaRaw = trim((string)($row[3] ?? ''));
+
+                if ($empresaRaw === '' && empty(array_filter($row))) {
+                    $ignorados++;
+                    continue;
                 }
 
-                $contratoId = $contrato->id ?? null;
-            }
+                // ── Extração do código e razão social ────────────────────────────
+                $codigoIdentificado  = null;
+                $razaoSocialPlanilha = null;
 
-            if (!$contratoId) $naoVinculados++;
-
-            // ── Conversão de data ────────────────────────────────────────────────
-            $vencimento = null;
-            $rawDate = trim((string)($row[4] ?? ''));
-            if ($rawDate !== '') {
-                // Tenta formatos comuns: d/m/Y, Y-m-d, número serial Excel
-                if (is_numeric($rawDate)) {
-                    try {
-                        $vencimento = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$rawDate)
-                            ->format('Y-m-d');
-                    } catch (\Exception $e) {}
+                if (str_contains($empresaRaw, ' - ')) {
+                    $partes = explode(' - ', $empresaRaw, 2);
+                    $codigoIdentificado  = strtoupper(trim($partes[0]));
+                    $razaoSocialPlanilha = trim($partes[1]);
                 } else {
-                    foreach (['d/m/Y', 'Y-m-d', 'd-m-Y', 'm/d/Y'] as $fmt) {
-                        $dt = \DateTime::createFromFormat($fmt, $rawDate);
-                        if ($dt) { $vencimento = $dt->format('Y-m-d'); break; }
+                    $codigoIdentificado = strtoupper(trim($empresaRaw));
+                }
+
+                // ── Conversão de data ────────────────────────────────────────────
+                $vencimento = null;
+                $rawDate    = trim((string)($row[4] ?? ''));
+                if ($rawDate !== '') {
+                    if (is_numeric($rawDate)) {
+                        try {
+                            $vencimento = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$rawDate)
+                                ->format('Y-m-d');
+                        } catch (\Exception $e) {}
+                    } else {
+                        foreach (['d/m/Y', 'Y-m-d', 'd-m-Y', 'm/d/Y'] as $fmt) {
+                            $dt = \DateTime::createFromFormat($fmt, $rawDate);
+                            if ($dt) { $vencimento = $dt->format('Y-m-d'); break; }
+                        }
                     }
                 }
+
+                $parcela = $toNum($row[5]);
+
+                // ── Deduplicação: mesma linha já importada? ──────────────────────
+                $jaExiste = DB::table('pagamentos')
+                    ->where('tipo_planilha',     $tipo)
+                    ->where('empresa_conveniada', $empresaRaw)
+                    ->where('vencimento',         $vencimento)
+                    ->where('parcela',            $parcela)
+                    ->exists();
+
+                if ($jaExiste) {
+                    $duplicados++;
+                    continue;
+                }
+
+                // ── Tentativa de vincular ao contrato ────────────────────────────
+                $contratoId = null;
+
+                if ($codigoIdentificado) {
+                    $contrato = DB::table('contrato_empresarial')
+                        ->where('codigo_saude', $codigoIdentificado)
+                        ->select('id')
+                        ->first();
+
+                    if (!$contrato && $razaoSocialPlanilha) {
+                        $contrato = DB::table('contrato_empresarial')
+                            ->where('razao_social', 'like', '%' . $razaoSocialPlanilha . '%')
+                            ->select('id')
+                            ->first();
+                    }
+
+                    $contratoId = $contrato->id ?? null;
+                }
+
+                if (!$contratoId) $naoVinculados++;
+
+                Pagamento::create([
+                    'contrato_empresarial_id' => $contratoId,
+                    'tipo_planilha'           => $tipo,
+                    'empresa_conveniada'      => $empresaRaw,
+                    'codigo_identificado'     => $codigoIdentificado,
+                    'razao_social_planilha'   => $razaoSocialPlanilha,
+                    'vencimento'              => $vencimento,
+                    'parcela'                 => $parcela,
+                    'vl_base_com'             => $toNum($row[6]),
+                    'pct_imposto'             => $toNum($row[7]),
+                    'vl_liquido'              => $toNum($row[8]),
+                    'pc_dist'                 => $toNum($row[9]),
+                    'vl_a_pagar'              => $toNum($row[10]),
+                    'arquivo_original'        => $file->getClientOriginalName(),
+                ]);
+
+                $inseridos++;
             }
-
-            $toNum = fn($v) => $v !== null && $v !== '' ? (float)str_replace(['.', ','], ['', '.'], (string)$v) : null;
-
-            Pagamento::create([
-                'contrato_empresarial_id' => $contratoId,
-                'tipo_planilha'           => $tipo,
-                'empresa_conveniada'      => $empresaRaw,
-                'codigo_identificado'     => $codigoIdentificado,
-                'razao_social_planilha'   => $razaoSocialPlanilha,
-                'vencimento'              => $vencimento,
-                'parcela'                 => $toNum($row[5]),
-                'vl_base_com'             => $toNum($row[6]),
-                'pct_imposto'             => $toNum($row[7]),
-                'vl_liquido'              => $toNum($row[8]),
-                'pc_dist'                 => $toNum($row[9]),
-                'vl_a_pagar'              => $toNum($row[10]),
-                'arquivo_original'        => $file->getClientOriginalName(),
-            ]);
-
-            $inseridos++;
         }
+
+        $msg = "{$inseridos} registro(s) importado(s).";
+        if ($duplicados > 0)    $msg .= " {$duplicados} duplicado(s) ignorado(s).";
+        if ($naoVinculados > 0) $msg .= " {$naoVinculados} não vinculado(s) a contratos.";
 
         return response()->json([
             'success'        => true,
             'inseridos'      => $inseridos,
             'nao_vinculados' => $naoVinculados,
+            'duplicados'     => $duplicados,
             'ignorados'      => $ignorados,
-            'mensagem'       => "{$inseridos} registros importados. {$naoVinculados} não vinculados a contratos.",
+            'mensagem'       => $msg,
         ]);
     }
 

@@ -25,6 +25,8 @@
         var urlUploadDocumentoBoleto         = "{{ route('contratos.empresarial.upload_documento_boleto') }}";
         var urlSalvarFinalizado              = "{{ route('contratos.empresarial.salvar_finalizado') }}";
         var urlImportarHistorico             = "{{ route('contratos.empresarial.importar_historico') }}";
+        var urlListarBloqueados              = "{{ route('financeiro.importacao_bloqueados') }}";
+        var urlLimparBloqueados              = "{{ route('financeiro.importacao_bloqueados.limpar') }}";
         var urlBeneficiarios                 = "{{ route('financeiro.beneficiarios', ['id' => '__ID__']) }}";
         var urlResumoValor                   = "{{ route('financeiro.resumo_valor', ['id' => '__ID__']) }}";
         var appAssetUrl                      = "{{ asset('') }}";
@@ -662,6 +664,52 @@
         </div>
     </div>
 
+    {{-- ── Modal Contratos Bloqueados na Importação ── --}}
+    <div id="modalBloqueados" class="modal-colar-overlay" style="display:none;">
+        <div class="modal-colar-box" style="max-width:780px;width:95vw;">
+            <div class="modal-colar-header">
+                <div>
+                    <p class="modal-colar-title" style="color:#fcd34d;">Contratos Bloqueados na Importação</p>
+                    <p class="modal-colar-sub">Contratos não importados por duplicidade de CNPJ ou Razão Social</p>
+                </div>
+                <button type="button" class="modal-colar-close" id="fecharModalBloqueados">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-colar-body" style="padding:0 0 18px;">
+                <div id="bloqueados-loading" style="display:flex;justify-content:center;padding:40px;">
+                    <div class="dot-flashing"><div></div><div></div><div></div></div>
+                </div>
+                <div id="bloqueados-content" style="display:none;padding:0 22px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <span id="bloqueados-info" style="color:rgba(255,255,255,.45);font-size:.76rem;"></span>
+                        <button id="btnLimparBloqueados"
+                            style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;
+                                   padding:5px 14px;border-radius:8px;font-size:.72rem;font-weight:700;cursor:pointer;">
+                            Limpar lista
+                        </button>
+                    </div>
+                    <div style="overflow-x:auto;border:1px solid rgba(255,255,255,.07);border-radius:10px;">
+                        <table style="width:100%;border-collapse:collapse;font-size:.73rem;color:#cbd5e1;">
+                            <thead>
+                                <tr style="background:rgba(251,191,36,.07);border-bottom:1px solid rgba(255,255,255,.08);">
+                                    <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">#</th>
+                                    <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">Razão Social</th>
+                                    <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">CNPJ</th>
+                                    <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">Motivo</th>
+                                    <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">Importado em</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bloqueados-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- ── Modal Importar Histórico Sindicatos ── --}}
     <div id="modalImportarHistorico" style="display:none;">
         <div class="modal-colar-overlay" id="overlayModalHistorico"></div>
@@ -701,8 +749,26 @@
                            style="width:100%;background:#1a2540;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);
                                   border-radius:10px;padding:10px 14px;font-size:.82rem;box-sizing:border-box;cursor:pointer;">
 
-                    <div id="historicoMsgErro"   class="modal-colar-msg erro"   style="margin-top:10px;"></div>
-                    <div id="historicoMsgSucesso" class="modal-colar-msg sucesso" style="margin-top:10px;"></div>
+                    <div id="historicoMsgErro"    class="modal-colar-msg erro"    style="margin-top:10px;"></div>
+                    <div id="historicoMsgSucesso" class="modal-colar-msg sucesso"  style="margin-top:10px;"></div>
+                    <div id="historicoBloqueados" style="display:none;margin-top:14px;">
+                        <div style="color:#fbbf24;font-size:.76rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                            <span id="historicoBloqueadosTitle"></span>
+                        </div>
+                        <div style="max-height:220px;overflow-y:auto;border:1px solid rgba(251,191,36,.2);border-radius:8px;">
+                            <table id="historicoBloqueadosTable" style="width:100%;border-collapse:collapse;font-size:.7rem;color:#cbd5e1;">
+                                <thead>
+                                    <tr style="background:rgba(251,191,36,.08);border-bottom:1px solid rgba(251,191,36,.2);">
+                                        <th style="padding:5px 8px;text-align:left;color:rgba(255,255,255,.4);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">Razão Social</th>
+                                        <th style="padding:5px 8px;text-align:left;color:rgba(255,255,255,.4);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">CNPJ</th>
+                                        <th style="padding:5px 8px;text-align:left;color:rgba(255,255,255,.4);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;">Motivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historicoBloqueadosTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
                     <div class="modal-colar-actions">
                         <button type="button" id="cancelarModalHistorico" class="modal-colar-btn-cancel">Cancelar</button>
@@ -1030,10 +1096,20 @@
                     <h1 class="fin-title">Financeiro</h1>
                     <p class="fin-sub">Gestão de contratos empresariais</p>
                 </div>
-                <button type="button" id="btnNovoContrato" class="fin-btn-new">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                    Novo Contrato
-                </button>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button type="button" id="btnVerBloqueados" style="display:none;align-items:center;gap:6px;
+                        background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fcd34d;
+                        padding:6px 14px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;flex-shrink:0;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        <span id="bloqueados-count">0</span> bloqueados
+                    </button>
+                    <button type="button" id="btnNovoContrato" class="fin-btn-new">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Novo Contrato
+                    </button>
+                </div>
             </div>
 
             {{-- Conteúdo principal --}}

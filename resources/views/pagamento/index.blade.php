@@ -143,14 +143,25 @@
                 {{-- ── Painéis lado a lado ── --}}
                 <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
 
-                {{-- Visão por Plano ── --}}
-                <div id="pag-matrix-section" class="pag-matrix-section" style="display:none;flex:1;min-width:280px;">
+                {{-- Agenciamento por Plano --}}
+                <div id="pag-matrix-ag-section" class="pag-matrix-section" style="display:none;flex:0 0 calc(45% - 7px);min-width:0;">
                     <div class="pag-matrix-head">
-                        <span class="pag-matrix-title">Visão por Plano</span>
-                        <button id="pag-matrix-toggle-btn" class="pag-matrix-toggle">▼ Expandir</button>
+                        <span class="pag-matrix-title" style="color:#86efac;">Agenciamento</span>
+                        <button id="pag-matrix-ag-toggle-btn" class="pag-matrix-toggle">▼ Expandir</button>
                     </div>
-                    <div id="pag-matrix-body" class="pag-matrix-body" style="display:none;">
-                        <div id="pag-matrix-container"></div>
+                    <div id="pag-matrix-ag-body" class="pag-matrix-body" style="display:none;">
+                        <div id="pag-matrix-ag-container"></div>
+                    </div>
+                </div>
+
+                {{-- Recorrência por Plano --}}
+                <div id="pag-matrix-re-section" class="pag-matrix-section" style="display:none;flex:0 0 calc(55% - 7px);min-width:0;">
+                    <div class="pag-matrix-head">
+                        <span class="pag-matrix-title" style="color:#fcd34d;">Recorrência</span>
+                        <button id="pag-matrix-re-toggle-btn" class="pag-matrix-toggle">▼ Expandir</button>
+                    </div>
+                    <div id="pag-matrix-re-body" class="pag-matrix-body" style="display:none;">
+                        <div id="pag-matrix-re-container"></div>
                     </div>
                 </div>
 
@@ -172,12 +183,6 @@
                             </thead>
                             <tbody>
                                 <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
-                                    <td style="padding:7px 8px;font-weight:700;color:#e2e8f0;">Saúde + Odonto</td>
-                                    <td style="padding:7px 8px;text-align:right;" id="res-total-pago">—</td>
-                                    <td style="padding:7px 8px;text-align:right;" id="res-total-falta">—</td>
-                                    <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-total-plano">—</td>
-                                </tr>
-                                <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
                                     <td style="padding:7px 8px;font-weight:600;color:#34d399;">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#34d399" style="width:10px;height:10px;vertical-align:middle;margin-right:3px;"><path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/></svg>
                                         Saúde
@@ -196,6 +201,14 @@
                                     <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-odonto-plano">—</td>
                                 </tr>
                             </tbody>
+                            <tfoot>
+                                <tr style="border-top:1px solid rgba(255,255,255,.15);">
+                                    <td style="padding:7px 8px;font-weight:700;color:#e2e8f0;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">Total</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-total-pago">—</td>
+                                    <td style="padding:7px 8px;text-align:right;" id="res-total-falta">—</td>
+                                    <td style="padding:7px 8px;text-align:right;color:rgba(255,255,255,.5);" id="res-total-plano">—</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -389,7 +402,7 @@
                     </span>
                     <span style="font-size:.7rem;color:rgba(255,255,255,.25);">.xlsx · .csv</span>
                 </label>
-                <input type="file" id="input-upload-excel"
+                <input type="file" id="input-upload-excel" multiple
                     accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     style="display:none;">
 
@@ -401,6 +414,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                     </svg>
                     <span id="pag-upload-file-name" style="color:#93c5fd;font-size:.78rem;word-break:break-all;"></span>
+                </div>
+
+                {{-- Progresso de envio --}}
+                <div id="pag-upload-progress" style="display:none;margin-top:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                        <span id="pag-upload-progress-label" style="color:rgba(255,255,255,.55);font-size:.75rem;"></span>
+                        <span id="pag-upload-progress-count" style="color:#93c5fd;font-size:.75rem;font-weight:700;"></span>
+                    </div>
+                    <div style="height:5px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;">
+                        <div id="pag-upload-progress-bar" style="height:100%;width:0%;background:#4f8ef7;border-radius:4px;transition:width .35s ease;"></div>
+                    </div>
                 </div>
 
                 {{-- Botões --}}

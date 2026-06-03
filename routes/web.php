@@ -52,6 +52,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/contratos/empresarial/upload-documento-boleto',[FinanceiroController::class,'uploadDocumentoBoleto'])->name('contratos.empresarial.upload_documento_boleto');
     Route::post('/contratos/empresarial/salvar-finalizado',[FinanceiroController::class,'salvarFinalizado'])->name('contratos.empresarial.salvar_finalizado');
     Route::post('/contratos/empresarial/importar-historico',[FinanceiroController::class,'importarHistoricoSindicatos'])->name('contratos.empresarial.importar_historico');
+    Route::get('/financeiro/importacao-bloqueados',[FinanceiroController::class,'listarBloqueados'])->name('financeiro.importacao_bloqueados');
+    Route::delete('/financeiro/importacao-bloqueados/limpar',[FinanceiroController::class,'limparBloqueados'])->name('financeiro.importacao_bloqueados.limpar');
     Route::post('/financeiro/modal/empresarial',[FinanceiroController::class,'modalEmpresarial'])->name('financeiro.modal.contrato.empresarial');
     Route::post('/financeiro/status-pagamento',[FinanceiroController::class,'atualizarStatusPagamento'])->name('financeiro.status.pagamento');
     Route::get('/financeiro/resumo-valor/{id}',[FinanceiroController::class,'resumoValor'])->name('financeiro.resumo_valor');

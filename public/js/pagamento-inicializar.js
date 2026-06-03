@@ -32,7 +32,15 @@ function renderTipoPag(data, type) {
 
 // ── Código: render da col 3 ───────────────────────────────────────────────────
 function renderCodigoPag(data, type, row) {
-    if (type !== 'display') return data || '';
+    if (type !== 'display') {
+        var tipo = row ? (row.tipo_contrato || null) : null;
+        var cS = row ? (row.codigo_saude  || '') : '';
+        var cO = row ? (row.codigo_odonto || '') : '';
+        if (tipo === 'ambos')  return [cS, cO].filter(Boolean).join(' / ') || data || '';
+        if (tipo === 'saude')  return cS || data || '';
+        if (tipo === 'odonto') return cO || data || '';
+        return data || '';
+    }
     var cS = row.codigo_saude  || null;
     var cO = row.codigo_odonto || null;
     var tipo = row.tipo_contrato || null;
@@ -51,7 +59,11 @@ function renderCodigoPag(data, type, row) {
 
 // ── Valor: render da col 10 ───────────────────────────────────────────────────
 function renderValorPag(data, type, row) {
-    if (type !== 'display') return data;
+    if (type !== 'display') {
+        var tipo = row ? (row.tipo_contrato || null) : null;
+        if (tipo === 'ambos') return parseFloat(row.valor_saude || 0) + parseFloat(row.valor_odonto || 0);
+        return data;
+    }
     if (!data) return '-';
     var fmt = function (v) {
         return 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -100,16 +112,40 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
     var temReO = parseInt(rowData.tem_recorrencia_odonto  || 0);
     var temGap = parseInt(rowData.tem_gap_recorrencia     || 0);
 
+    // Calcula meses desde a última parcela usando meses_pagamento do rowData
+    var _mesesDesdeUltimo = function () {
+        var meses = (rowData.meses_pagamento || '').split(',').filter(Boolean);
+        if (!meses.length) return 999;
+        var ultimo = meses[meses.length - 1].split('-');
+        var hoje   = new Date();
+        return (hoje.getFullYear() - parseInt(ultimo[0])) * 12 + (hoje.getMonth() + 1 - parseInt(ultimo[1]));
+    };
+
     switch (filtroStatusPag) {
         case 'sem_pagamento':
             return temAgS === 0 && temAgO === 0 && temReS === 0 && temReO === 0;
         case 'so_agenciamento':
+        case 'nao_pago':
             return (temAgS === 1 || temAgO === 1) && temReS === 0 && temReO === 0;
+        case 'com_agenciamento':
+        case 'pago_ag':
+            return (temAgS === 1 || temAgO === 1);
+        case 'nao_pago_ag':
+            return temAgS === 0 && temAgO === 0;
         case 'so_recorrencia':
             return (temReS === 1 || temReO === 1) && temAgS === 0 && temAgO === 0 && temGap !== 1;
         case 'agenc_recorr':
             return (temAgS === 1 || temAgO === 1) && (temReS === 1 || temReO === 1) && temGap !== 1;
+        case 'pago_ag_recorr':
+            // Tem agenc + recorrência + sem gap + última parcela ≤ 3 meses atrás
+            return (temAgS === 1 || temAgO === 1) && (temReS === 1 || temReO === 1)
+                && temGap !== 1 && _mesesDesdeUltimo() < 3;
+        case 'atrasado':
+            // Tem agenc + recorrência + sem gap + última parcela > 3 meses atrás
+            return (temAgS === 1 || temAgO === 1) && (temReS === 1 || temReO === 1)
+                && temGap !== 1 && _mesesDesdeUltimo() >= 3;
         case 'gap_recorrencia':
+        case 'gap':
             return temGap === 1;
         default:
             return true;
@@ -139,7 +175,8 @@ function inicializarPagamento() {
         },
         ajax: { url: urlListarPagamento },
         lengthMenu: [500, 1000, 2000],
-        ordering:   false,
+        ordering:   true,
+        order:      [[12, 'asc']],
         paging:     true,
         searching:  true,
         info:       true,
@@ -184,7 +221,7 @@ function inicializarPagamento() {
               }
             },
             // col 12 — Última Parcela
-            { data: 'ultima_parcela', name: 'ultima_parcela', orderable: false, width: '5%', className: 'dt-center',
+            { data: 'ultima_parcela', name: 'ultima_parcela', width: '5%', className: 'dt-center',
               render: function (data, type) {
                   if (type !== 'display') return data || '';
                   if (!data) return '<span style="color:rgba(255,255,255,.2);font-size:.7rem;">—</span>';
@@ -214,7 +251,7 @@ function inicializarPagamento() {
                 title: 'pagamento-empresarial',
                 text: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Exportar',
                 className: 'btn-exportar',
-                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 9, 10], orthogonal: 'export' },
                 filename: 'pagamento-empresarial'
             }
         ],
@@ -249,51 +286,256 @@ function inicializarPagamento() {
                 $(this).find('.status-tag-count').text(sc[key] !== undefined ? sc[key] : 0);
             });
 
-            // ── Matriz Visão por Plano ─────────────────────────────────────────
-            var mData = {}, mPlans = [];
+            // ── Matrizes Agenciamento + Recorrência ────────────────────────────
+            var hoje = new Date();
+            var anoHoje = hoje.getFullYear(), mesHoje = hoje.getMonth() + 1;
+            function mesesAtras(mesStr) {
+                if (!mesStr) return 999;
+                var p = mesStr.split('-');
+                return (anoHoje - parseInt(p[0])) * 12 + (mesHoje - parseInt(p[1]));
+            }
+
+            var aData = {}, rData = {}, mPlans = [];
             allRows.forEach(function (r) {
                 var pl = r.plano || '—';
-                if (!mData[pl]) { mData[pl] = { total:0, sem_pagamento:0, so_agenciamento:0, so_recorrencia:0, agenc_recorr:0, gap_recorrencia:0 }; mPlans.push(pl); }
+                if (!aData[pl]) {
+                    aData[pl] = { total: 0, vidas_total: 0, pago_ag: 0, pago_ag_vidas: 0, pago_ag_valor: 0, nao_pago_ag: 0, nao_pago_ag_vidas: 0, nao_pago_ag_valor: 0 };
+                    rData[pl] = { total: 0, vidas_total: 0, pago_ag_recorr: 0, pago_ag_recorr_vidas: 0, pago_ag_recorr_valor: 0, nao_pago: 0, nao_pago_vidas: 0, nao_pago_valor: 0, atrasado: 0, gap: 0 };
+                    mPlans.push(pl);
+                }
                 var agS = parseInt(r.tem_agenciamento_saude  || 0), reS = parseInt(r.tem_recorrencia_saude   || 0);
                 var agO = parseInt(r.tem_agenciamento_odonto || 0), reO = parseInt(r.tem_recorrencia_odonto  || 0);
                 var gap = parseInt(r.tem_gap_recorrencia || 0);
-                mData[pl].total++;
-                if (!agS && !agO && !reS && !reO)                      mData[pl].sem_pagamento++;
-                if ((agS||agO) && !reS && !reO)                        mData[pl].so_agenciamento++;
-                if ((reS||reO) && !agS && !agO && !gap)                mData[pl].so_recorrencia++;
-                if ((agS||agO) && (reS||reO) && !gap)                  mData[pl].agenc_recorr++;
-                if (gap === 1)                                          mData[pl].gap_recorrencia++;
+
+                var meses     = (r.meses_pagamento || '').split(',').filter(Boolean);
+                var ultimoMes = meses.length ? meses[meses.length - 1] : null;
+                var emAtraso  = mesesAtras(ultimoMes) >= 3;
+
+                var vidas = parseFloat(r.quantidade_vidas || 0);
+                var valor = (r.tipo_contrato === 'ambos')
+                    ? parseFloat(r.valor_saude || 0) + parseFloat(r.valor_odonto || 0)
+                    : parseFloat(r.valor_plano || 0);
+
+                aData[pl].total++;
+                aData[pl].vidas_total += vidas;
+                if (agS || agO) {
+                    aData[pl].pago_ag++;
+                    aData[pl].pago_ag_vidas += vidas;
+                    aData[pl].pago_ag_valor += valor;
+                } else {
+                    aData[pl].nao_pago_ag++;
+                    aData[pl].nao_pago_ag_vidas += vidas;
+                    aData[pl].nao_pago_ag_valor += valor;
+                }
+
+                if (agS || agO) {
+                    rData[pl].total++;
+                    rData[pl].vidas_total += vidas;
+                }
+                if ((agS||agO) && (reS||reO) && !gap && !emAtraso) {
+                    rData[pl].pago_ag_recorr++;
+                    rData[pl].pago_ag_recorr_vidas += vidas;
+                    rData[pl].pago_ag_recorr_valor += valor;
+                }
+                if ((agS||agO) && (reS||reO) && !gap && emAtraso) rData[pl].atrasado++;
+                if ((agS||agO) && !reS && !reO) {
+                    rData[pl].nao_pago++;
+                    rData[pl].nao_pago_vidas += vidas;
+                    rData[pl].nao_pago_valor += valor;
+                }
+                if (gap === 1) rData[pl].gap++;
             });
             mPlans.sort();
 
-            var mCols = [
-                { key:'sem_pagamento',   label:'Sem Pag',    color:'#fca5a5', activeBg:'rgba(248,113,113,.18)' },
-                { key:'so_agenciamento', label:'Só Agenc',   color:'#86efac', activeBg:'rgba(34,197,94,.18)'   },
-                { key:'so_recorrencia',  label:'Só Recorr',  color:'#93c5fd', activeBg:'rgba(59,130,246,.18)'  },
-                { key:'agenc_recorr',    label:'Ag+Recorr',  color:'#fcd34d', activeBg:'rgba(245,158,11,.18)'  },
-                { key:'gap_recorrencia', label:'Gap',         color:'#fde68a', activeBg:'rgba(251,191,36,.18)'  },
-            ];
-
-            var mH = '<table class="pag-matrix-table"><thead><tr>'
-                + '<th style="color:rgba(255,255,255,.35);">Plano</th>';
-            mCols.forEach(function (c) { mH += '<th style="color:' + c.color + ';">' + c.label + '</th>'; });
-            mH += '<th style="color:rgba(255,255,255,.3);">Total</th></tr></thead><tbody>';
-
-            mPlans.forEach(function (pl) {
-                var d = mData[pl];
-                mH += '<tr><td class="pag-matrix-td-plano" data-plano="' + pl + '">' + pl + '</td>';
-                mCols.forEach(function (c) {
-                    var n = d[c.key] || 0;
-                    mH += n === 0
-                        ? '<td class="pag-matrix-num mat-zero">—</td>'
-                        : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="' + c.key + '" data-color="' + c.color + '" data-activebg="' + c.activeBg + '" style="color:' + c.color + ';">' + n + '</td>';
+            function buildMatrizTable(plans, data, cols) {
+                var totals = { total: 0 };
+                cols.forEach(function (c) { totals[c.key] = 0; });
+                var h = '<table class="pag-matrix-table"><thead><tr>'
+                    + '<th style="color:rgba(255,255,255,.35);">Plano</th>'
+                    + '<th style="color:rgba(255,255,255,.3);">Total</th>';
+                cols.forEach(function (c) { h += '<th style="color:' + c.color + ';">' + c.label + '</th>'; });
+                h += '</tr></thead><tbody>';
+                plans.forEach(function (pl) {
+                    var d = data[pl];
+                    totals.total += d.total;
+                    h += '<tr><td class="pag-matrix-td-plano" data-plano="' + pl + '">' + pl + '</td>'
+                        + '<td class="pag-matrix-td-total" data-plano="' + pl + '">' + d.total + '</td>';
+                    cols.forEach(function (c) {
+                        var n = d[c.key] || 0;
+                        totals[c.key] += n;
+                        h += n === 0
+                            ? '<td class="pag-matrix-num mat-zero">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="' + c.key + '" data-color="' + c.color + '" data-activebg="' + c.activeBg + '" style="color:' + c.color + ';">' + n + '</td>';
+                    });
+                    h += '</tr>';
                 });
-                mH += '<td class="pag-matrix-td-total" data-plano="' + pl + '">' + d.total + '</td></tr>';
-            });
-            mH += '</tbody></table>';
-            $('#pag-matrix-container').html(mH);
-            $('#pag-matrix-section').show();
-            $('#pag-resumo-section').show();
+                h += '</tbody><tfoot><tr style="border-top:1px solid rgba(255,255,255,.15);">'
+                    + '<td style="padding:6px 8px;font-weight:700;color:#e2e8f0;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">Total</td>'
+                    + '<td class="pag-matrix-num" style="color:#e2e8f0;font-weight:700;">' + totals.total + '</td>';
+                cols.forEach(function (c) {
+                    var n = totals[c.key] || 0;
+                    h += n === 0
+                        ? '<td class="pag-matrix-num mat-zero">—</td>'
+                        : '<td class="pag-matrix-num" style="color:' + c.color + ';font-weight:700;">' + n + '</td>';
+                });
+                h += '</tr></tfoot></table>';
+                return h;
+            }
+
+            function buildMatrizAgenciamento(plans, data) {
+                var fmtVal = function (v) {
+                    if (!v) return '—';
+                    return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                };
+                var TH = 'padding:4px 8px;font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600;white-space:nowrap;';
+                var totals = { total: 0, vidas_total: 0, pago_ag: 0, pago_ag_vidas: 0, pago_ag_valor: 0, nao_pago_ag: 0, nao_pago_ag_vidas: 0, nao_pago_ag_valor: 0 };
+
+                var h = '<table class="pag-matrix-table"><thead>'
+                    + '<tr>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.35);vertical-align:middle;">Plano</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.3);vertical-align:middle;text-align:center;">Total</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.3);vertical-align:middle;text-align:center;">Vidas</th>'
+                    + '<th colspan="3" style="' + TH + 'color:#86efac;text-align:center;border-bottom:1px solid rgba(134,239,172,.25);padding-bottom:3px;">PAGO</th>'
+                    + '<th colspan="3" style="' + TH + 'color:#fca5a5;text-align:center;border-bottom:1px solid rgba(252,165,165,.25);padding-bottom:3px;">NÃO PAGO</th>'
+                    + '</tr>'
+                    + '<tr>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:center;">Total</th>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:center;">Vidas</th>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:right;">R$ Total</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:center;">Total</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:center;">Vidas</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:right;">R$ Total</th>'
+                    + '</tr>'
+                    + '</thead><tbody>';
+
+                plans.forEach(function (pl) {
+                    var d = data[pl];
+                    Object.keys(totals).forEach(function (k) { totals[k] += (d[k] || 0); });
+                    var vT = d.vidas_total || 0;
+                    h += '<tr>'
+                        + '<td class="pag-matrix-td-plano" data-plano="' + pl + '">' + pl + '</td>'
+                        + '<td class="pag-matrix-td-total pag-matrix-num" data-plano="' + pl + '" style="text-align:center;">' + d.total + '</td>'
+                        + '<td class="pag-matrix-num" style="color:rgba(255,255,255,.55);text-align:center;">' + (vT || '—') + '</td>'
+                        + (d.pago_ag === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="pago_ag" data-color="#86efac" data-activebg="rgba(34,197,94,.18)" style="color:#86efac;text-align:center;">' + d.pago_ag + '</td>')
+                        + (d.pago_ag_vidas === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#86efac;text-align:center;">' + d.pago_ag_vidas + '</td>')
+                        + (d.pago_ag_valor === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:right;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#86efac;text-align:right;white-space:nowrap;">' + fmtVal(d.pago_ag_valor) + '</td>')
+                        + (d.nao_pago_ag === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="nao_pago_ag" data-color="#fca5a5" data-activebg="rgba(248,113,113,.18)" style="color:#fca5a5;text-align:center;">' + d.nao_pago_ag + '</td>')
+                        + (d.nao_pago_ag_vidas === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#fca5a5;text-align:center;">' + d.nao_pago_ag_vidas + '</td>')
+                        + (d.nao_pago_ag_valor === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:right;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#fca5a5;text-align:right;white-space:nowrap;">' + fmtVal(d.nao_pago_ag_valor) + '</td>')
+                        + '</tr>';
+                });
+
+                h += '</tbody><tfoot><tr style="border-top:1px solid rgba(255,255,255,.15);">'
+                    + '<td style="padding:6px 8px;font-weight:700;color:#e2e8f0;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">Total</td>'
+                    + '<td class="pag-matrix-num" style="color:#e2e8f0;font-weight:700;text-align:center;">' + totals.total + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#e2e8f0;font-weight:700;text-align:center;">' + (totals.vidas_total || '—') + '</td>'
+                    + '<td class="pag-matrix-num" data-status="pago_ag" data-color="#86efac" data-activebg="rgba(34,197,94,.18)" style="color:#86efac;font-weight:700;text-align:center;">' + (totals.pago_ag || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#86efac;font-weight:700;text-align:center;">' + (totals.pago_ag_vidas || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#86efac;font-weight:700;text-align:right;white-space:nowrap;">' + fmtVal(totals.pago_ag_valor) + '</td>'
+                    + '<td class="pag-matrix-num" data-status="nao_pago_ag" data-color="#fca5a5" data-activebg="rgba(248,113,113,.18)" style="color:#fca5a5;font-weight:700;text-align:center;">' + (totals.nao_pago_ag || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#fca5a5;font-weight:700;text-align:center;">' + (totals.nao_pago_ag_vidas || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#fca5a5;font-weight:700;text-align:right;white-space:nowrap;">' + fmtVal(totals.nao_pago_ag_valor) + '</td>'
+                    + '</tr></tfoot></table>';
+
+                return h;
+            }
+
+            function buildMatrizRecorrencia(plans, data) {
+                var fmtVal = function (v) {
+                    if (!v) return '—';
+                    return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                };
+                var TH = 'padding:4px 8px;font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;font-weight:600;white-space:nowrap;';
+                var totals = { total:0, vidas_total:0, pago_ag_recorr:0, pago_ag_recorr_vidas:0, pago_ag_recorr_valor:0, nao_pago:0, nao_pago_vidas:0, nao_pago_valor:0, atrasado:0, gap:0 };
+
+                var h = '<table class="pag-matrix-table"><thead>'
+                    + '<tr>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.35);vertical-align:middle;">Plano</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.3);vertical-align:middle;text-align:center;">Total</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:rgba(255,255,255,.3);vertical-align:middle;text-align:center;">Vidas</th>'
+                    + '<th colspan="3" style="' + TH + 'color:#86efac;text-align:center;border-bottom:1px solid rgba(134,239,172,.25);padding-bottom:3px;">PAGO</th>'
+                    + '<th colspan="3" style="' + TH + 'color:#fca5a5;text-align:center;border-bottom:1px solid rgba(252,165,165,.25);padding-bottom:3px;">NÃO PAGO</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:#fb923c;vertical-align:middle;text-align:center;">Atrasado</th>'
+                    + '<th rowspan="2" style="' + TH + 'color:#fde68a;vertical-align:middle;text-align:center;">Gap</th>'
+                    + '</tr>'
+                    + '<tr>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:center;">Total</th>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:center;">Vidas</th>'
+                    + '<th style="' + TH + 'color:rgba(134,239,172,.65);text-align:right;">R$ Total</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:center;">Total</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:center;">Vidas</th>'
+                    + '<th style="' + TH + 'color:rgba(252,165,165,.65);text-align:right;">R$ Total</th>'
+                    + '</tr>'
+                    + '</thead><tbody>';
+
+                plans.forEach(function (pl) {
+                    var d = data[pl];
+                    Object.keys(totals).forEach(function (k) { totals[k] += (d[k] || 0); });
+                    var vT = d.vidas_total || 0;
+                    h += '<tr>'
+                        + '<td class="pag-matrix-td-plano" data-plano="' + pl + '">' + pl + '</td>'
+                        + '<td class="pag-matrix-td-total pag-matrix-num" data-plano="' + pl + '" style="text-align:center;">' + d.total + '</td>'
+                        + '<td class="pag-matrix-num" style="color:rgba(255,255,255,.55);text-align:center;">' + (vT || '—') + '</td>'
+                        + (d.pago_ag_recorr === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="pago_ag_recorr" data-color="#86efac" data-activebg="rgba(34,197,94,.18)" style="color:#86efac;text-align:center;">' + d.pago_ag_recorr + '</td>')
+                        + (d.pago_ag_recorr_vidas === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#86efac;text-align:center;">' + d.pago_ag_recorr_vidas + '</td>')
+                        + (d.pago_ag_recorr_valor === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:right;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#86efac;text-align:right;white-space:nowrap;">' + fmtVal(d.pago_ag_recorr_valor) + '</td>')
+                        + (d.nao_pago === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="nao_pago" data-color="#fca5a5" data-activebg="rgba(248,113,113,.18)" style="color:#fca5a5;text-align:center;">' + d.nao_pago + '</td>')
+                        + (d.nao_pago_vidas === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#fca5a5;text-align:center;">' + d.nao_pago_vidas + '</td>')
+                        + (d.nao_pago_valor === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:right;">—</td>'
+                            : '<td class="pag-matrix-num" style="color:#fca5a5;text-align:right;white-space:nowrap;">' + fmtVal(d.nao_pago_valor) + '</td>')
+                        + (d.atrasado === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="atrasado" data-color="#fb923c" data-activebg="rgba(251,146,60,.18)" style="color:#fb923c;text-align:center;">' + d.atrasado + '</td>')
+                        + (d.gap === 0
+                            ? '<td class="pag-matrix-num mat-zero" style="text-align:center;">—</td>'
+                            : '<td class="pag-matrix-num" data-plano="' + pl + '" data-status="gap" data-color="#fde68a" data-activebg="rgba(251,191,36,.18)" style="color:#fde68a;text-align:center;">' + d.gap + '</td>')
+                        + '</tr>';
+                });
+
+                h += '</tbody><tfoot><tr style="border-top:1px solid rgba(255,255,255,.15);">'
+                    + '<td style="padding:6px 8px;font-weight:700;color:#e2e8f0;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">Total</td>'
+                    + '<td class="pag-matrix-num" style="color:#e2e8f0;font-weight:700;text-align:center;">' + totals.total + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#e2e8f0;font-weight:700;text-align:center;">' + (totals.vidas_total || '—') + '</td>'
+                    + '<td class="pag-matrix-num" data-status="pago_ag_recorr" data-color="#86efac" data-activebg="rgba(34,197,94,.18)" style="color:#86efac;font-weight:700;text-align:center;">' + (totals.pago_ag_recorr || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#86efac;font-weight:700;text-align:center;">' + (totals.pago_ag_recorr_vidas || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#86efac;font-weight:700;text-align:right;white-space:nowrap;">' + fmtVal(totals.pago_ag_recorr_valor) + '</td>'
+                    + '<td class="pag-matrix-num" data-status="nao_pago" data-color="#fca5a5" data-activebg="rgba(248,113,113,.18)" style="color:#fca5a5;font-weight:700;text-align:center;">' + (totals.nao_pago || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#fca5a5;font-weight:700;text-align:center;">' + (totals.nao_pago_vidas || '—') + '</td>'
+                    + '<td class="pag-matrix-num" style="color:#fca5a5;font-weight:700;text-align:right;white-space:nowrap;">' + fmtVal(totals.nao_pago_valor) + '</td>'
+                    + '<td class="pag-matrix-num" data-status="atrasado" data-color="#fb923c" data-activebg="rgba(251,146,60,.18)" style="color:#fb923c;font-weight:700;text-align:center;">' + (totals.atrasado || '—') + '</td>'
+                    + '<td class="pag-matrix-num" data-status="gap" data-color="#fde68a" data-activebg="rgba(251,191,36,.18)" style="color:#fde68a;font-weight:700;text-align:center;">' + (totals.gap || '—') + '</td>'
+                    + '</tr></tfoot></table>';
+
+                return h;
+            }
+
+            $('#pag-matrix-ag-container').html(buildMatrizAgenciamento(mPlans, aData));
+            $('#pag-matrix-re-container').html(buildMatrizRecorrencia(mPlans, rData));
+            $('#pag-matrix-ag-section').show();
+            $('#pag-matrix-re-section').show();
 
             // ── Select de mês ──────────────────────────────────────────────────
             var mesesSet = {};
@@ -423,8 +665,14 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, rowData) {
 });
 
 // ── Painel: toggles ───────────────────────────────────────────────────────────
-$(document).on('click', '#pag-matrix-toggle-btn', function () {
-    var $body = $('#pag-matrix-body');
+$(document).on('click', '#pag-matrix-ag-toggle-btn', function () {
+    var $body = $('#pag-matrix-ag-body');
+    var collapsed = $body.is(':hidden');
+    $body.slideToggle(180);
+    $(this).text(collapsed ? '▲ Recolher' : '▼ Expandir');
+});
+$(document).on('click', '#pag-matrix-re-toggle-btn', function () {
+    var $body = $('#pag-matrix-re-body');
     var collapsed = $body.is(':hidden');
     $body.slideToggle(180);
     $(this).text(collapsed ? '▲ Recolher' : '▼ Expandir');
@@ -438,8 +686,8 @@ $(document).on('click', '#pag-resumo-toggle-btn', function () {
 
 // ── Matriz: helper ────────────────────────────────────────────────────────────
 function aplicarFiltroMatriz(plano, status, $cell) {
-    // limpa destaques da matriz
-    $('#pag-matrix-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
+    // limpa destaques das matrizes
+    $('#pag-matrix-ag-container .mat-active, #pag-matrix-re-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
 
     // reseta botões de plano
     $('#pagamento-page .plano-tag-btn').each(function () {
@@ -474,13 +722,13 @@ function aplicarFiltroMatriz(plano, status, $cell) {
 }
 
 // ── Matriz: cliques ───────────────────────────────────────────────────────────
-$(document).on('click', '#pag-matrix-container .pag-matrix-num:not(.mat-zero)', function () {
+$(document).on('click', '#pag-matrix-ag-container .pag-matrix-num:not(.mat-zero), #pag-matrix-re-container .pag-matrix-num:not(.mat-zero)', function () {
     aplicarFiltroMatriz($(this).data('plano'), $(this).data('status'), $(this));
 });
-$(document).on('click', '#pag-matrix-container .pag-matrix-td-plano', function () {
+$(document).on('click', '#pag-matrix-ag-container .pag-matrix-td-plano, #pag-matrix-re-container .pag-matrix-td-plano', function () {
     aplicarFiltroMatriz($(this).data('plano'), null, $(this));
 });
-$(document).on('click', '#pag-matrix-container .pag-matrix-td-total', function () {
+$(document).on('click', '#pag-matrix-ag-container .pag-matrix-td-total, #pag-matrix-re-container .pag-matrix-td-total', function () {
     aplicarFiltroMatriz($(this).data('plano'), null, $(this));
 });
 
@@ -505,7 +753,7 @@ $(document).on('click', '#pagamento-page .plano-tag-btn', function () {
         $btn.css({ background: 'rgba(255,255,255,.14)', borderColor: 'rgba(255,255,255,.35)', color: '#fff' });
     }
 
-    $('#pag-matrix-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
+    $('#pag-matrix-ag-container, #pag-matrix-re-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
     tablePagamento.column(1).search(
         plano ? ('^' + $.fn.dataTable.util.escapeRegex(plano) + '$') : '',
         plano ? true : false,
@@ -559,7 +807,7 @@ $(document).on('click', '#pagamento-page .status-tag-btn', function () {
         $btn.css({ background: 'rgba(255,255,255,.14)', borderColor: 'rgba(255,255,255,.35)', color: '#fff' });
     }
 
-    $('#pag-matrix-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
+    $('#pag-matrix-ag-container, #pag-matrix-re-container .mat-active').removeClass('mat-active').css({ background: '', borderRadius: '' });
     filtroStatusPag = status;
 
     // "Todos" = reset completo: limpa plano, tipo, mês e matriz
@@ -603,6 +851,7 @@ $('#tabela_pagamento').on('click', 'tbody tr', function () {
 
 // ── Upload Excel modal ────────────────────────────────────────────────────────
 var uploadExcelTipoAtual = null;
+var uploadDroppedFiles   = null;
 
 var UPLOAD_TIPOS = {
     agenciamento_saude:   { label: 'Agenciamento — Saúde',   cor: '#34d399' },
@@ -611,15 +860,24 @@ var UPLOAD_TIPOS = {
     recorrencia_odonto:   { label: 'Recorrência — Odonto',   cor: '#a5b4fc' },
 };
 
+function resetProgressBar() {
+    $('#pag-upload-progress').hide();
+    $('#pag-upload-progress-bar').css('width', '0%');
+    $('#pag-upload-progress-label').text('');
+    $('#pag-upload-progress-count').text('');
+}
+
 function abrirModalUploadExcel(tipo) {
     uploadExcelTipoAtual = tipo;
+    uploadDroppedFiles   = null;
     var info = UPLOAD_TIPOS[tipo] || { label: tipo, cor: '#fff' };
 
     $('#modal-upload-excel-title').text(info.label).css('color', info.cor);
     $('#input-upload-excel').val('');
     $('#pag-upload-file-info').hide();
     $('#pag-upload-file-name').text('');
-    $('#pag-dropzone-label-text').text('Clique para selecionar ou arraste o arquivo aqui');
+    $('#pag-dropzone-label-text').text('Clique para selecionar ou arraste os arquivos aqui');
+    resetProgressBar();
     $('#pag-upload-dropzone').css({ borderColor: 'rgba(255,255,255,.18)', background: 'rgba(255,255,255,.02)' });
 
     $('#btn-enviar-upload-excel')
@@ -632,6 +890,8 @@ function abrirModalUploadExcel(tipo) {
 function fecharModalUploadExcel() {
     $('#modal-upload-excel-overlay').fadeOut(160);
     uploadExcelTipoAtual = null;
+    uploadDroppedFiles   = null;
+    resetProgressBar();
 }
 
 $(document).on('click', '.pag-upload-card', function () {
@@ -654,20 +914,26 @@ $('#pag-upload-dropzone').on('dragover', function (e) {
     if (e.type === 'drop') {
         var files = e.originalEvent.dataTransfer.files;
         if (files && files.length) {
-            $('#input-upload-excel').prop('files', files);
-            triggerFileSelected(files[0]);
+            uploadDroppedFiles = files;
+            triggerFileSelected(files);
         }
     }
 });
 
 $('#input-upload-excel').on('change', function () {
-    if (this.files && this.files.length) triggerFileSelected(this.files[0]);
+    if (this.files && this.files.length) {
+        uploadDroppedFiles = null;
+        triggerFileSelected(this.files);
+    }
 });
 
-function triggerFileSelected(file) {
-    $('#pag-upload-file-name').text(file.name);
+function triggerFileSelected(files) {
+    var count = files.length;
+    var label = count === 1 ? files[0].name : count + ' arquivos selecionados';
+    var names = Array.from(files).map(function (f) { return f.name; }).join(', ');
+    $('#pag-upload-file-name').text(names);
     $('#pag-upload-file-info').css('display', 'flex');
-    $('#pag-dropzone-label-text').text(file.name);
+    $('#pag-dropzone-label-text').text(label);
     $('#btn-enviar-upload-excel')
         .prop('disabled', false)
         .css({ background: '#4f8ef7', borderColor: '#4f8ef7', color: '#fff', cursor: 'pointer' });
@@ -675,60 +941,172 @@ function triggerFileSelected(file) {
 
 $('#btn-enviar-upload-excel').on('click', function () {
     if ($(this).prop('disabled')) return;
-    var file = $('#input-upload-excel')[0].files[0];
-    if (!file || !uploadExcelTipoAtual) return;
+    var files = uploadDroppedFiles || $('#input-upload-excel')[0].files;
+    if (!files || !files.length || !uploadExcelTipoAtual) return;
 
-    var $btn = $(this);
-    $btn.prop('disabled', true).text('Enviando...').css('cursor', 'not-allowed');
+    var $btn       = $(this);
+    var total      = files.length;
+    var idx        = 0;
+    var acInseridos    = 0;
+    var acNaoVinc      = 0;
+    var acDuplicados   = 0;
+    var tipoAtual  = uploadExcelTipoAtual;
 
-    var formData = new FormData();
-    formData.append('arquivo', file);
-    formData.append('tipo', uploadExcelTipoAtual);
-    formData.append('_token', csrfToken);
+    function toastPag(msg, cor) {
+        $('<div>').text(msg).css({
+            position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%)',
+            background:'#1a2540', border:'1px solid ' + cor, color: cor,
+            padding:'10px 22px', borderRadius:'10px', fontSize:'.82rem',
+            fontWeight:'700', zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.4)',
+            whiteSpace:'nowrap'
+        }).appendTo('body').delay(4000).fadeOut(400, function () { $(this).remove(); });
+    }
 
-    $.ajax({
-        url:         urlUploadPlanilha,
-        type:        'POST',
-        data:        formData,
-        processData: false,
-        contentType: false,
-        success: function (res) {
-            fecharModalUploadExcel();
-            var cor = res.nao_vinculados > 0 ? '#fbbf24' : '#34d399';
-            $('<div>')
-                .text(res.mensagem)
-                .css({
-                    position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%)',
-                    background:'#1a2540', border:'1px solid ' + cor, color: cor,
-                    padding:'10px 22px', borderRadius:'10px', fontSize:'.82rem',
-                    fontWeight:'700', zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.4)'
-                })
-                .appendTo('body');
-            setTimeout(function () { location.reload(); }, 1800);
-        },
-        error: function (xhr) {
-            var msg = xhr.responseJSON && xhr.responseJSON.message
-                ? xhr.responseJSON.message
-                : 'Erro ao importar a planilha.';
-            $('<div>')
-                .text(msg)
-                .css({
-                    position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%)',
-                    background:'#1a2540', border:'1px solid #f87171', color:'#f87171',
-                    padding:'10px 22px', borderRadius:'10px', fontSize:'.82rem',
-                    fontWeight:'700', zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.4)'
-                })
-                .appendTo('body')
-                .delay(4000).fadeOut(400, function () { $(this).remove(); });
-
-            $btn.prop('disabled', false).text('Enviar')
-                .css({ background:'#4f8ef7', borderColor:'#4f8ef7', color:'#fff', cursor:'pointer' });
+    function enviarArquivo() {
+        if (idx >= total) {
+            $('#pag-upload-progress-bar').css('width', '100%');
+            $('#pag-upload-progress-label').text('Concluído');
+            $('#pag-upload-progress-count').text(total + ' de ' + total);
+            setTimeout(function () {
+                fecharModalUploadExcel();
+                var msg = acInseridos + ' registro(s) importado(s).';
+                if (acDuplicados  > 0) msg += ' ' + acDuplicados  + ' duplicado(s) ignorado(s).';
+                if (acNaoVinc     > 0) msg += ' ' + acNaoVinc     + ' não vinculado(s).';
+                var cor = acNaoVinc > 0 || acDuplicados > 0 ? '#fbbf24' : '#34d399';
+                toastPag(msg, cor);
+                setTimeout(function () { location.reload(); }, 1800);
+            }, 400);
+            return;
         }
-    });
+
+        var pct = Math.round((idx / total) * 100);
+        $('#pag-upload-progress').show();
+        $('#pag-upload-progress-bar').css('width', pct + '%');
+        $('#pag-upload-progress-label').text(files[idx].name);
+        $('#pag-upload-progress-count').text((idx + 1) + ' de ' + total);
+
+        var btnLabel = total > 1 ? 'Enviando ' + (idx + 1) + ' de ' + total : 'Enviando';
+        $btn.prop('disabled', true).text(btnLabel).css('cursor', 'not-allowed');
+
+        var fd = new FormData();
+        fd.append('arquivo[]', files[idx]);
+        fd.append('tipo', tipoAtual);
+        fd.append('_token', csrfToken);
+
+        $.ajax({
+            url: urlUploadPlanilha, type: 'POST',
+            data: fd, processData: false, contentType: false,
+            success: function (res) {
+                acInseridos  += (res.inseridos      || 0);
+                acNaoVinc    += (res.nao_vinculados  || 0);
+                acDuplicados += (res.duplicados      || 0);
+                idx++;
+                enviarArquivo();
+            },
+            error: function (xhr) {
+                var msg = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : 'Erro ao importar arquivo ' + (idx + 1) + '.';
+                toastPag(msg, '#f87171');
+                $btn.prop('disabled', false).text('Enviar')
+                    .css({ background:'#4f8ef7', borderColor:'#4f8ef7', color:'#fff', cursor:'pointer' });
+            }
+        });
+    }
+
+    enviarArquivo();
 });
 
+// ── Detalhe: gera PDF de gap para enviar à operadora ─────────────────────────
+function gerarPdfGap(contrato, pagamentos, faltando) {
+    var fmt = function (v) {
+        if (!v && v !== 0) return '—';
+        return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    var agenc  = pagamentos.filter(function (p) { return p.tipo_planilha.indexOf('agenciamento') === 0; });
+    var recorr = pagamentos.filter(function (p) { return p.tipo_planilha.indexOf('recorrencia')  === 0; });
+    var tipoLabel = { agenciamento_saude:'Saúde', agenciamento_odonto:'Odonto', recorrencia_saude:'Saúde', recorrencia_odonto:'Odonto' };
+
+    function buildTable(rows) {
+        var h = '<table><thead><tr><th>Tipo</th><th>Parcela</th><th>Vencimento</th><th>VL Base</th><th>% Imp.</th><th>VL Líquido</th><th>% Dist.</th><th>VL a Pagar</th></tr></thead><tbody>';
+        rows.forEach(function (p) {
+            var venc = p.vencimento ? p.vencimento.split('-').reverse().join('/') : '—';
+            h += '<tr><td>' + (tipoLabel[p.tipo_planilha] || p.tipo_planilha) + '</td>'
+               + '<td style="text-align:center;">' + (p.parcela || '1') + 'ª</td>'
+               + '<td>' + venc + '</td><td>' + fmt(p.vl_base_com) + '</td>'
+               + '<td>' + (p.pct_imposto || '—') + '%</td><td>' + fmt(p.vl_liquido) + '</td>'
+               + '<td>' + (p.pc_dist || '—') + '%</td><td><strong>' + fmt(p.vl_a_pagar) + '</strong></td></tr>';
+        });
+        return h + '</tbody></table>';
+    }
+
+    var titulo  = contrato ? (contrato.razao_social || 'Contrato') : 'Contrato';
+    var cnpj    = contrato ? (contrato.cnpj || '') : '';
+    var codigos = [];
+    if (contrato && contrato.codigo_saude)  codigos.push('Saúde: ' + contrato.codigo_saude);
+    if (contrato && contrato.codigo_odonto) codigos.push('Odonto: ' + contrato.codigo_odonto);
+    var agTotal = agenc.reduce(function (s, p) { return s + parseFloat(p.vl_a_pagar || 0); }, 0);
+    var reTotal = recorr.reduce(function (s, p) { return s + parseFloat(p.vl_a_pagar || 0); }, 0);
+    var hoje    = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+    var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+        + '<title>Parcelas em Falta — ' + titulo + '</title>'
+        + '<style>'
+        + 'body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:900px;margin:auto}'
+        + 'h1{font-size:15px;margin:0 0 3px}h2{font-size:12px;font-weight:700;margin:18px 0 5px;padding-bottom:3px;border-bottom:2px solid #333}'
+        + '.sub{color:#555;font-size:10px;margin-bottom:18px}'
+        + 'table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px}'
+        + 'th{background:#f0f0f0;border:1px solid #ccc;padding:5px 7px;text-align:left}'
+        + 'td{border:1px solid #e0e0e0;padding:4px 7px}'
+        + '.total-row{text-align:right;font-weight:700;font-size:12px;margin-bottom:4px}'
+        + '.gap-box{border:2px solid #d97706;border-radius:6px;padding:14px;margin-top:20px;background:#fffbeb}'
+        + '.gap-title{color:#92400e;font-weight:700;font-size:13px;margin-bottom:10px}'
+        + '.gap-tr td{background:#fef3c7;font-weight:700}'
+        + '.gap-obs{color:#92400e;font-size:11px;margin-top:10px;line-height:1.5}'
+        + '.footer{margin-top:28px;border-top:1px solid #ccc;padding-top:8px;color:#777;font-size:10px}'
+        + '.print-btn{float:right;padding:6px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px}'
+        + '@media print{.print-btn{display:none}}'
+        + '</style></head><body>'
+        + '<button class="print-btn" onclick="window.print()">Imprimir / Salvar PDF</button>'
+        + '<h1>' + titulo + '</h1>'
+        + '<div class="sub">'
+        + (cnpj ? 'CNPJ: <strong>' + cnpj + '</strong>' : '')
+        + (codigos.length ? '&nbsp;&nbsp;|&nbsp;&nbsp;' + codigos.join(' | ') : '')
+        + '<br>Gerado em: ' + hoje
+        + '</div>';
+
+    if (agenc.length) {
+        html += '<h2>Agenciamento</h2>' + buildTable(agenc);
+        html += '<div class="total-row">Total Agenciamento: ' + fmt(agTotal) + '</div>';
+    }
+    if (recorr.length) {
+        html += '<h2>Recorrência Recebida</h2>' + buildTable(recorr);
+        html += '<div class="total-row">Total Recorrência: ' + fmt(reTotal) + '</div>';
+    }
+
+    html += '<div class="gap-box">'
+        + '<div class="gap-title">⚠ PARCELA(S) EM FALTA — CONFRONTAÇÃO COM OPERADORA</div>'
+        + '<table><thead><tr><th>Parcela</th><th>Vencimento Projetado</th><th>Valor Estimado</th><th>Situação</th></tr></thead><tbody>';
+    faltando.forEach(function (f) {
+        html += '<tr class="gap-tr">'
+            + '<td>' + f.parcela + 'ª</td>'
+            + '<td>' + (f.vencimento_projetado || '—') + '</td>'
+            + '<td>' + fmt(f.valor_estimado) + '</td>'
+            + '<td>Não encontrada nos registros recebidos</td></tr>';
+    });
+    html += '</tbody></table>'
+        + '<div class="gap-obs">Este documento comprova que a(s) parcela(s) listada(s) acima não foram repassadas pela operadora.<br>'
+        + 'Solicitamos a conferência e regularização dos valores em aberto conforme contrato vigente.</div>'
+        + '</div>'
+        + '<div class="footer">Accert Empresarial &nbsp;|&nbsp; ' + new Date().toLocaleDateString('pt-BR') + '</div>'
+        + '</body></html>';
+
+    var popup = window.open('', '_blank', 'width=960,height=720,scrollbars=yes');
+    if (popup) { popup.document.write(html); popup.document.close(); }
+}
+
 // ── Detalhe: renderiza duas seções (Agenciamento / Recorrência) ──────────────
-function renderDetalheModal(pagamentos) {
+function renderDetalheModal(pagamentos, contrato) {
     var $content = $('#modal-detalhe-content').empty();
 
     var fmt = function (v) {
@@ -816,6 +1194,80 @@ function renderDetalheModal(pagamentos) {
         );
     }
 
+    // ── Detecção de GAP nas parcelas de recorrência ───────────────────────────
+    if (recorr.length >= 2) {
+        var vencMap = {};
+        recorr.forEach(function (p) {
+            var n = parseInt(p.parcela);
+            if (n && p.vencimento) vencMap[n] = p.vencimento; // 'YYYY-MM-DD'
+        });
+        var parcelas = Object.keys(vencMap).map(Number).sort(function (a, b) { return a - b; });
+        var min = parcelas[0], max = parcelas[parcelas.length - 1];
+
+        // Valor médio das recorrências como estimativa
+        var avgVal = recorr.reduce(function (s, p) { return s + parseFloat(p.vl_a_pagar || 0); }, 0) / recorr.length;
+
+        // Projeta vencimento de parcela ausente usando âncora mais próxima
+        function projetarData(n) {
+            var anchor = parcelas.reduce(function (prev, curr) {
+                return Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev;
+            });
+            var parts  = vencMap[anchor].split('-');
+            var dt     = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            dt.setMonth(dt.getMonth() + (n - anchor));
+            return dt.toLocaleDateString('pt-BR');
+        }
+
+        var faltando = [];
+        for (var n = min; n <= max; n++) {
+            if (parcelas.indexOf(n) === -1) {
+                faltando.push({ parcela: n, vencimento_projetado: projetarData(n), valor_estimado: avgVal });
+            }
+        }
+
+        if (faltando.length) {
+            var gapHtml = '<div style="margin-top:16px;border:1px solid rgba(251,191,36,.35);border-radius:10px;overflow:hidden;">'
+                + '<div style="background:rgba(251,191,36,.1);padding:8px 14px;border-bottom:1px solid rgba(251,191,36,.2);display:flex;justify-content:space-between;align-items:center;">'
+                + '<span style="color:#fcd34d;font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">'
+                + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#fcd34d" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>'
+                + faltando.length + ' parcela(s) em falta</span>'
+                + '<span style="color:rgba(255,255,255,.3);font-size:.65rem;">Projeção baseada no padrão de vencimento</span>'
+                + '</div>'
+                + '<table style="width:100%;border-collapse:collapse;font-size:.72rem;color:#cbd5e1;">'
+                + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.07);">'
+                + '<th style="padding:5px 10px;color:rgba(255,255,255,.32);font-size:.6rem;text-transform:uppercase;">Parcela</th>'
+                + '<th style="padding:5px 10px;color:rgba(255,255,255,.32);font-size:.6rem;text-transform:uppercase;">Vencimento Projetado</th>'
+                + '<th style="padding:5px 10px;color:rgba(255,255,255,.32);font-size:.6rem;text-transform:uppercase;text-align:right;">Valor Estimado</th>'
+                + '</tr></thead><tbody>';
+
+            faltando.forEach(function (f) {
+                gapHtml += '<tr style="background:rgba(251,191,36,.06);border-bottom:1px solid rgba(255,255,255,.04);">'
+                    + '<td style="padding:7px 10px;font-weight:700;color:#fcd34d;">' + f.parcela + 'ª ⚠</td>'
+                    + '<td style="padding:7px 10px;">' + f.vencimento_projetado + '</td>'
+                    + '<td style="padding:7px 10px;text-align:right;color:#fbbf24;font-weight:700;">≈ ' + fmt(f.valor_estimado) + '</td>'
+                    + '</tr>';
+            });
+
+            gapHtml += '</tbody></table></div>';
+
+            // Botão PDF
+            gapHtml += '<div style="display:flex;justify-content:flex-end;margin-top:10px;">'
+                + '<button id="btn-pdf-gap" style="display:inline-flex;align-items:center;gap:7px;'
+                + 'background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);color:#fcd34d;'
+                + 'padding:8px 18px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;">'
+                + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" style="width:14px;height:14px;">'
+                + '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>'
+                + 'Baixar PDF — Confrontação Operadora</button></div>';
+
+            $content.append(gapHtml);
+
+            // Bind do botão PDF
+            $content.find('#btn-pdf-gap').on('click', function () {
+                gerarPdfGap(contrato, pagamentos, faltando);
+            });
+        }
+    }
+
     $content.show();
 }
 
@@ -849,7 +1301,7 @@ $(document).on('click', '.btn-detalhe-pagamento', function (e) {
             $('#modal-detalhe-sub').text(codigos.join(' | ') + (c.cnpj ? '  •  CNPJ: ' + c.cnpj : ''));
         }
 
-        renderDetalheModal(res.pagamentos || []);
+        renderDetalheModal(res.pagamentos || [], res.contrato || null);
     }).fail(function () {
         $('#modal-detalhe-loading').hide();
         $('#modal-detalhe-content')
@@ -919,7 +1371,7 @@ function renderNaoVinculados(registros) {
         var $tr    = $('<tr data-id="' + reg.id + '" style="border-bottom:1px solid rgba(255,255,255,.05);">');
 
         $tr.html(
-            '<td style="padding:7px 6px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + nvEsc(reg.empresa_conveniada) + '">' + nvEsc(reg.empresa_conveniada || '—') + '</td>'
+            '<td style="padding:7px 6px;word-break:break-word;min-width:160px;">' + nvEsc(reg.empresa_conveniada || '—') + '</td>'
           + '<td style="padding:7px 6px;white-space:nowrap;"><span style="color:' + info.cor + ';font-size:.7rem;font-weight:700;">' + info.label + '</span></td>'
           + '<td style="padding:7px 6px;text-align:center;white-space:nowrap;">' + parc + '</td>'
           + '<td style="padding:7px 6px;white-space:nowrap;">' + venc + '</td>'

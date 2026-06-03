@@ -718,9 +718,23 @@ $("body").on('click', '#closeModalEmpresarial', function () {
 });
 
 // ── Edição inline na modal de detalhe ────────────────────────────────────────
+function toastFinanceiro(msg, cor) {
+    $('<div>').text(msg).css({
+        position:'fixed', bottom:'28px', left:'50%', transform:'translateX(-50%)',
+        background:'#1a2540', border:'1px solid ' + cor, color: cor,
+        padding:'10px 22px', borderRadius:'10px', fontSize:'.82rem',
+        fontWeight:'700', zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.4)',
+        whiteSpace:'nowrap'
+    }).appendTo('body').delay(3500).fadeOut(400, function () { $(this).remove(); });
+}
+
 $("body").on('click', '.editar_empresarial_select', function () {
-    var input = $(this).closest("div").find("select");
-    input.prop('disabled', !input.prop('disabled'));
+    var $select = $(this).closest("div").find("select");
+    if ($select.attr('name') === 'mudar_corretor_empresarial' && parseInt($('#contrato_pago').val()) === 1) {
+        toastFinanceiro('Vendedor não pode ser alterado após o pagamento da comissão.', '#f87171');
+        return;
+    }
+    $select.prop('disabled', !$select.prop('disabled'));
 });
 
 $("body").on('click', '.editar_empresarial', function () {
@@ -746,7 +760,7 @@ function salvarCampoEmpresarial(id, campo, valor, $el) {
             var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Erro ao salvar.';
             $el.css({ outline: '2px solid #f87171' });
             setTimeout(function () { $el.css({ outline: '' }); }, 2000);
-            console.warn('Erro ao salvar campo "' + campo + '":', msg);
+            toastFinanceiro(msg, '#f87171');
         }
     });
 }
@@ -1220,12 +1234,73 @@ $(document).on('click', '.fin-tag', function () {
     }
 });
 
+// ── Contratos Bloqueados na Importação ───────────────────────────────────────
+function carregarContadorBloqueados() {
+    $.get(urlListarBloqueados, function (res) {
+        var total = parseInt(res.total) || 0;
+        if (total > 0) {
+            $('#bloqueados-count').text(total);
+            $('#btnVerBloqueados').css('display', 'inline-flex');
+        } else {
+            $('#btnVerBloqueados').hide();
+        }
+    });
+}
+
+carregarContadorBloqueados();
+
+$(document).on('click', '#btnVerBloqueados', function () {
+    $('#bloqueados-loading').show();
+    $('#bloqueados-content').hide();
+    $('#modalBloqueados').fadeIn(180);
+
+    $.get(urlListarBloqueados, function (res) {
+        $('#bloqueados-loading').hide();
+        var lista = res.contratos || [];
+        $('#bloqueados-info').text(lista.length + ' contrato(s) bloqueado(s) por duplicidade');
+        var $tbody = $('#bloqueados-tbody').empty();
+        lista.forEach(function (b, i) {
+            var corMotivo = b.motivo && b.motivo.indexOf('CNPJ') !== -1 ? '#fbbf24' : '#fb923c';
+            $tbody.append(
+                '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">'
+                + '<td style="padding:6px 10px;color:rgba(255,255,255,.25);font-size:.65rem;">' + (i + 1) + '</td>'
+                + '<td style="padding:6px 10px;word-break:break-word;font-weight:600;">' + (b.razao_social || '—') + '</td>'
+                + '<td style="padding:6px 10px;white-space:nowrap;color:rgba(255,255,255,.5);">' + (b.cnpj || '—') + '</td>'
+                + '<td style="padding:6px 10px;white-space:nowrap;color:' + corMotivo + ';font-weight:700;">' + (b.motivo || '—') + '</td>'
+                + '<td style="padding:6px 10px;white-space:nowrap;color:rgba(255,255,255,.35);font-size:.68rem;">' + (b.importado_em || '—') + '</td>'
+                + '</tr>'
+            );
+        });
+        $('#bloqueados-content').show();
+    });
+});
+
+$(document).on('click', '#fecharModalBloqueados, #modalBloqueados', function (e) {
+    if ($(e.target).is('#modalBloqueados') || $(e.target).is('#fecharModalBloqueados') || $(e.target).closest('#fecharModalBloqueados').length) {
+        $('#modalBloqueados').fadeOut(160);
+    }
+});
+
+$(document).on('click', '#btnLimparBloqueados', function () {
+    if (!confirm('Limpar toda a lista de bloqueados?')) return;
+    $.ajax({
+        url: urlLimparBloqueados, type: 'DELETE',
+        success: function () {
+            $('#modalBloqueados').fadeOut(160);
+            $('#btnVerBloqueados').hide();
+        }
+    });
+});
+
 // ── Importar Histórico Sindicatos ─────────────────────────────────────────────
 
 $(document).on('click', '#btnAbrirImportarHistorico', function () {
     $('#historicoMsgErro').hide().text('');
     $('#historicoMsgSucesso').hide().text('');
+    $('#historicoBloqueados').hide();
+    $('#historicoBloqueadosTbody').empty();
     $('#arquivoHistorico').val('');
+    $('#btnImportarHistorico').prop('disabled', false).text('Importar Planilha');
     $('#modalImportarHistorico').fadeIn(150);
 });
 
@@ -1245,7 +1320,7 @@ $(document).on('submit', '#formImportarHistorico', function (e) {
     var fd = new FormData(this);
     fd.append('planilha', arquivo);
 
-    $('#btnImportarHistorico').prop('disabled', true).text('Importando...');
+    $('#btnImportarHistorico').prop('disabled', true).text('Validando planilha...');
     $('#historicoMsgErro').hide().text('');
     $('#historicoMsgSucesso').hide().text('');
 
@@ -1256,11 +1331,37 @@ $(document).on('submit', '#formImportarHistorico', function (e) {
         processData: false,
         contentType: false,
         success: function (res) {
-            $('#btnImportarHistorico').prop('disabled', false).text('Importar Planilha');
             if (res.success) {
-                $('#historicoMsgSucesso').text(res.importados + ' contrato(s) importado(s) com sucesso!').show();
-                if (tableempresarial) tableempresarial.ajax.reload(null, false);
+                var msg = res.importados + ' contrato(s) importado(s)';
+                if (res.duplicados > 0) msg += ', ' + res.duplicados + ' bloqueado(s)';
+
+                // Exibe tabela de bloqueados para análise antes do reload
+                if (res.bloqueados && res.bloqueados.length > 0) {
+                    $('#historicoBloqueadosTitle').text(res.bloqueados.length + ' contrato(s) bloqueado(s) — analise antes do reload:');
+                    var $tbody = $('#historicoBloqueadosTbody').empty();
+                    res.bloqueados.forEach(function (b) {
+                        $tbody.append(
+                            '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">'
+                            + '<td style="padding:5px 8px;word-break:break-word;">' + (b.razao_social || '—') + '</td>'
+                            + '<td style="padding:5px 8px;white-space:nowrap;color:rgba(255,255,255,.5);">' + (b.cnpj || '—') + '</td>'
+                            + '<td style="padding:5px 8px;color:#fbbf24;">' + (b.motivo || '—') + '</td>'
+                            + '</tr>'
+                        );
+                    });
+                    $('#historicoBloqueados').show();
+                    // Com bloqueados: aguarda mais para o usuário ver a tabela
+                    msg += '. Recarregando em 8s...';
+                    $('#btnImportarHistorico').prop('disabled', true).text('Recarregando...');
+                    $('#historicoMsgSucesso').text(msg).show();
+                    setTimeout(function () { location.reload(); }, 8000);
+                } else {
+                    msg += '. Recarregando...';
+                    $('#btnImportarHistorico').prop('disabled', true).text('Recarregando...');
+                    $('#historicoMsgSucesso').text(msg).show();
+                    setTimeout(function () { location.reload(); }, 1500);
+                }
             } else {
+                $('#btnImportarHistorico').prop('disabled', false).text('Importar Planilha');
                 $('#historicoMsgErro').text(res.error || 'Erro ao importar.').show();
             }
         },

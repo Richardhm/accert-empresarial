@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class FinanceiroController extends Controller
 {
@@ -382,11 +383,21 @@ class FinanceiroController extends Controller
         };
 
         $importados = 0;
+        $duplicados = 0;
+        $bloqueados = [];
         $rowNum     = 0;
+
+        // Colunas obrigatórias A–O e seus nomes esperados
+        $colunasObrigatorias = [
+            'A' => 'Plano',           'B' => 'Data',          'C' => 'Vendedor',
+            'D' => 'Razão Social',    'E' => 'CNPJ',          'F' => 'Telefone',
+            'G' => 'Vidas Saúde',     'H' => 'Vidas Odonto',  'I' => 'Código Saúde',
+            'J' => 'Código Odonto',   'K' => 'Valor Saúde',   'L' => 'Valor Odonto',
+            'M' => 'Boleto Adesão',   'N' => 'Status',        'O' => 'Status da Adesão',
+        ];
 
         foreach ($sheet->sheetData->row as $row) {
             $rowNum++;
-            if ($rowNum === 1) continue; // pular cabeçalho
 
             // Build column map
             $cells = [];
@@ -394,6 +405,22 @@ class FinanceiroController extends Controller
                 $ref = strtoupper((string) $c->attributes()->r);
                 $col = preg_replace('/[0-9]/', '', $ref);
                 $cells[$col] = $cellValue($c);
+            }
+
+            // ── Validação do cabeçalho (linha 1) ────────────────────────────────
+            if ($rowNum === 1) {
+                $faltando = [];
+                foreach ($colunasObrigatorias as $col => $nome) {
+                    if (empty(trim($cells[$col] ?? ''))) {
+                        $faltando[] = "{$col} ({$nome})";
+                    }
+                }
+                if (!empty($faltando)) {
+                    return response()->json([
+                        'error' => 'Planilha fora do formato esperado. Colunas ausentes ou fora de ordem: ' . implode(', ', $faltando),
+                    ], 422);
+                }
+                continue;
             }
 
             // Colunas: A=Plano B=Data C=Vendedor D=Razão social E=CNPJ F=Telefone
@@ -427,7 +454,7 @@ class FinanceiroController extends Controller
             $cancelado  = (mb_strtolower($status) === 'cancelado');
             $dataRef    = $dataVig ?? now()->format('Y-m-d');
 
-            ContratoEmpresarial::create([
+            $contrato = ContratoEmpresarial::create([
                 'tabela_origens_id'     => $tabelaOrigem ? $tabelaOrigem->id : 1,
                 'razao_social'          => $razaoSocial,
                 'cnpj'                  => $cnpj,
@@ -470,11 +497,35 @@ class FinanceiroController extends Controller
                 'historico_cancelado'  => $cancelado,
             ]);
 
+            // Usa a data da coluna B da planilha como data de cadastro
+            if ($dataVig) {
+                DB::table('contrato_empresarial')->where('id', $contrato->id)->update(['created_at' => $dataVig]);
+            }
+
             $importados++;
         }
 
+        // Persiste bloqueados no JSON para consulta posterior
+        if (!empty($bloqueados)) {
+            $existing = [];
+            if (Storage::exists('importacao_bloqueados.json')) {
+                $existing = json_decode(Storage::get('importacao_bloqueados.json'), true) ?? [];
+            }
+            $agora = now()->format('d/m/Y H:i');
+            foreach ($bloqueados as &$b) {
+                $b['importado_em'] = $agora;
+            }
+            unset($b);
+            Storage::put('importacao_bloqueados.json', json_encode(array_merge($existing, $bloqueados)));
+        }
+
         Cache::forget('listarContratoEmpresaPendentes');
-        return response()->json(['success' => true, 'importados' => $importados]);
+        return response()->json([
+            'success'    => true,
+            'importados' => $importados,
+            'duplicados' => $duplicados,
+            'bloqueados' => $bloqueados,
+        ]);
     }
 
     public function avancarEtapa(Request $request)
@@ -543,6 +594,14 @@ class FinanceiroController extends Controller
                 $valor = Carbon::createFromFormat('d/m/Y', $valor)->format('Y-m-d');
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Data inválida. Use o formato dd/mm/aaaa.'], 422);
+            }
+        }
+
+        // Troca de vendedor bloqueada após pagamento da comissão
+        if ($campo === 'mudar_corretor_empresarial') {
+            $pago = DB::table('contrato_empresarial')->where('id', $id)->value('pago');
+            if ($pago) {
+                return response()->json(['error' => 'Vendedor não pode ser alterado após o pagamento da comissão.'], 422);
             }
         }
 
@@ -2169,6 +2228,22 @@ class FinanceiroController extends Controller
         ContratoEmpresarial::where('id', $request->id)
             ->update(['status_pagamento' => $request->status]);
         Cache::forget('listarContratoEmpresaPendentes');
+        return response()->json(['success' => true]);
+    }
+
+    // ─── Bloqueados na importação histórica ──────────────────────────────────────
+    public function listarBloqueados()
+    {
+        $dados = [];
+        if (Storage::exists('importacao_bloqueados.json')) {
+            $dados = json_decode(Storage::get('importacao_bloqueados.json'), true) ?? [];
+        }
+        return response()->json(['contratos' => $dados, 'total' => count($dados)]);
+    }
+
+    public function limparBloqueados()
+    {
+        Storage::delete('importacao_bloqueados.json');
         return response()->json(['success' => true]);
     }
 

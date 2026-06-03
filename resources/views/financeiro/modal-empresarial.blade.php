@@ -9,6 +9,7 @@
         </button>
     </div>
     <input type="hidden" id="empresarial_cliente_id" name="empresarial_cliente_id" value="{{$id}}">
+    <input type="hidden" id="contrato_pago" value="{{ $dados->pago ?? 0 }}">
 
 
 
