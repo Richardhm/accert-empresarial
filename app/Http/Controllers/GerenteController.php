@@ -74,6 +74,7 @@ class GerenteController extends Controller
             "administradoras" => '',
             "users" => $this->getUsers($mes,$ano),
             "users_apto_apagar" => $users_apto_apagar,
+            "folhas_fechadas" => FolhaMes::where('status', 1)->get(['mes']),
             "mes" => $mes,
             "ano" => $ano,
 
@@ -789,6 +790,7 @@ class GerenteController extends Controller
 
         $alt = ContratoEmpresarial::where("id",$request->default_corretor)->first();
         $alt->valor_pagar = $resultado;
+        $alt->porcentagem_corretor = $porcentagem;
         if($alt->save()) {
            return [
                 "valor" => number_format($resultado,2,",","."),
@@ -993,14 +995,14 @@ class GerenteController extends Controller
         DATE_FORMAT(contrato_empresarial.data_boleto,'%d/%m/%Y') AS data_baixa_gerente,
         valor_plano AS valor_plano_contratado,
        '0' AS desconto,
-       '30' AS comissao_esperada,
+       COALESCE(contrato_empresarial.porcentagem_corretor, 30) AS comissao_esperada,
        contrato_empresarial.valor_pagar AS comissao_recebida,
        contrato_empresarial.id,
        contrato_empresarial.id,
        '1' as parcela,
-       '30' AS porcentagem_parcela_corretor,
+       COALESCE(contrato_empresarial.porcentagem_corretor, 30) AS porcentagem_parcela_corretor,
         '1' AS id_porcentagem_parcela_corretor,
-        '30' AS porcentagem_paga,
+        COALESCE(contrato_empresarial.porcentagem_corretor, 30) AS porcentagem_paga,
         '1' AS contrato_id
         FROM contrato_empresarial
         WHERE
@@ -1029,7 +1031,7 @@ class GerenteController extends Controller
             contrato_empresarial.valor_pagar as valor,
             contrato_empresarial.quantidade_vidas AS quantidade_vidas,
             contrato_empresarial.plano_id AS plano,
-            '30' AS  porcentagem_parcela_corretor,
+            COALESCE(contrato_empresarial.porcentagem_corretor, 30) AS porcentagem_parcela_corretor,
             contrato_empresarial.id as contrato_id,
             contrato_empresarial.razao_social AS cliente,
             'Hapvida' AS administradora

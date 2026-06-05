@@ -81,23 +81,16 @@
 
         </div>
 
-        {{-- ── Linha 3: Etapas (inline) ── --}}
+        {{-- ── Linha 3: Etapas — 2 blocos na mesma linha ── --}}
         <div class="fin-filters-row">
 
+            {{-- Bloco 1: pipeline de etapas --}}
             <fieldset class="fin-filter-fieldset fs-etapas" style="flex:1;">
                 <legend class="fin-filter-legend">Etapas</legend>
                 <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                    <button class="fin-tag fin-tag-todos fin-tag-ativo" data-etapa="">
-                        <span class="fin-tag-dot"></span>Todos
-                        <span class="fin-tag-count" id="count-todos"></span>
-                    </button>
                     <button class="fin-tag fin-tag-vencidos" data-etapa="vencidos">
-                        <span class="fin-tag-dot"></span>Adesão Vencidos
+                        <span class="fin-tag-dot"></span>Atrasado
                         <span class="fin-tag-count" id="count-vencidos"></span>
-                    </button>
-                    <button class="fin-tag fin-tag-cancelados" data-etapa="cancelados">
-                        <span class="fin-tag-dot"></span>Cancelados
-                        <span class="fin-tag-count" id="count-cancelados"></span>
                     </button>
                     <button class="fin-tag fin-tag-andamento" data-etapa="andamento">
                         <span class="fin-tag-dot"></span>Em Andamento
@@ -138,6 +131,25 @@
                     <button class="fin-tag fin-tag-concluidos" data-etapa="8">
                         <span class="fin-tag-dot"></span>Finalizado
                         <span class="fin-tag-count" id="count-etapa-8"></span>
+                    </button>
+                </div>
+            </fieldset>
+
+            {{-- Bloco 2: visão geral --}}
+            <fieldset class="fin-filter-fieldset fs-etapas" style="flex:none;">
+                <legend class="fin-filter-legend">Geral</legend>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <button class="fin-tag fin-tag-todos fin-tag-ativo" data-etapa="">
+                        <span class="fin-tag-dot"></span>Todos
+                        <span class="fin-tag-count" id="count-todos"></span>
+                    </button>
+                    <button class="fin-tag fin-tag-cancelados" data-etapa="cancelados">
+                        <span class="fin-tag-dot"></span>Cancelados
+                        <span class="fin-tag-count" id="count-cancelados"></span>
+                    </button>
+                    <button class="fin-tag fin-tag-declinar" data-etapa="declinar">
+                        <span class="fin-tag-dot"></span>Declinar
+                        <span class="fin-tag-count" id="count-declinados"></span>
                     </button>
                 </div>
             </fieldset>

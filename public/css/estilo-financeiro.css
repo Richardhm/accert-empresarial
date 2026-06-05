@@ -673,6 +673,11 @@
 .fin-tag-cancelados:hover { background: rgba(239,68,68,.18); border-color: #ef4444; }
 .fin-tag-cancelados.fin-tag-ativo { background: #ef4444; border-color: #ef4444; color: #fff; }
 .fin-tag-cancelados.fin-tag-ativo .fin-tag-count { background: rgba(0,0,0,.15); color: #fff; }
+.fin-tag-declinar { color: #fdba74; border-color: rgba(249,115,22,.35); background: rgba(249,115,22,.07); }
+.fin-tag-declinar .fin-tag-dot { background: #f97316; }
+.fin-tag-declinar:hover { background: rgba(249,115,22,.18); border-color: #f97316; }
+.fin-tag-declinar.fin-tag-ativo { background: #f97316; border-color: #f97316; color: #fff; }
+.fin-tag-declinar.fin-tag-ativo .fin-tag-count { background: rgba(0,0,0,.15); color: #fff; }
 
 /* ═══════════════════════════════════════════════
    DATATABLES — DARK OVERRIDE

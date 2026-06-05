@@ -249,6 +249,7 @@ class FinanceiroController extends Controller
                         'contrato_empresarial.finalizado_pdf_path as finalizado_pdf_path',
                         'contrato_empresarial.importado_historico as importado_historico',
                         'contrato_empresarial.historico_cancelado as historico_cancelado',
+                        'contrato_empresarial.declinado as declinado',
                         'contrato_empresarial.plano_saude_id as plano_saude_id',
                         'contrato_empresarial.plano_odonto_id as plano_odonto_id',
                         'contrato_empresarial.saude_uf as saude_uf',
@@ -305,6 +306,24 @@ class FinanceiroController extends Controller
 
 
 
+
+    public function declinarContrato(Request $request)
+    {
+        $contrato = ContratoEmpresarial::find($request->id);
+
+        if (!$contrato) {
+            return response()->json(['error' => 'Contrato não encontrado.'], 404);
+        }
+
+        if ($contrato->etapa_atual > 2) {
+            return response()->json(['error' => 'Não é possível declinar após a etapa de Adesão.'], 422);
+        }
+
+        $contrato->declinado = 1;
+        $contrato->save();
+
+        return response()->json(['success' => 'Contrato declinado com sucesso.']);
+    }
 
     public function importarHistoricoSindicatos(Request $request)
     {
@@ -1615,7 +1634,7 @@ class FinanceiroController extends Controller
         foreach (explode("\n", $texto) as $linha) {
             $linha = trim($linha);
             if ($linha === '') continue;
-            $linha = preg_replace('/^\d+\.\s*/', '', $linha); // strip "1. "
+            $linha = preg_replace('/^\d+\s*\.\s*/', '', $linha); // strip "1. " ou "3 ."
             $pos   = strpos($linha, ':');
             if ($pos === false) continue;
             $chave = $normalize(substr($linha, 0, $pos));
@@ -1623,12 +1642,19 @@ class FinanceiroController extends Controller
             $campos[$chave] = $valor;
         }
 
-        // Parse CÓDIGO line: "SAUDE :UH8XA ODONTO: SJATL"
-        $codigoLinha  = $campos['CODIGO'] ?? null;
+        // Parse códigos — suporta dois formatos:
+        // Novo: "CODIGO SAUDE: 3ABSV ODONTO: PT6XU"  (chave = "CODIGO SAUDE", valor = "3ABSV ODONTO: PT6XU")
+        // Antigo: "CODIGO: SAUDE: UH8XA ODONTO: SJATL" (chave = "CODIGO", valor = "SAUDE: UH8XA ODONTO: SJATL")
         $codigoSaude  = null;
         $codigoOdonto = null;
+        $codigoLinha  = $campos['CODIGO'] ?? ($campos['CODIGO SAUDE'] ?? null);
+
         if ($codigoLinha) {
             if (preg_match('/SAUDE\s*:\s*([A-Z0-9]+)/i', $codigoLinha, $m)) {
+                // Formato antigo: valor contém "SAUDE: X"
+                $codigoSaude = strtoupper(trim($m[1]));
+            } elseif (preg_match('/^([A-Z0-9]+)/i', $codigoLinha, $m)) {
+                // Formato novo: primeiro token do valor é o código saúde
                 $codigoSaude = strtoupper(trim($m[1]));
             }
             if (preg_match('/ODONTO\s*:\s*([A-Z0-9]+)/i', $codigoLinha, $m)) {

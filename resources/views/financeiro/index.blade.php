@@ -25,6 +25,7 @@
         var urlUploadDocumentoBoleto         = "{{ route('contratos.empresarial.upload_documento_boleto') }}";
         var urlSalvarFinalizado              = "{{ route('contratos.empresarial.salvar_finalizado') }}";
         var urlImportarHistorico             = "{{ route('contratos.empresarial.importar_historico') }}";
+        var urlDeclinarContrato              = "{{ route('contratos.empresarial.declinar') }}";
         var urlListarBloqueados              = "{{ route('financeiro.importacao_bloqueados') }}";
         var urlLimparBloqueados              = "{{ route('financeiro.importacao_bloqueados.limpar') }}";
         var urlBeneficiarios                 = "{{ route('financeiro.beneficiarios', ['id' => '__ID__']) }}";
@@ -426,7 +427,7 @@
                         name="texto_colar"
                         rows="6"
                         class="modal-colar-textarea"
-                        placeholder="1. Empresa: Nome da Empresa LTDA&#10;2. CÓDIGO: SAUDE: UH8XA ODONTO: SJATL&#10;3. SENHA: 643045&#10;4. Vigência: 15/05/2026"
+                        placeholder="1. Empresa: 64.894.226 PABLINY CLAUDIA DE ARAUJO OLIVEIRA&#10;2. CÓDIGO SAÚDE: 3ABSV ODONTO: PT6XU&#10;3. SENHA: 643045&#10;4. Vigência: 08/06/2026"
                     ></textarea>
 
                     <div id="vigenciaMsgErro"    class="modal-colar-msg erro"></div>

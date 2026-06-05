@@ -25,6 +25,7 @@ class ContratoEmpresarial extends Model
         'codigo_externo',
         'data_boleto',
         'valor_pagar',
+        'porcentagem_corretor',
         'responsavel',
         'telefone',
         'celular',
@@ -73,6 +74,7 @@ class ContratoEmpresarial extends Model
         'finalizado_pdf_path',
         'importado_historico',
         'historico_cancelado',
+        'declinado',
     ];
 
     protected $casts = [

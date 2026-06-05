@@ -347,7 +347,15 @@ function inicializarEmpresarial(corretora_id) {
                       + 'style="background:none;border:none;padding:3px;cursor:pointer;line-height:0;opacity:.7;transition:opacity .15s;margin-left:2px;" '
                       + 'onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.7">'
                       + svgPen + '</button>';
-                  return '<span style="display:inline-flex;align-items:center;gap:1px;">' + btnDetalhe + btnEditar + '</span>';
+                  var btnDeclinar = '';
+                  if ((parseInt(row.etapa_atual) || 0) <= 2 && row.declinado != 1) {
+                      var svgBan = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="rgba(249,115,22,.85)" style="width:13px;height:13px;vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+                      btnDeclinar = '<button class="btn-declinar-contrato" data-id="' + data + '" title="Declinar contrato" '
+                          + 'style="background:none;border:none;padding:3px;cursor:pointer;line-height:0;opacity:.7;transition:opacity .15s;margin-left:2px;" '
+                          + 'onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.7">'
+                          + svgBan + '</button>';
+                  }
+                  return '<span style="display:inline-flex;align-items:center;gap:1px;">' + btnDetalhe + btnEditar + btnDeclinar + '</span>';
               }
             },
         ],
@@ -803,12 +811,21 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     return (rowData.tipo_contrato || null) === filtroTipoAtual;
 });
 
-// ── Filtro por etapa (tags de pipeline) ──────────────────────────────────────
+// ── Filtro base: oculta declinados em todas as views exceto 'declinar' ────────
 var filtroEtapaAtual = null;
 
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     if (settings.nTable.id !== 'tabela_empresarial') return true;
-    if (filtroEtapaAtual === null) return true;
+    var rowData = tableempresarial.row(dataIndex).data();
+    if (!rowData) return true;
+    if (filtroEtapaAtual === 'declinar') return rowData.declinado == 1;
+    return rowData.declinado != 1;
+});
+
+// ── Filtro por etapa (tags de pipeline) ──────────────────────────────────────
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+    if (settings.nTable.id !== 'tabela_empresarial') return true;
+    if (filtroEtapaAtual === null || filtroEtapaAtual === 'declinar') return true;
     var rowData = tableempresarial.row(dataIndex).data();
     if (!rowData) return true;
     var etapa = parseInt(rowData.etapa_atual) || 0;
@@ -820,10 +837,13 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
 
 // Retorna true se row passa por todos os filtros ativos, exceto o grupo indicado
 function rowMatchesFiltros(row, excluir) {
+    // Declinados nunca entram nos contadores normais
+    if (row.declinado == 1) return false;
+
     if (excluir !== 'tipo' && filtroTipoAtual !== null) {
         if ((row.tipo_contrato || null) !== filtroTipoAtual) return false;
     }
-    if (excluir !== 'etapa' && filtroEtapaAtual !== null) {
+    if (excluir !== 'etapa' && filtroEtapaAtual !== null && filtroEtapaAtual !== 'declinar') {
         var etapa = parseInt(row.etapa_atual) || 0;
         if (filtroEtapaAtual === 'andamento') {
             if (etapa >= 8) return false;
@@ -845,7 +865,12 @@ function atualizarContadoresEtapa() {
     if (!tableempresarial) return;
     var todos = tableempresarial.data().toArray();
 
-    // ── Etapas: conta excluindo o filtro de etapa ──
+    // ── Declinados: contagem independente ──
+    var declinados = 0;
+    todos.forEach(function (row) { if (row.declinado == 1) declinados++; });
+    $('#count-declinados').text(declinados);
+
+    // ── Etapas: conta excluindo o filtro de etapa (declinados sempre excluídos) ──
     var counts = {}, totalEtapa = 0, andamento = 0, vencidos = 0, cancelados = 0;
     todos.forEach(function (row) {
         if (!rowMatchesFiltros(row, 'etapa')) return;
@@ -1225,6 +1250,8 @@ $(document).on('click', '.fin-tag', function () {
         filtroEtapaAtual = 'vencidos';
     } else if (etapaStr === 'cancelados') {
         filtroEtapaAtual = 'cancelados';
+    } else if (etapaStr === 'declinar') {
+        filtroEtapaAtual = 'declinar';
     } else {
         filtroEtapaAtual = parseInt(etapaStr);
     }
@@ -1232,6 +1259,42 @@ $(document).on('click', '.fin-tag', function () {
     if (tableempresarial) {
         tableempresarial.draw();
     }
+});
+
+// ── Declinar contrato ────────────────────────────────────────────────────────
+$(document).on('click', '.btn-declinar-contrato', function () {
+    var id = $(this).data('id');
+    Swal.fire({
+        title: 'Declinar contrato?',
+        html: 'O contrato será marcado como <strong>declinado</strong> e removido da listagem normal.<br><br>Para visualizá-lo depois, use o filtro <strong>Declinar</strong>.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, declinar',
+        confirmButtonColor: '#f97316',
+        cancelButtonText: 'Cancelar',
+        background: '#0f1e38',
+        color: '#e2e8f0',
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+        $.post(urlDeclinarContrato, {
+            id: id,
+            _token: $('meta[name=csrf-token]').attr('content')
+        }, function (res) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Declinado!',
+                text: res.success,
+                background: '#0f1e38',
+                color: '#e2e8f0',
+                timer: 1800,
+                showConfirmButton: false
+            });
+            tableempresarial.ajax.reload(null, false);
+        }).fail(function (xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Erro ao declinar.';
+            Swal.fire({ icon: 'error', title: 'Erro', text: msg, background: '#0f1e38', color: '#e2e8f0' });
+        });
+    });
 });
 
 // ── Contratos Bloqueados na Importação ───────────────────────────────────────

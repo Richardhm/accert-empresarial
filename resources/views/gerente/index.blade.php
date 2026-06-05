@@ -93,10 +93,20 @@
                         $ano_folha   = $ano ?: date('Y');
                         $folha_aberta = !empty($mes) && $mes != 0;
                         $nome_mes_aberto = $folha_aberta ? ($nomes_meses[$mes] ?? '') : '';
+
+                        // Meses já fechados como conjunto 'YYYY-MM' para consulta rápida
+                        $fechadas_set = $folhas_fechadas->map(fn($f) => date('Y-m', strtotime($f->mes)))->toArray();
+
+                        // Janela: 2 meses anteriores ao mês atual + mês atual + 3 meses futuros
                         $opcoes_meses = [];
-                        foreach (range($ano_folha - 1, $ano_folha + 1) as $y) {
-                            foreach ($nomes_meses as $num => $nome) {
-                                $opcoes_meses[] = ['valor' => $num, 'label' => $nome.'/'.$y, 'ano' => $y];
+                        $base = new DateTime('first day of this month');
+                        for ($i = -2; $i <= 3; $i++) {
+                            $dt    = (clone $base)->modify("{$i} months");
+                            $num   = $dt->format('m');
+                            $y     = (int) $dt->format('Y');
+                            $chave = "{$y}-{$num}";
+                            if (!in_array($chave, $fechadas_set)) {
+                                $opcoes_meses[] = ['valor' => $num, 'label' => $nomes_meses[$num].'/'.$y, 'ano' => $y];
                             }
                         }
                     @endphp
@@ -702,12 +712,19 @@
                 });
 
                 $("#escolher_vendedor").on('change',function() {
-                    $("#loading-overlay").removeClass('ocultar');
                     let id_user_select = $(this).val();
 
                     let mes = $("#mes_folha option:selected").val();
                     let ano = $("#mes_folha option:selected").data("ano");
 
+                    if (!mes || !ano || ano === undefined) {
+                        toastr["warning"]("Selecione um mês antes de escolher o corretor.");
+                        toastr.options = { 'timeOut': 4000, 'closeButton': true, 'positionClass': 'toast-top-full-width' };
+                        $(this).val('');
+                        return;
+                    }
+
+                    $("#loading-overlay").removeClass('ocultar');
 
                     if (id_user_select != 00) {
 
