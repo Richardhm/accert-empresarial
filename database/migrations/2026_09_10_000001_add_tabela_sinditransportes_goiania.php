@@ -12,6 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Se o plano já foi cadastrado manualmente (qualquer variação de nome),
+        // não faz nada — evita duplicar planos em produção.
+        if (DB::table('planos')->where('nome', 'like', 'Sinditransporte%')->exists()) {
+            return;
+        }
+
         $now = now();
 
         $cidadeId = DB::table('cidades')->where('nome', 'Goiânia')->where('uf', 'GO')->value('id');
