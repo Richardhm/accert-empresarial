@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('contrato_empresarial', 'declinado')) {
+            return;
+        }
         Schema::table('contrato_empresarial', function (Blueprint $table) {
             $table->boolean('declinado')->default(0)->after('historico_cancelado');
         });

@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('contrato_empresarial', 'porcentagem_corretor')) {
+            return;
+        }
         Schema::table('contrato_empresarial', function (Blueprint $table) {
             $table->decimal('porcentagem_corretor', 5, 2)->nullable()->default(30)->after('valor_pagar');
         });
