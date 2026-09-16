@@ -536,11 +536,12 @@
                             <th class="py-2 pr-2 font-medium">Empresa</th>
                             <th class="py-2 pr-2 font-medium">Contrato</th>
                             <th class="py-2 pr-2 font-medium">Data</th>
+                            <th class="py-2 pr-2 font-medium text-right">%</th>
                             <th class="py-2 font-medium text-right">Comissão</th>
                         </tr>
                     </thead>
                     <tbody id="tbody_preview_folha">
-                        <tr><td colspan="5" class="text-center py-6 text-gray-400">Carregando...</td></tr>
+                        <tr><td colspan="6" class="text-center py-6 text-gray-400">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1399,7 +1400,7 @@
                     var ano     = $("#mes_folha option:selected").data("ano");
 
                     // Reset
-                    $('#tbody_preview_folha').html('<tr><td colspan="5" class="text-center py-6 text-gray-400">Carregando...</td></tr>');
+                    $('#tbody_preview_folha').html('<tr><td colspan="6" class="text-center py-6 text-gray-400">Carregando...</td></tr>');
                     $('#pill_comissao').text('–');
                     $('#pill_vale').text('–');
                     $('#pill_total').text('–');
@@ -1416,7 +1417,7 @@
                         // Tabela
                         var tbody = '';
                         if (!data.empresas.length) {
-                            tbody = '<tr><td colspan="5" class="text-center py-6 text-gray-400">Nenhuma empresa encontrada</td></tr>';
+                            tbody = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Nenhuma empresa encontrada</td></tr>';
                         } else {
                             $.each(data.empresas, function(i, e) {
                                 tbody += '<tr style="border-bottom:1px solid #f3f4f6;">' +
@@ -1424,6 +1425,7 @@
                                     '<td class="py-2 pr-2">' + e.cliente + '</td>' +
                                     '<td class="py-2 pr-2 text-gray-500">' + e.codigo_externo + '</td>' +
                                     '<td class="py-2 pr-2 text-gray-500">' + e.data + '</td>' +
+                                    '<td class="py-2 pr-2 text-right text-gray-500">' + (e.porcentagem || '') + '%</td>' +
                                     '<td class="py-2 text-right font-medium">R$ ' + e.comissao + '</td>' +
                                     '</tr>';
                             });

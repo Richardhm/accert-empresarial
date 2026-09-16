@@ -495,6 +495,9 @@ class GerenteController extends Controller
             '0' as desconto,
             contrato_empresarial.valor_plano as valor_plano_contratado,
             contrato_empresarial.valor_pagar AS comissao,
+            CASE WHEN contrato_empresarial.valor_plano > 0
+                 THEN ROUND(contrato_empresarial.valor_pagar / contrato_empresarial.valor_plano * 100, 2)
+                 ELSE COALESCE(contrato_empresarial.porcentagem_corretor, 0) END AS porcentagem,
             '1' as parcela
             FROM contrato_empresarial
 
@@ -744,7 +747,10 @@ class GerenteController extends Controller
                 contrato_empresarial.codigo_externo    AS codigo_externo,
                 DATE_FORMAT(contrato_empresarial.created_at,'%d/%m/%Y') AS data,
                 contrato_empresarial.valor_plano       AS valor_plano_contratado,
-                contrato_empresarial.valor_pagar       AS comissao
+                contrato_empresarial.valor_pagar       AS comissao,
+                CASE WHEN contrato_empresarial.valor_plano > 0
+                     THEN ROUND(contrato_empresarial.valor_pagar / contrato_empresarial.valor_plano * 100, 2)
+                     ELSE COALESCE(contrato_empresarial.porcentagem_corretor, 0) END AS porcentagem
             FROM contrato_empresarial
             WHERE
                 contrato_empresarial.pago = 1 AND
@@ -770,6 +776,7 @@ class GerenteController extends Controller
                 'data'           => $e->data,
                 'valor_plano'    => number_format($e->valor_plano_contratado, 2, ',', '.'),
                 'comissao'       => number_format($e->comissao, 2, ',', '.'),
+                'porcentagem'    => number_format($e->porcentagem, 2, ',', '.'),
             ];
         }, $empresarial);
 

@@ -122,6 +122,7 @@
                     <td >Valor</td>
                     @if($tipo == "corretora")
 
+                    <td align="center">%</td>
                     <td align="center">Comissão</td>
                     @endif
                 </tr>
@@ -145,6 +146,7 @@
                         <td style="width:8%;">{{number_format($e->valor_plano_contratado,2,",",".")}}</td>
                         @if($tipo == "corretora")
 
+                        <td style="width:6%;" align="center">{{rtrim(rtrim(number_format($e->porcentagem,2,",","."), '0'), ',')}}%</td>
                         <td style="width:8%;" align="center">{{number_format($e->comissao,2,",",".")}}</td>
                         @endif
                     </tr>
@@ -152,7 +154,7 @@
             </tbody>
             <tfoot style="border-top:1px solid black;">
                 <tr>
-                    <td colspan="7"></td>
+                    <td colspan="{{ $tipo == 'corretora' ? 8 : 7 }}"></td>
 
 
                     @if($tipo == "corretora")
