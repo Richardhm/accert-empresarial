@@ -104,10 +104,7 @@
                         <span class="fin-tag-dot"></span>Contrato
                         <span class="fin-tag-count" id="count-etapa-1"></span>
                     </button>
-                    <button class="fin-tag fin-tag-adesao" data-etapa="2">
-                        <span class="fin-tag-dot"></span>Adesão
-                        <span class="fin-tag-count" id="count-etapa-2"></span>
-                    </button>
+                    {{-- Etapa "Adesão" descontinuada — "Vencimento" agrupa contratos nas etapas 2 e 3 --}}
                     <button class="fin-tag fin-tag-boleto" data-etapa="3">
                         <span class="fin-tag-dot"></span>Vencimento
                         <span class="fin-tag-count" id="count-etapa-3"></span>
@@ -198,6 +195,10 @@
                     <th class="dt-center">1º Boleto</th>
                     <th class="dt-center">Finalizado</th>
                     <th class="dt-center">Ações</th>
+                    {{-- Colunas ocultas: apenas para exportação --}}
+                    <th>Responsável</th>
+                    <th>Celular</th>
+                    <th>Email</th>
                 </tr>
             </thead>
             <tbody></tbody>

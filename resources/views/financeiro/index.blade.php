@@ -832,9 +832,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4f8ef7" style="width:20px;height:20px"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
                     </div>
                     <div class="guia-step-content">
-                        <div class="guia-step-title">Adesão — Data e Boleto</div>
-                        <div class="guia-step-fazer">Clique no ícone na coluna <strong style="color:#e2e8f0;">Adesão</strong>, informe a <strong style="color:#e2e8f0;">data de adesão</strong> e envie o <strong style="color:#e2e8f0;">PDF do boleto de adesão</strong>.</div>
-                        <div class="guia-step-sistema">⚙️ O sistema extrai o valor do boleto automaticamente do PDF e compara com o valor calculado na planilha. Se houver diferença, será necessário preencher uma <strong>justificativa</strong>. Contratos com divergência ficam marcados com ⚠️ na tabela.</div>
+                        <div class="guia-step-title">Adesão — Etapa Descontinuada</div>
+                        <div class="guia-step-fazer">Esta etapa <strong style="color:#e2e8f0;">não é mais utilizada</strong> nos novos contratos — após o Contrato (etapa 2), o fluxo segue direto para o <strong style="color:#e2e8f0;">Vencimento do Boleto</strong>.</div>
+                        <div class="guia-step-sistema">⚙️ Contratos antigos que já registraram a adesão continuam exibindo o boleto e a data na coluna Adesão; nos demais a coluna aparece com "—".</div>
                     </div>
                 </div>
 
@@ -1275,14 +1275,19 @@
                 etapasHtml += etapaRow(2, 'Aditivo / Contrato PDF', etapa, row.data_aditivo || '',
                     row.aditivo_path ? [{ path: row.aditivo_path, label: 'Aditivo PDF' }] : []);
 
-                // 3 — Adesão
-                var extraAdesao = '';
-                if (row.boleto_adesao_valor) extraAdesao += 'Boleto: ' + fmtMoeda(row.boleto_adesao_valor);
-                if (parseInt(row.tem_diferenca_valor) === 1 && row.justificativa_diferenca)
-                    extraAdesao += (extraAdesao ? ' — ' : '') + '⚠ ' + row.justificativa_diferenca;
-                etapasHtml += etapaRow(3, 'Adesão — Boleto', etapa, row.data_adesao || '',
-                    row.boleto_adesao_path ? [{ path: row.boleto_adesao_path, label: 'Boleto Adesão' }] : [],
-                    extraAdesao);
+                // 3 — Adesão (etapa descontinuada — dados exibidos só em contratos antigos)
+                if (row.data_adesao || row.boleto_adesao_path) {
+                    var extraAdesao = '';
+                    if (row.boleto_adesao_valor) extraAdesao += 'Boleto: ' + fmtMoeda(row.boleto_adesao_valor);
+                    if (parseInt(row.tem_diferenca_valor) === 1 && row.justificativa_diferenca)
+                        extraAdesao += (extraAdesao ? ' — ' : '') + '⚠ ' + row.justificativa_diferenca;
+                    etapasHtml += etapaRow(3, 'Adesão — Boleto', etapa, row.data_adesao || '',
+                        row.boleto_adesao_path ? [{ path: row.boleto_adesao_path, label: 'Boleto Adesão' }] : [],
+                        extraAdesao);
+                } else {
+                    etapasHtml += etapaRow(3, 'Adesão — Dispensada', etapa, '', [],
+                        'Etapa descontinuada — não é mais utilizada nos contratos');
+                }
 
                 // 4 — PG Boleto
                 var extraPgto = [row.forma_pagamento, row.oriundo].filter(Boolean).join(' · ');

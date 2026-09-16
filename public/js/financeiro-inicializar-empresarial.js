@@ -65,6 +65,25 @@ function criarRenderEtapa(stepNum, label, svgAvail, fnDone) {
     };
 }
 
+// ── Etapa 3 (Adesão) — descontinuada: só exibe dados de contratos antigos ─────
+// Contratos que já registraram adesão mantêm a visualização; os demais mostram "—"
+function renderEtapa3Descontinuada(data, type, row) {
+    if (type !== 'display') return data;
+    if (row.data_adesao || row.boleto_adesao_path) return renderEtapa3Done(data, row);
+    return '<div class="etapa-cell" title="Adesão (etapa descontinuada)" style="opacity:.35;">—</div>';
+}
+
+// ── Etapa 4 (PG Boleto) — disponível após o Aditivo (etapa 2) ou Adesão legada (3) ──
+function renderEtapa4Coluna(data, type, row) {
+    if (type !== 'display') return data;
+    var etapa = parseInt(row.etapa_atual) || 0;
+    if (etapa >= 4) return renderEtapa4Done(data, row);
+    if (etapa === 2 || etapa === 3) {
+        return '<div class="etapa-cell etapa-avail" data-id="' + data + '" data-step="4" data-label="PG Boleto" title="PG Boleto">' + SVG_RECEIPT + '</div>';
+    }
+    return '<div class="etapa-cell etapa-lock" title="PG Boleto (bloqueada)">' + SVG_LOCK + '</div>';
+}
+
 // ── Renderers "done" — estrutura consistente: check+canetinha no topo, conteúdo abaixo ──
 
 function renderEtapa8Done(id, row) {
@@ -325,8 +344,8 @@ function inicializarEmpresarial(corretora_id) {
             // ── Etapas (data: "id" → usado como data-id no render) ────────
             { data: "id", name: "etapa1", orderable: false, className: "dt-center", width: "4%", render: criarRenderEtapa(1, "Importar Planilha", SVG_UPLOAD, renderEtapa1Done) }, // 11
             { data: "id", name: "etapa2", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(2, "Aditivo PDF",        SVG_PDF,    renderEtapa2Done) }, // 12
-            { data: "id", name: "etapa3", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(3, "Adesão",             SVG_CALENDAR, renderEtapa3Done) }, // 13
-            { data: "id", name: "etapa4", orderable: false, className: "dt-center", width: "8%", render: criarRenderEtapa(4, "PG Boleto",          SVG_RECEIPT, renderEtapa4Done) }, // 14
+            { data: "id", name: "etapa3", orderable: false, className: "dt-center", width: "5%", render: renderEtapa3Descontinuada }, // 13
+            { data: "id", name: "etapa4", orderable: false, className: "dt-center", width: "8%", render: renderEtapa4Coluna }, // 14
             { data: "id", name: "etapa5", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(5, "Vigência",           SVG_CALENDAR, renderEtapa5Done) }, // 15
             { data: "id", name: "etapa6", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(6, "Carteirinha",        SVG_CARD, renderEtapa6Done) }, // 16
             { data: "id", name: "etapa7", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(7, "1º Boleto",          SVG_BILL, renderEtapa7Done) }, // 17
@@ -358,6 +377,11 @@ function inicializarEmpresarial(corretora_id) {
                   return '<span style="display:inline-flex;align-items:center;gap:1px;">' + btnDetalhe + btnEditar + btnDeclinar + '</span>';
               }
             },
+
+            // ── Colunas ocultas: apenas para exportação ────────────────────
+            { data: "responsavel", name: "responsavel", visible: false, defaultContent: "" }, // 19
+            { data: "fone",        name: "celular",     visible: false, defaultContent: "" }, // 20
+            { data: "email",       name: "email",       visible: false, defaultContent: "" }, // 21
         ],
         buttons: [
             {
@@ -365,7 +389,7 @@ function inicializarEmpresarial(corretora_id) {
                 title: 'vivaz-empresarial',
                 text: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Exportar Tabela',
                 className: 'btn-exportar',
-                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+                exportOptions: { columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 19, 20, 21] },
                 filename: 'vivaz-empresarial'
             }
         ],
@@ -462,7 +486,7 @@ function inicializarEmpresarial(corretora_id) {
                 else if (tipo === 'odonto') { vp = valO || toNum(r.valor_plano); }
                 else                        { vp = toNum(r.valor_plano); }
                 if (etapa >= 4)       { adesaoPago     += vp; }
-                else if (etapa === 3) { adesaoPendente += vp; }
+                else if (etapa === 2 || etapa === 3) { adesaoPendente += vp; }
             });
             var fmtBRL = function (v) { return v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' }); };
             $(".total_adesao_pago").html(fmtBRL(adesaoPago));
@@ -832,6 +856,8 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     if (filtroEtapaAtual === 'andamento') return etapa < 8;
     if (filtroEtapaAtual === 'vencidos') return isVencido(rowData);
     if (filtroEtapaAtual === 'cancelados') return rowData.historico_cancelado == 1;
+    // Etapa de adesão descontinuada: "Boleto" agrupa contratos parados em 2 ou 3
+    if (filtroEtapaAtual === 3) return etapa === 2 || etapa === 3;
     return etapa === filtroEtapaAtual;
 });
 
@@ -851,6 +877,8 @@ function rowMatchesFiltros(row, excluir) {
             if (!isVencido(row)) return false;
         } else if (filtroEtapaAtual === 'cancelados') {
             if (row.historico_cancelado != 1) return false;
+        } else if (filtroEtapaAtual === 3) {
+            if (etapa !== 2 && etapa !== 3) return false;
         } else {
             if (etapa !== filtroEtapaAtual) return false;
         }
@@ -888,6 +916,8 @@ function atualizarContadoresEtapa() {
     for (var i = 0; i <= 8; i++) {
         $('#count-etapa-' + i).text(counts[i] || 0);
     }
+    // Etapa de adesão descontinuada: o botão "Boleto" agrupa etapas 2 e 3
+    $('#count-etapa-3').text((counts[2] || 0) + (counts[3] || 0));
 
     // ── Tipo: conta excluindo o filtro de tipo ──
     var tipos = { saude: 0, odonto: 0, ambos: 0 }, totalTipo = 0;
@@ -935,9 +965,9 @@ function abrirProximaEtapa(etapaConc, contratoId) {
             if (window.abrirModalAditivo) window.abrirModalAditivo(contratoId);
             break;
         case 2:
+            // Etapa de adesão descontinuada: após o aditivo, vai direto ao PG Boleto
             var row2 = buscarRowData(contratoId);
-            var vp = row2 ? (parseFloat(row2.valor_plano) || 0) : 0;
-            if (window.abrirModalAdesao) window.abrirModalAdesao(contratoId, vp);
+            if (window.abrirEtapa4Boleto) window.abrirEtapa4Boleto(contratoId, false, row2);
             break;
         case 3:
             if (window.abrirEtapa4Boleto) window.abrirEtapa4Boleto(contratoId);
@@ -973,7 +1003,9 @@ window.transicaoEtapa = function (etapaConc, contratoId, fecharFn) {
     if (fecharFn) fecharFn();
 
     var nomeConc = ETAPA_NOMES[etapaConc] || ('Etapa ' + etapaConc);
-    var nomeProx = etapaConc < 8 ? ETAPA_NOMES[etapaConc + 1] : null;
+    // Etapa de adesão descontinuada: após o Aditivo (2) a próxima é o PG Boleto (4)
+    var proxIdx  = etapaConc === 2 ? 4 : etapaConc + 1;
+    var nomeProx = etapaConc < 8 ? ETAPA_NOMES[proxIdx] : null;
 
     $('#et-nome-conc').text(nomeConc);
     $('#et-proxima').html(

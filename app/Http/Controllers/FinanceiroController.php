@@ -381,7 +381,7 @@ class FinanceiroController extends Controller
         };
 
         // Pre-load planos and users for lookup
-        $planoAliases = ['sechseg' => 'sescheg']; // aliases para nomes divergentes na planilha
+        $planoAliases = ['sescheg' => 'sechseg']; // aliases para nomes divergentes na planilha
         $planosMap    = Plano::all()->mapWithKeys(fn($p) => [mb_strtolower(trim($p->nome)) => $p->id]);
         $usersAll    = User::all();
         $tabelaOrigem = TabelaOrigem::first();
@@ -400,6 +400,12 @@ class FinanceiroController extends Controller
             }
             return null;
         };
+
+        // Registros de histórico já existentes (evita duplicar ao reimportar)
+        $existentes = [];
+        foreach (ContratoEmpresarial::where('importado_historico', 1)->get(['cnpj', 'plano_id', 'razao_social']) as $c) {
+            $existentes[mb_strtolower(trim($c->cnpj) . '|' . $c->plano_id . '|' . trim($c->razao_social))] = true;
+        }
 
         $importados = 0;
         $duplicados = 0;
@@ -469,6 +475,24 @@ class FinanceiroController extends Controller
             $planoKey   = $planoAliases[$planoKey] ?? $planoKey;
             $planoId    = $planosMap->get($planoKey);
             $userId     = $findUserId($vendedorNome) ?? auth()->id();
+
+            if (!$planoId) {
+                $bloqueados[] = [
+                    'linha'        => $rowNum,
+                    'razao_social' => $razaoSocial,
+                    'cnpj'         => $cnpj,
+                    'motivo'       => "Plano não encontrado: \"{$planoNome}\"",
+                ];
+                continue;
+            }
+
+            $dupKey = mb_strtolower(trim($cnpj) . '|' . $planoId . '|' . trim($razaoSocial));
+            if (isset($existentes[$dupKey])) {
+                $duplicados++;
+                continue;
+            }
+            $existentes[$dupKey] = true;
+
             $dataVig    = $excelDateToYmd($dataSerial);
             $cancelado  = (mb_strtolower($status) === 'cancelado');
             $dataRef    = $dataVig ?? now()->format('Y-m-d');
@@ -807,7 +831,8 @@ class FinanceiroController extends Controller
             return null;
         };
 
-        $beneficiarios = [];
+        $beneficiarios     = [];
+        $linhasIncompletas = [];
 
         foreach ($rows as $row) {
             $rowNum = (int) $row->attributes()->r;
@@ -821,11 +846,25 @@ class FinanceiroController extends Controller
                 $cells[$ci] = $cellValue($c);
             }
 
-            $tipo = $get($cells, $colMap, 'titular ou dependente');
-            if (!$tipo) continue;
+            // A linha só é beneficiário se tiver nome ou CPF. Linhas em branco do
+            // template e a linha de total ficam de fora.
+            $nomeCompleto = $get($cells, $colMap, 'nome completo');
+            $cpfLinha     = $get($cells, $colMap, 'cpf');
+            if (!$nomeCompleto && !$cpfLinha) continue;
 
-            $nomeTipo = strtolower(trim($tipo));
-            if (!str_contains($nomeTipo, 'titular') && !str_contains($nomeTipo, 'dependente')) continue;
+            // Linha preenchida sem "Titular ou Dependente" válido é erro de
+            // preenchimento — bloqueia o arquivo inteiro em vez de descartar a vida.
+            $tipo     = $get($cells, $colMap, 'titular ou dependente');
+            $nomeTipo = strtolower(trim((string) $tipo));
+
+            if (!str_contains($nomeTipo, 'titular') && !str_contains($nomeTipo, 'dependente')) {
+                $linhasIncompletas[] = [
+                    'linha' => $rowNum,
+                    'nome'  => trim((string) ($nomeCompleto ?: $cpfLinha)),
+                    'valor' => trim((string) $tipo),
+                ];
+                continue;
+            }
 
             $nascSerial = $get($cells, $colMap, 'data de nascimento', 'data nascimento');
             $casSerial  = $get($cells, $colMap, 'data do casamento', 'data casamento');
@@ -835,9 +874,9 @@ class FinanceiroController extends Controller
                 'contrato_empresarial_id' => $contratoId,
                 'tipo_plano'       => $tipoPlanilha,
                 'tipo'             => $tipo,
-                'nome_completo'    => $get($cells, $colMap, 'nome completo'),
+                'nome_completo'    => $nomeCompleto,
                 'nome_titular'     => $get($cells, $colMap, 'nome titular'),
-                'cpf'              => $get($cells, $colMap, 'cpf'),
+                'cpf'              => $cpfLinha,
                 'data_nascimento'  => $excelDateToYmd($nascSerial),
                 'idade'            => (int) ($get($cells, $colMap, 'idade') ?? 0) ?: null,
                 'nome_mae'         => $get($cells, $colMap, 'nome da mae', 'nome mae'),
@@ -852,6 +891,25 @@ class FinanceiroController extends Controller
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ];
+        }
+
+        // ── Bloquear planilha com coluna "Titular ou Dependente" mal preenchida ──
+        // Nada é gravado: nem beneficiários, nem arquivo, nem etapa.
+        if (!empty($linhasIncompletas)) {
+            $detalhes = array_map(function ($l) {
+                $rotulo = $l['nome'] !== '' ? ' (' . $l['nome'] . ')' : '';
+                return $l['valor'] === ''
+                    ? 'linha ' . $l['linha'] . $rotulo . ': em branco'
+                    : 'linha ' . $l['linha'] . $rotulo . ': "' . $l['valor'] . '"';
+            }, $linhasIncompletas);
+
+            return response()->json([
+                'error' => 'A coluna "Titular ou Dependente" não está preenchida em '
+                    . count($linhasIncompletas) . ' linha(s) da planilha ('
+                    . ($tipoPlanilha === 'odonto' ? 'Odonto' : 'Saúde') . '). '
+                    . 'Preencha "Titular" ou "Dependente" e envie novamente — nenhuma vida foi importada. → '
+                    . implode('; ', $detalhes) . '.'
+            ], 422);
         }
 
         if (empty($beneficiarios)) {
@@ -1076,8 +1134,9 @@ class FinanceiroController extends Controller
         $path = $cnpj . '/' . $nomeArquivo;
 
         $updates = ['aditivo_path' => $path, 'data_aditivo' => $dataAditivo];
+        // Etapa de adesão descontinuada: aditivo avança direto para "aguardando PG Boleto"
         if ($etapaAtual === 1) {
-            $updates['etapa_atual'] = 2;
+            $updates['etapa_atual'] = 3;
         }
 
         ContratoEmpresarial::where('id', $contratoId)->update($updates);
@@ -1572,8 +1631,9 @@ class FinanceiroController extends Controller
             return response()->json(['error' => 'Contrato não encontrado.'], 404);
         }
 
-        if ((int) $contrato->etapa_atual < 3) {
-            return response()->json(['error' => 'A adesão deve ser registrada antes do boleto.'], 422);
+        // Etapa de adesão descontinuada: basta o aditivo (etapa 2) para registrar o boleto
+        if ((int) $contrato->etapa_atual < 2) {
+            return response()->json(['error' => 'O aditivo deve ser enviado antes do boleto.'], 422);
         }
 
         if (!$dataPgto) {
@@ -1594,7 +1654,7 @@ class FinanceiroController extends Controller
             'forma_pagamento' => $formaPagamento,
             'oriundo'         => $oriundo,
         ];
-        if ((int) $contrato->etapa_atual === 3) {
+        if (in_array((int) $contrato->etapa_atual, [2, 3], true)) {
             $updates['etapa_atual'] = 4;
         }
 
