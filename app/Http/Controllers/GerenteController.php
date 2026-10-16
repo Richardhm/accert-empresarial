@@ -352,7 +352,8 @@ class GerenteController extends Controller
 
             INNER JOIN users ON users.id = contrato_empresarial.user_id
             WHERE pago != 1
-            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.etapa_atual >= 4
+            AND contrato_empresarial.declinado = 0
             AND users.id NOT IN
             (SELECT user_id FROM valores_corretores_lancadas WHERE MONTH(data) = {$mes} AND YEAR(data) = {$ano})
             GROUP BY users.id, users.name
@@ -423,7 +424,8 @@ class GerenteController extends Controller
             COUNT(*) AS total
             FROM contrato_empresarial
             WHERE contrato_empresarial.pago = 0
-            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.etapa_atual >= 4
+            AND contrato_empresarial.declinado = 0
             AND contrato_empresarial.user_id = {$id}
         ")[0]->total;
 
@@ -788,6 +790,76 @@ class GerenteController extends Controller
         ]);
     }
 
+    // Histórico de folhas: todos os meses com lançamentos, com vendedores,
+    // comissões, vales e líquido — dados lidos do que já está gravado.
+    public function historicoFolhas()
+    {
+        $nomesMeses = [1=>'Janeiro',2=>'Fevereiro',3=>'Março',4=>'Abril',5=>'Maio',6=>'Junho',
+                       7=>'Julho',8=>'Agosto',9=>'Setembro',10=>'Outubro',11=>'Novembro',12=>'Dezembro'];
+
+        $meses = DB::select("
+            SELECT DATE_FORMAT(data,'%Y-%m') AS ref
+            FROM valores_corretores_lancadas
+            GROUP BY ref
+            ORDER BY ref DESC
+        ");
+
+        $fechados = DB::table('folha_mes')->where('status', 1)->pluck('mes')
+            ->map(fn ($m) => substr((string) $m, 0, 7))->all();
+
+        $historico = [];
+        foreach ($meses as $m) {
+            [$ano, $mesNum] = explode('-', $m->ref);
+
+            $vendedores = DB::select("
+                SELECT u.id   AS user_id,
+                       u.name AS vendedor,
+                       v.valor_total AS comissao,
+                       COALESCE((SELECT SUM(va.valor) FROM vales va
+                                 WHERE va.user_id = u.id
+                                   AND DATE_FORMAT(va.mes,'%Y-%m') = ?), 0) AS vale,
+                       (SELECT COUNT(*) FROM contrato_empresarial ce
+                         WHERE ce.pago = 1 AND ce.user_id = u.id
+                           AND DATE_FORMAT(ce.data_baixa_finalizado,'%Y-%m') = ?) AS contratos
+                FROM valores_corretores_lancadas v
+                INNER JOIN users u ON u.id = v.user_id
+                WHERE DATE_FORMAT(v.data,'%Y-%m') = ?
+                ORDER BY u.name
+            ", [$m->ref, $m->ref, $m->ref]);
+
+            $linhas = [];
+            $totComissao = 0.0; $totVale = 0.0; $totLiquido = 0.0;
+            foreach ($vendedores as $v) {
+                $liquido      = max(0, (float) $v->comissao - (float) $v->vale);
+                $totComissao += (float) $v->comissao;
+                $totVale     += (float) $v->vale;
+                $totLiquido  += $liquido;
+                $linhas[] = [
+                    'user_id'   => $v->user_id,
+                    'vendedor'  => $v->vendedor,
+                    'contratos' => (int) $v->contratos,
+                    'comissao'  => number_format($v->comissao, 2, ',', '.'),
+                    'vale'      => number_format($v->vale, 2, ',', '.'),
+                    'liquido'   => number_format($liquido, 2, ',', '.'),
+                ];
+            }
+
+            $historico[] = [
+                'mes'            => $mesNum,
+                'ano'            => $ano,
+                'label'          => ($nomesMeses[(int) $mesNum] ?? $mesNum) . ' / ' . $ano,
+                'fechada'        => in_array($m->ref, $fechados),
+                'qtd_vendedores' => count($linhas),
+                'total_comissao' => number_format($totComissao, 2, ',', '.'),
+                'total_vale'     => number_format($totVale, 2, ',', '.'),
+                'total_liquido'  => number_format($totLiquido, 2, ',', '.'),
+                'vendedores'     => $linhas,
+            ];
+        }
+
+        return response()->json(['historico' => $historico]);
+    }
+
     public function mudarComissaoCorretor(Request $request)
     {
         $valor_plano = floatval($request->valor_plano);
@@ -929,7 +1001,7 @@ class GerenteController extends Controller
             SELECT
             COUNT(*) AS total
             FROM contrato_empresarial
-            WHERE pago = 0 AND etapa_atual >= 3 AND user_id = {$id}
+            WHERE pago = 0 AND etapa_atual >= 4 AND declinado = 0 AND user_id = {$id}
         ")[0]->total;
 
 
@@ -1014,7 +1086,8 @@ class GerenteController extends Controller
         FROM contrato_empresarial
         WHERE
         contrato_empresarial.pago = 0
-        AND contrato_empresarial.etapa_atual >= 3
+        AND contrato_empresarial.etapa_atual >= 4
+        AND contrato_empresarial.declinado = 0
         AND contrato_empresarial.user_id = {$id}
         ");
 
@@ -1044,7 +1117,8 @@ class GerenteController extends Controller
             'Hapvida' AS administradora
             FROM contrato_empresarial
             WHERE contrato_empresarial.pago = 0
-            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.etapa_atual >= 4
+            AND contrato_empresarial.declinado = 0
             AND contrato_empresarial.user_id = {$id}
         ");
         return $dados;
@@ -1170,7 +1244,8 @@ class GerenteController extends Controller
             COUNT(*) AS total
             FROM contrato_empresarial
             WHERE contrato_empresarial.pago = 0
-            AND contrato_empresarial.etapa_atual >= 3
+            AND contrato_empresarial.etapa_atual >= 4
+            AND contrato_empresarial.declinado = 0
             AND contrato_empresarial.user_id = {$id}
         ")[0]->total;
 

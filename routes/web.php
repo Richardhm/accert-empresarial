@@ -72,6 +72,7 @@ Route::middleware(['auth', 'acesso'])->group(function () {
         Route::get('/gerente/empresarial/listar/{id}',[GerenteController::class,'empresarialAReceber'])->name('gerente.listagem.empresarial.areceber');
         Route::get('/gerente/finalizar/criarpdf',[GerenteController::class,'criarPDFUser'])->name('gerente.finalizar.criarpdf');
         Route::get('/gerente/folha/preview',[GerenteController::class,'previsualizarFolha'])->name('gerente.folha.preview');
+        Route::get('/gerente/historico/folhas',[GerenteController::class,'historicoFolhas'])->name('gerente.historico.folhas');
         Route::get('/gerente/exportar/excel',[GerenteController::class,'exportarExcel'])->name('gerente.exportar.excel');
         Route::post('/gerente/mudarcomisao/corretor/gerente',[GerenteController::class,'mudarComissaoCorretor'])->name('gerente.mudar.valor.corretor');
         Route::post('/gerente/antecipar/parcela',[GerenteController::class,'aptarPagamento'])->name('gerente.aptar.pagamento');

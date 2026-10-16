@@ -122,6 +122,7 @@
                     @if($folha_aberta)
                         <p class="ger-folha-aberta-label">&#x25CF; Folha de {{ $nome_mes_aberto }} de {{ $ano_folha }} aberta</p>
                     @endif
+                    <button id="btn_historico_folhas" class="ger-btn ger-btn-blue">Histórico</button>
                     <button id="btn_vale" class="ger-btn ger-btn-orange">Vale</button>
                     <button id="btn_finalizar_mes" class="ger-btn ger-btn-red">Finalizar Mês</button>
                 </div>
@@ -671,6 +672,20 @@
                     <tr><td colspan="3" class="text-center py-2 opacity-50">Carregando...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ MODAL HISTÓRICO DE FOLHAS ══════════════ -->
+<div id="modalHistorico" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="rounded-lg shadow-lg p-6" style="background:#1e2a3a;color:#fff;width:800px;max-width:95%;max-height:88vh;display:flex;flex-direction:column;">
+        <div class="flex justify-between items-center mb-4" style="flex-shrink:0;">
+            <h5 class="text-lg font-semibold">Histórico de Folhas</h5>
+            <button id="closeModalHistorico" class="text-gray-300 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+
+        <div id="historico_body" style="overflow-y:auto;">
+            <div class="text-center py-6 opacity-50">Carregando...</div>
         </div>
     </div>
 </div>
@@ -1959,6 +1974,96 @@
         });
     });
 
+    // ══════════════ HISTÓRICO DE FOLHAS ══════════════
+    $('#btn_historico_folhas').on('click', function() {
+        $('#historico_body').html('<div class="text-center py-6 opacity-50">Carregando...</div>');
+        $('#modalHistorico').removeClass('hidden');
+
+        $.get('{{ route("gerente.historico.folhas") }}', function(data) {
+            if (!data.historico || !data.historico.length) {
+                $('#historico_body').html('<div class="text-center py-6 opacity-50">Nenhuma folha encontrada.</div>');
+                return;
+            }
+
+            var html = '';
+            $.each(data.historico, function(i, h) {
+                var badge = h.fechada
+                    ? '<span class="hist-badge hist-badge-fechada">Fechada</span>'
+                    : '<span class="hist-badge hist-badge-aberta">Aberta</span>';
+
+                html += '<div class="mb-2">' +
+                    '<div class="hist-mes-header" data-idx="' + i + '">' +
+                        '<div style="display:flex;align-items:center;gap:10px;">' +
+                            '<span style="font-weight:700;font-size:.9rem;">' + h.label + '</span>' + badge +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:14px;">' +
+                            '<span class="hist-chip">' + h.qtd_vendedores + ' vendedor(es)</span>' +
+                            '<span class="hist-chip">Comissões <strong>R$ ' + h.total_comissao + '</strong></span>' +
+                            '<span class="hist-chip">Vales <strong>R$ ' + h.total_vale + '</strong></span>' +
+                            '<span class="hist-chip">Líquido <strong style="color:#34d399;">R$ ' + h.total_liquido + '</strong></span>' +
+                            '<span class="hist-caret" style="opacity:.5;">&#9662;</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="hist-mes-det" id="hist_det_' + i + '" style="display:none;padding:8px 14px 4px;">' +
+                        '<table class="w-full text-sm">' +
+                            '<thead><tr style="opacity:.6;border-bottom:1px solid rgba(255,255,255,.15);font-size:.72rem;">' +
+                                '<th class="text-left py-1">Vendedor</th>' +
+                                '<th class="text-center py-1">Contratos</th>' +
+                                '<th class="text-right py-1">Comissão</th>' +
+                                '<th class="text-right py-1">Vale</th>' +
+                                '<th class="text-right py-1">Líquido</th>' +
+                                '<th class="text-center py-1">Folha</th>' +
+                            '</tr></thead><tbody>';
+
+                $.each(h.vendedores, function(j, v) {
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06);">' +
+                        '<td class="py-1">' + v.vendedor + '</td>' +
+                        '<td class="py-1 text-center" style="opacity:.7;">' + v.contratos + '</td>' +
+                        '<td class="py-1 text-right">R$ ' + v.comissao + '</td>' +
+                        '<td class="py-1 text-right" style="color:#fbbf24;">' + (v.vale !== '0,00' ? '(R$ ' + v.vale + ')' : '–') + '</td>' +
+                        '<td class="py-1 text-right" style="color:#34d399;font-weight:600;">R$ ' + v.liquido + '</td>' +
+                        '<td class="py-1 text-center">' +
+                            '<button class="hist-pdf-btn" data-user="' + v.user_id + '" data-mes="' + h.mes + '" data-ano="' + h.ano + '">PDF</button>' +
+                        '</td>' +
+                    '</tr>';
+                });
+
+                html += '</tbody></table></div></div>';
+            });
+
+            $('#historico_body').html(html);
+        }).fail(function() {
+            $('#historico_body').html('<div class="text-center py-6 text-red-400">Erro ao carregar o histórico.</div>');
+        });
+    });
+
+    $('#closeModalHistorico').on('click', function() {
+        $('#modalHistorico').addClass('hidden');
+    });
+
+    // Expandir/recolher um mês
+    $(document).on('click', '.hist-mes-header', function() {
+        var idx = $(this).data('idx');
+        $('#hist_det_' + idx).slideToggle(150);
+        var $caret = $(this).find('.hist-caret');
+        $caret.html($caret.html().charCodeAt(0) === 9662 ? '&#9652;' : '&#9662;');
+    });
+
+    // PDF da folha do vendedor naquele mês (mesma rota do PDF atual)
+    $(document).on('click', '.hist-pdf-btn', function(e) {
+        e.stopPropagation();
+        var dados = {
+            individual: 0,
+            coletivo: 0,
+            empresarial: 1,
+            user_id: $(this).data('user'),
+            mes: String($(this).data('mes')).padStart(2, '0'),
+            ano: $(this).data('ano'),
+            tipo: 'corretora'
+        };
+        window.open('{{ route("gerente.finalizar.criarpdf") }}?' + $.param(dados), '_blank');
+    });
+
     // ══════════════ FINALIZAR MÊS ══════════════
     $('#btn_finalizar_mes').on('click', function() {
         $('#resumo_fechamento_body').html('<div class="text-center py-6 opacity-50">Carregando...</div>');
@@ -2154,6 +2259,29 @@
             .ger-btn:hover { opacity: .85; transform: translateY(-1px); }
             .ger-btn-orange { background: rgba(255,152,0,.9); }
             .ger-btn-red    { background: rgba(211,47,47,.9); }
+            .ger-btn-blue   { background: rgba(79,142,247,.9); }
+
+            /* Histórico de folhas */
+            .hist-mes-header {
+                display: flex; align-items: center; justify-content: space-between;
+                gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer;
+                background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+                transition: background .15s;
+            }
+            .hist-mes-header:hover { background: rgba(255,255,255,.09); }
+            .hist-badge {
+                font-size: .62rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+                text-transform: uppercase; letter-spacing: .05em;
+            }
+            .hist-badge-fechada { background: rgba(52,211,153,.15); color: #34d399; border: 1px solid rgba(52,211,153,.4); }
+            .hist-badge-aberta  { background: rgba(251,191,36,.15); color: #fbbf24; border: 1px solid rgba(251,191,36,.4); }
+            .hist-chip { font-size: .7rem; color: rgba(255,255,255,.55); white-space: nowrap; }
+            .hist-chip strong { color: #fff; font-weight: 600; }
+            .hist-pdf-btn {
+                background: rgba(79,142,247,.85); color: #fff; border: none; border-radius: 6px;
+                font-size: .68rem; font-weight: 700; padding: 3px 10px; cursor: pointer;
+            }
+            .hist-pdf-btn:hover { opacity: .85; }
 
             /* Excel button */
             .ger-excel-btn {
