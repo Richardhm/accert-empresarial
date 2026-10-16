@@ -22,8 +22,8 @@ Route::middleware(['auth', 'acesso'])->group(function () {
     });
 
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/perfil', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/financeiro',[FinanceiroController::class,'index'])->name('financeiro.index');
     Route::get('/listar/empresarial',[FinanceiroController::class,'listar'])->name('contratos.listarEmpresarial.listarContratoEmpresaPendentes');
