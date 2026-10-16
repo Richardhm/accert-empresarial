@@ -18,7 +18,7 @@ class DashboardController extends Controller
                 COALESCE(SUM(ce.valor_plano), 0)       AS total_valor,
                 COUNT(ce.id)                           AS total_contratos
             FROM planos p
-            LEFT JOIN contrato_empresarial ce ON ce.plano_id = p.id
+            LEFT JOIN contrato_empresarial ce ON ce.plano_id = p.id AND COALESCE(ce.importado_historico,0) = 0
             GROUP BY p.id, p.nome
             ORDER BY total_contratos DESC
         ");
@@ -33,6 +33,7 @@ class DashboardController extends Controller
                 COALESCE(SUM(CASE WHEN ce.pago = 1 THEN ce.valor_pagar ELSE 0 END), 0) AS total_comissao_paga
             FROM contrato_empresarial ce
             INNER JOIN users u ON u.id = ce.user_id
+            WHERE COALESCE(ce.importado_historico,0) = 0
             GROUP BY ce.user_id, u.name
             ORDER BY total_contratos DESC
         ");
@@ -59,6 +60,7 @@ class DashboardController extends Controller
             FROM contrato_empresarial ce
             INNER JOIN planos p ON p.id = ce.plano_id
             WHERE ce.user_id = {$userId}
+              AND COALESCE(ce.importado_historico,0) = 0
             ORDER BY ce.created_at DESC
         ");
 

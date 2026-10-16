@@ -267,6 +267,8 @@ class FinanceiroController extends Controller
                     ->leftJoin('comissao', 'users.id', '=', 'comissao.user_id')
                     ->leftJoin('planos', 'planos.id', '=', 'contrato_empresarial.plano_id')
                     ->leftJoin('tabela_origens', 'tabela_origens.id', '=', 'contrato_empresarial.tabela_origens_id')
+                    // Históricos importados ficam fora do /financeiro — só aparecem no /pagamento
+                    ->whereRaw('COALESCE(contrato_empresarial.importado_historico,0) = 0')
                     ->orderBy('contrato_empresarial.id', 'desc');
                 return $query->get();
             });
@@ -1134,15 +1136,59 @@ class FinanceiroController extends Controller
         $path = $cnpj . '/' . $nomeArquivo;
 
         $updates = ['aditivo_path' => $path, 'data_aditivo' => $dataAditivo];
-        // Etapa de adesão descontinuada: aditivo avança direto para "aguardando PG Boleto"
+        // Etapa de adesão reativada: aditivo avança para "aguardando Adesão"
         if ($etapaAtual === 1) {
-            $updates['etapa_atual'] = 3;
+            $updates['etapa_atual'] = 2;
         }
 
         ContratoEmpresarial::where('id', $contratoId)->update($updates);
         Cache::forget('listarContratoEmpresaPendentes');
 
         return response()->json(['success' => true, 'message' => 'Aditivo enviado com sucesso!']);
+    }
+
+    public function pularTermoContrato(Request $request)
+    {
+        $contrato = ContratoEmpresarial::find($request->input('contrato_id'));
+        if (!$contrato) {
+            return response()->json(['error' => 'Contrato não encontrado.'], 404);
+        }
+
+        $etapaAtual = (int) $contrato->etapa_atual;
+        if ($etapaAtual < 1) {
+            return response()->json(['error' => 'A planilha de beneficiários deve ser importada antes de pular o termo.'], 422);
+        }
+        if ($etapaAtual > 1) {
+            return response()->json(['error' => 'Este contrato já passou da etapa de Contrato.'], 422);
+        }
+
+        // Mesmo destino do upload do termo: libera a Adesão sem anexar PDF
+        ContratoEmpresarial::where('id', $contrato->id)->update(['etapa_atual' => 2]);
+        Cache::forget('listarContratoEmpresaPendentes');
+
+        return response()->json(['success' => true, 'message' => 'Etapa de Contrato pulada — sem termo de adesão.']);
+    }
+
+    public function pularAdesaoContrato(Request $request)
+    {
+        $contrato = ContratoEmpresarial::find($request->input('contrato_id'));
+        if (!$contrato) {
+            return response()->json(['error' => 'Contrato não encontrado.'], 404);
+        }
+
+        $etapaAtual = (int) $contrato->etapa_atual;
+        if ($etapaAtual < 2) {
+            return response()->json(['error' => 'A etapa de Contrato deve ser concluída antes de pular a Adesão.'], 422);
+        }
+        if ($etapaAtual > 2) {
+            return response()->json(['error' => 'Este contrato já passou da etapa de Adesão.'], 422);
+        }
+
+        // Mesmo destino da adesão registrada: libera o PG Boleto sem anexar boleto
+        ContratoEmpresarial::where('id', $contrato->id)->update(['etapa_atual' => 3]);
+        Cache::forget('listarContratoEmpresaPendentes');
+
+        return response()->json(['success' => true, 'message' => 'Etapa de Adesão pulada — sem boleto de adesão.']);
     }
 
     public function extrairValorBoletoPdf(Request $request)
@@ -1631,9 +1677,9 @@ class FinanceiroController extends Controller
             return response()->json(['error' => 'Contrato não encontrado.'], 404);
         }
 
-        // Etapa de adesão descontinuada: basta o aditivo (etapa 2) para registrar o boleto
-        if ((int) $contrato->etapa_atual < 2) {
-            return response()->json(['error' => 'O aditivo deve ser enviado antes do boleto.'], 422);
+        // Etapa de adesão reativada: a adesão (registrada ou pulada) precede o boleto
+        if ((int) $contrato->etapa_atual < 3) {
+            return response()->json(['error' => 'A etapa de Adesão deve ser concluída (ou pulada) antes do boleto.'], 422);
         }
 
         if (!$dataPgto) {
@@ -1654,7 +1700,7 @@ class FinanceiroController extends Controller
             'forma_pagamento' => $formaPagamento,
             'oriundo'         => $oriundo,
         ];
-        if (in_array((int) $contrato->etapa_atual, [2, 3], true)) {
+        if ((int) $contrato->etapa_atual === 3) {
             $updates['etapa_atual'] = 4;
         }
 

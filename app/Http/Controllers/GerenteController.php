@@ -189,6 +189,7 @@ class GerenteController extends Controller
         $dados = DB::table('contrato_empresarial as ccl')
             ->selectRaw('SUM(ccl.valor_plano) as total, COUNT(ccl.id) as quantidade')
             ->where('ccl.pago', 1)
+            ->whereRaw('COALESCE(ccl.importado_historico,0) = 0')
             ->whereMonth('ccl.data_baixa_finalizado', $mes)
             ->whereYear('ccl.data_baixa_finalizado', $ano);
 
@@ -234,10 +235,8 @@ class GerenteController extends Controller
 
     private function getDadosContratosPorTipo($mes, $ano, $plano_id = null)
     {
-        $query = DB::table('contrato_empresarial');
-
-
-
+        $query = DB::table('contrato_empresarial')
+            ->whereRaw('COALESCE(contrato_empresarial.importado_historico,0) = 0');
 
         if ($plano_id) {
             $query->where('contrato_empresarial.plano_id', $plano_id);
@@ -272,6 +271,7 @@ class GerenteController extends Controller
 
         $dados = DB::table('contrato_empresarial')
             ->where('contrato_empresarial.pago', 1)
+            ->whereRaw('COALESCE(contrato_empresarial.importado_historico,0) = 0')
             ->whereMonth('data_baixa_finalizado', $mes)
             ->whereYear('data_baixa_finalizado', $ano)
 
@@ -293,6 +293,7 @@ class GerenteController extends Controller
                 ->first(),
             'recebidas' => DB::table('contrato_empresarial')
                 ->where('contrato_empresarial.pago', 1)
+                ->whereRaw('COALESCE(contrato_empresarial.importado_historico,0) = 0')
                 ->selectRaw('COUNT(*) as quantidade, SUM(contrato_empresarial.valor_plano) as valor')
                 ->first(),
         ];
@@ -308,6 +309,7 @@ class GerenteController extends Controller
         return DB::table('contrato_empresarial as cc')
             ->selectRaw("SUM(cc.valor_plano) AS total, 'Hapvida' AS administradora")
             ->where('cc.pago', 1)
+            ->whereRaw('COALESCE(cc.importado_historico,0) = 0')
             ->whereBetween('cc.data_baixa_finalizado', [$inicio, $fim])
             ->get();
     }
@@ -316,7 +318,7 @@ class GerenteController extends Controller
     {
         return DB::
             table('contrato_empresarial')
-
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->count();
     }
 
@@ -324,6 +326,7 @@ class GerenteController extends Controller
     {
         return DB
             ::table('contrato_empresarial')
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->sum('contrato_empresarial.valor_plano');
     }
 
@@ -331,6 +334,7 @@ class GerenteController extends Controller
     {
         return DB::
             table('contrato_empresarial')
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->sum('quantidade_vidas');
     }
 
@@ -339,7 +343,7 @@ class GerenteController extends Controller
         return DB::
             table('contrato_empresarial')
             ->where('pago', 1)
-
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->groupBy(DB::raw('MONTH(data_baixa_finalizado)'))
             ->pluck('data_baixa_finalizado');
     }
@@ -382,6 +386,7 @@ class GerenteController extends Controller
 
         $total_empresarial_quantidade = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->whereMonth("data_baixa_finalizado",$mes)
             ->whereYear("data_baixa_finalizado",$ano)
             ->where("user_id",$id)
@@ -389,6 +394,7 @@ class GerenteController extends Controller
 
         $total_empresarial = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->where("user_id",$id)
             ->whereMonth("data_baixa_finalizado",$mes)
             ->whereYear("data_baixa_finalizado",$ano)
@@ -407,6 +413,7 @@ class GerenteController extends Controller
 
         $ids_confirmados = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->where("user_id",$id)
             ->whereMonth("data_baixa_finalizado",$mes)
             ->whereYear("data_baixa_finalizado",$ano)
@@ -505,6 +512,7 @@ class GerenteController extends Controller
 
             WHERE
             contrato_empresarial.pago = 1 AND
+            COALESCE(contrato_empresarial.importado_historico,0) = 0 AND
             contrato_empresarial.user_id = {$id} AND month(contrato_empresarial.data_baixa_finalizado) = {$mes} AND YEAR(contrato_empresarial.data_baixa_finalizado) = {$ano} ORDER BY contrato_empresarial.id
         ");
 
@@ -526,7 +534,7 @@ class GerenteController extends Controller
 
 
         $total_empresarial = DB::select("SELECT	SUM((contrato_empresarial.valor_pagar)) AS total FROM contrato_empresarial
-        WHERE contrato_empresarial.pago = 1 AND user_id = {$id} AND MONTH(data_baixa_finalizado) = {$mes} AND YEAR(data_baixa_finalizado) = {$ano}
+        WHERE contrato_empresarial.pago = 1 AND COALESCE(contrato_empresarial.importado_historico,0) = 0 AND user_id = {$id} AND MONTH(data_baixa_finalizado) = {$mes} AND YEAR(data_baixa_finalizado) = {$ano}
         ")[0]->total;
 
         $total    = floatval($total_empresarial);
@@ -600,6 +608,7 @@ class GerenteController extends Controller
             INNER JOIN users u ON u.id = ce.user_id
             WHERE
                 ce.pago = 1 AND
+                COALESCE(ce.importado_historico,0) = 0 AND
                 MONTH(ce.data_baixa_finalizado) = {$mes} AND
                 YEAR(ce.data_baixa_finalizado)  = {$ano}
             ORDER BY u.name, ce.razao_social
@@ -756,6 +765,7 @@ class GerenteController extends Controller
             FROM contrato_empresarial
             WHERE
                 contrato_empresarial.pago = 1 AND
+                COALESCE(contrato_empresarial.importado_historico,0) = 0 AND
                 contrato_empresarial.user_id = {$id} AND
                 MONTH(contrato_empresarial.data_baixa_finalizado) = {$mes} AND
                 YEAR(contrato_empresarial.data_baixa_finalizado)  = {$ano}
@@ -820,6 +830,7 @@ class GerenteController extends Controller
                                    AND DATE_FORMAT(va.mes,'%Y-%m') = ?), 0) AS vale,
                        (SELECT COUNT(*) FROM contrato_empresarial ce
                          WHERE ce.pago = 1 AND ce.user_id = u.id
+                           AND COALESCE(ce.importado_historico,0) = 0
                            AND DATE_FORMAT(ce.data_baixa_finalizado,'%Y-%m') = ?) AS contratos
                 FROM valores_corretores_lancadas v
                 INNER JOIN users u ON u.id = v.user_id
@@ -1008,6 +1019,7 @@ class GerenteController extends Controller
 
         $total_empresarial_quantidade = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->where("user_id",$id)
             ->whereMonth('data_baixa_finalizado',$mes)
             ->whereYear('data_baixa_finalizado',$ano)
@@ -1016,7 +1028,7 @@ class GerenteController extends Controller
 
         $total_empresarial = DB::select("
             SELECT SUM(valor_pagar) as total_empresarial_valor from contrato_empresarial
-            WHERE pago = 1 and month(data_baixa_finalizado) = {$mes}
+            WHERE pago = 1 AND COALESCE(importado_historico,0) = 0 and month(data_baixa_finalizado) = {$mes}
                 AND year(data_baixa_finalizado) = {$ano}
             AND user_id = {$id}
 
@@ -1212,12 +1224,13 @@ class GerenteController extends Controller
         /******Geral ********************************/
         $total_empresarial_quantidade_geral = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->whereMonth('data_baixa_finalizado',$mes)
             ->whereYear('data_baixa_finalizado',$ano)
             ->count();
 
         $total_empresarial_geral = DB::select("
-            SELECT sum(valor_pagar) AS total_empresarial_valor from contrato_empresarial WHERE month(data_baixa_finalizado) = {$mes} AND year(data_baixa_finalizado) = {$ano}
+            SELECT sum(valor_pagar) AS total_empresarial_valor from contrato_empresarial WHERE COALESCE(importado_historico,0) = 0 AND month(data_baixa_finalizado) = {$mes} AND year(data_baixa_finalizado) = {$ano}
         ")[0]->total_empresarial_valor;
 
         $valores_geral = DB::select("
@@ -1251,13 +1264,14 @@ class GerenteController extends Controller
 
         $total_empresarial_quantidade = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->where("user_id",$id)
             ->whereMonth('data_baixa_finalizado',$mes)
             ->whereYear('data_baixa_finalizado',$ano)
             ->count();
 
         $total_empresarial = DB::select("
-            SELECT sum(valor_pagar) AS total_empresarial_valor from contrato_empresarial WHERE month(data_baixa_finalizado) = {$mes} AND year(data_baixa_finalizado) = {$ano}
+            SELECT sum(valor_pagar) AS total_empresarial_valor from contrato_empresarial WHERE COALESCE(importado_historico,0) = 0 AND month(data_baixa_finalizado) = {$mes} AND year(data_baixa_finalizado) = {$ano}
             AND user_id = {$id} AND pago = 1
         ")[0]->total_empresarial_valor;
 
@@ -1273,6 +1287,7 @@ class GerenteController extends Controller
 
         $ids_confirmados = ContratoEmpresarial
             ::where("pago",1)
+            ->whereRaw('COALESCE(importado_historico,0) = 0')
             ->where("user_id",$id)
             ->whereMonth("data_baixa_finalizado",$mes)
             ->whereYear("data_baixa_finalizado",$ano)
@@ -1489,6 +1504,7 @@ class GerenteController extends Controller
         FROM contrato_empresarial
         WHERE
             contrato_empresarial.user_id = {$id}
+            AND COALESCE(contrato_empresarial.importado_historico,0) = 0
             AND MONTH(data_baixa_finalizado) = {$mes}
             AND YEAR(data_baixa_finalizado)  = {$ano}
             AND contrato_empresarial.pago = 1
