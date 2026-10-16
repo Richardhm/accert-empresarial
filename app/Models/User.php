@@ -58,12 +58,31 @@ class User extends Authenticatable
         return $this->hasOne(Comissao::class, 'user_id', 'id');
     }
 
+    /**
+     * Mapa de permissões por e-mail. '*' = acesso total.
+     * Áreas: dashboard, financeiro, gerente, usuarios, tabelas, pagamento
+     * E-mails fora do mapa NÃO têm acesso ao sistema (login é bloqueado).
+     */
+    private const PERMISSOES = [
+        'richardjonhshm@gmail.com'  => ['*'],
+        'fredbbarros@gmail.com'     => ['*'],
+        'nikaelly.accert@gmail.com' => ['dashboard', 'financeiro', 'gerente', 'usuarios', 'tabelas'],
+        'administrador@accert.com'  => ['financeiro', 'tabelas'],
+    ];
+
+    public function permissoes(): array
+    {
+        return self::PERMISSOES[strtolower(trim($this->email ?? ''))] ?? [];
+    }
+
+    public function temAcesso(string $area): bool
+    {
+        $p = $this->permissoes();
+        return in_array('*', $p) || in_array($area, $p);
+    }
+
     public function isAdministrador(): bool
     {
-        $admins = [
-            'administrador@accert.com',
-            'richardjonhshm@gmail.com'
-        ];
-        return in_array($this->email, $admins);
+        return in_array('*', $this->permissoes());
     }
 }

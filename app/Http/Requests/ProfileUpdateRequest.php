@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
@@ -15,16 +13,10 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        // E-mail não é editável: as permissões de acesso são definidas por e-mail
+        // (ver User::PERMISSOES), então alterá-lo mudaria o acesso do usuário.
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
-            ],
         ];
     }
 }

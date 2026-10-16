@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 //    return view('dashboard');
 //})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'acesso'])->group(function () {
 
     Route::get('/', function () {
         return redirect('/login');
@@ -24,7 +24,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/financeiro',[FinanceiroController::class,'index'])->name('financeiro.index');
     Route::get('/listar/empresarial',[FinanceiroController::class,'listar'])->name('contratos.listarEmpresarial.listarContratoEmpresaPendentes');
@@ -39,6 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/contratos/empresarial/atualizar',[FinanceiroController::class,'atualizarContrato'])->name('contratos.empresarial.atualizar');
     Route::post('/contratos/empresarial/importar-planilha',[FinanceiroController::class,'importarPlanilha'])->name('contratos.empresarial.importar_planilha');
     Route::post('/contratos/empresarial/upload-aditivo',[FinanceiroController::class,'uploadAditivoPdf'])->name('contratos.empresarial.upload_aditivo');
+    Route::post('/contratos/empresarial/pular-termo',[FinanceiroController::class,'pularTermoContrato'])->name('contratos.empresarial.pular_termo');
+    Route::post('/contratos/empresarial/pular-adesao',[FinanceiroController::class,'pularAdesaoContrato'])->name('contratos.empresarial.pular_adesao');
     Route::post('/contratos/empresarial/salvar-adesao',[FinanceiroController::class,'salvarDataAdesao'])->name('contratos.empresarial.salvar_adesao');
     Route::post('/contratos/empresarial/upload-adesao',[FinanceiroController::class,'uploadAdesao'])->name('contratos.empresarial.upload_adesao');
     Route::post('/contratos/empresarial/extrair-valor-boleto',[FinanceiroController::class,'extrairValorBoletoPdf'])->name('contratos.empresarial.extrair_valor_boleto');
@@ -60,8 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/financeiro/resumo-valor/{id}',[FinanceiroController::class,'resumoValor'])->name('financeiro.resumo_valor');
     Route::get('/financeiro/beneficiarios/{id}',[FinanceiroController::class,'listarBeneficiarios'])->name('financeiro.beneficiarios');
 
-    // Rotas exclusivas para administradores
-    Route::middleware('admin')->group(function () {
+    // ── Gerente (folha de comissões) ─────────────────────────────────────
+    Route::middleware('acesso:gerente')->group(function () {
         Route::get("/gerente",[GerenteController::class,'index'])->name('gerente.index');
         Route::post('/gerente/folha_mes/inserir',[GerenteController::class,'cadastrarFolhaMes'])->name('gerente.cadastrar.folha_mes');
         Route::post('/gerente/informacoes/corretor',[GerenteController::class,'infoCorretor'])->name('gerente.informacoes.quantidade.corretor');
@@ -84,7 +85,10 @@ Route::middleware('auth')->group(function () {
         // Fechar mês
         Route::get('/gerente/fechamento/resumo', [GerenteController::class,'resumoFechamento'])->name('gerente.fechamento.resumo');
         Route::post('/gerente/fechamento/fechar', [GerenteController::class,'fecharMes'])->name('gerente.fechamento.fechar');
+    });
 
+    // ── Tabelas de preço (configuracoes) ─────────────────────────────────
+    Route::middleware('acesso:tabelas')->group(function () {
         // Configurações — Faixas Etárias (Saúde)
         Route::get('/configuracoes/faixas', [ConfiguracoesController::class, 'faixas'])->name('configuracoes.faixas');
         Route::get('/configuracoes/faixas/cidades', [ConfiguracoesController::class, 'cidadesPorUf'])->name('configuracoes.cidades');
@@ -104,7 +108,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/configuracoes/planos/salvar',        [ConfiguracoesController::class, 'salvarPlano'])->name('configuracoes.planos.salvar');
         Route::post('/configuracoes/planos/{id}/atualizar',[ConfiguracoesController::class, 'atualizarPlano'])->name('configuracoes.planos.atualizar');
         Route::post('/configuracoes/planos/{id}/excluir',  [ConfiguracoesController::class, 'excluirPlano'])->name('configuracoes.planos.excluir');
+    });
 
+    // ── Pagamento (agenciamento/recorrência) ─────────────────────────────
+    Route::middleware('acesso:pagamento')->group(function () {
         Route::get('/pagamento', [PagamentoController::class, 'index'])->name('pagamento.index');
         Route::get('/listar/pagamento', [PagamentoController::class, 'listar'])->name('pagamento.listar');
         Route::post('/pagamento/upload-planilha', [PagamentoController::class, 'uploadPlanilha'])->name('pagamento.upload_planilha');
@@ -112,10 +119,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/pagamento/nao-vinculados', [PagamentoController::class, 'naoVinculados'])->name('pagamento.nao_vinculados');
         Route::get('/pagamento/buscar-contratos', [PagamentoController::class, 'buscarContratos'])->name('pagamento.buscar_contratos');
         Route::post('/pagamento/vincular/{id}', [PagamentoController::class, 'vincular'])->name('pagamento.vincular');
+    });
 
+    // ── Dashboard ────────────────────────────────────────────────────────
+    Route::middleware('acesso:dashboard')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/empresas-vendedor', [DashboardController::class, 'empresasPorVendedor'])->name('dashboard.empresas.vendedor');
+    });
 
+    // ── Usuários (cadastro/exclusão/comissões) ───────────────────────────
+    Route::middleware('acesso:usuarios')->group(function () {
         Route::get('/cadastrar_usuario', [AdminController::class, 'formCadastrarUsuario'])->name('admin.cadastrar_usuario');
         Route::post('/cadastrar_usuario', [AdminController::class, 'storeCadastrarUsuario'])->name('admin.store_usuario');
         Route::post('/cadastrar_usuario/comissao', [AdminController::class, 'atualizarComissao'])->name('admin.atualizar_comissao');

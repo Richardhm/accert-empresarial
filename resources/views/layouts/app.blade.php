@@ -259,7 +259,7 @@
 
 
 
-            @if(Auth::user()->isAdministrador())
+            @if(Auth::user()->temAcesso('dashboard'))
             <li text-data="dashboard" class="hover:text-black">
                 <a href="{{route('dashboard')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                     <svg class="w-4 h-4 text-gray-800 text-white hover:text-black flex align-middle" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -295,7 +295,7 @@
 
 
 
-                @if(Auth::user()->isAdministrador())
+                @if(Auth::user()->temAcesso('gerente'))
                 <li text-data="gerente">
                     <a href="{{route('gerente.index')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                         <svg class="w-4 h-4 text-gray-800 text-white hover:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
@@ -304,6 +304,9 @@
                         <span class="text-sm">gerente</span>
                     </a>
                 </li>
+                @endif
+
+                @if(Auth::user()->temAcesso('usuarios'))
                 <li text-data="usuários">
                     <a href="{{route('admin.cadastrar_usuario')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                         <svg class="w-4 h-4 text-gray-800 text-white hover:text-black" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -312,6 +315,9 @@
                         <span class="text-sm">usuários</span>
                     </a>
                 </li>
+                @endif
+
+                @if(Auth::user()->temAcesso('tabelas'))
                 <li text-data="Tabelas de Valor">
                     <a href="{{route('configuracoes.cadastro')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4 text-white hover:text-black">
@@ -320,6 +326,7 @@
                         <span class="text-sm">tabelas $</span>
                     </a>
                 </li>
+                @endif
                 {{-- OCULTO DO MENU — rotas ainda funcionam via /configuracoes/faixas e /configuracoes/odonto
                 <li text-data="Faixas Saúde">
                     <a href="{{route('configuracoes.faixas')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
@@ -340,6 +347,7 @@
                     </a>
                 </li>
                 --}}
+                @if(Auth::user()->temAcesso('pagamento'))
                 <li text-data="Pagamento">
                     <a href="{{route('pagamento.index')}}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-white hover:text-black">
@@ -403,7 +411,7 @@
 {{--            </li>--}}
 
             <li text-data="Editar Perfil" class="hover:text-black">
-                <a href="" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
+                <a href="{{ route('profile.edit') }}" class="flex items-center justify-center flex-col align-middle content-center hover:text-black">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" class="w-4 h-4">
                         <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
                     </svg>
