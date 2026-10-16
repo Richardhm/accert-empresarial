@@ -192,6 +192,14 @@ class PagamentoController extends Controller
                         ->select('id')
                         ->first();
 
+                    // Planilhas de odonto trazem o código do plano odonto
+                    if (!$contrato) {
+                        $contrato = DB::table('contrato_empresarial')
+                            ->where('codigo_odonto', $codigoIdentificado)
+                            ->select('id')
+                            ->first();
+                    }
+
                     if (!$contrato && $razaoSocialPlanilha) {
                         $contrato = DB::table('contrato_empresarial')
                             ->where('razao_social', 'like', '%' . $razaoSocialPlanilha . '%')
