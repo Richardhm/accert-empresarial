@@ -12,6 +12,8 @@
         var urlAvancarEtapa                  = "{{ route('contratos.empresarial.avancar_etapa') }}";
         var urlImportarPlanilha              = "{{ route('contratos.empresarial.importar_planilha') }}";
         var urlUploadAditivoPdf              = "{{ route('contratos.empresarial.upload_aditivo') }}";
+        var urlPularTermoContrato            = "{{ route('contratos.empresarial.pular_termo') }}";
+        var urlPularAdesaoContrato           = "{{ route('contratos.empresarial.pular_adesao') }}";
         var urlSalvarDataAdesao              = "{{ route('contratos.empresarial.salvar_adesao') }}";
         var urlUploadAdesao                  = "{{ route('contratos.empresarial.upload_adesao') }}";
         var urlExtrairValorBoleto            = "{{ route('contratos.empresarial.extrair_valor_boleto') }}";
@@ -273,9 +275,14 @@
                     <div id="aditivoMsgErro"   class="modal-colar-msg erro"></div>
                     <div id="aditivoMsgSucesso" class="modal-colar-msg sucesso"></div>
 
-                    <div class="modal-colar-actions">
-                        <button type="button" id="cancelarModalAditivo" class="modal-colar-btn-cancel">Cancelar</button>
-                        <button type="submit" id="btnEnviarAditivo" class="modal-colar-btn-submit">Enviar PDF</button>
+                    <div class="modal-colar-actions" style="justify-content:space-between;">
+                        <button type="button" id="btnPularTermo" class="modal-colar-btn-cancel"
+                                style="border:1px dashed rgba(251,191,36,.5);color:#fbbf24;"
+                                title="Avança a etapa sem anexar o termo de adesão">Pular termo (sem contrato)</button>
+                        <div style="display:flex;gap:8px;">
+                            <button type="button" id="cancelarModalAditivo" class="modal-colar-btn-cancel">Cancelar</button>
+                            <button type="submit" id="btnEnviarAditivo" class="modal-colar-btn-submit">Enviar PDF</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -380,9 +387,14 @@
                     <div id="adesaoMsgErro"   class="modal-colar-msg erro"></div>
                     <div id="adesaoMsgSucesso" class="modal-colar-msg sucesso"></div>
 
-                    <div class="modal-colar-actions">
-                        <button type="button" id="cancelarModalAdesao" class="modal-colar-btn-cancel">Cancelar</button>
-                        <button type="submit" id="btnEnviarAdesao" class="modal-colar-btn-submit">Confirmar Adesão</button>
+                    <div class="modal-colar-actions" style="justify-content:space-between;">
+                        <button type="button" id="btnPularAdesao" class="modal-colar-btn-cancel"
+                                style="border:1px dashed rgba(251,191,36,.5);color:#fbbf24;"
+                                title="Avança a etapa sem anexar o boleto de adesão">Pular adesão (sem boleto)</button>
+                        <div style="display:flex;gap:8px;">
+                            <button type="button" id="cancelarModalAdesao" class="modal-colar-btn-cancel">Cancelar</button>
+                            <button type="submit" id="btnEnviarAdesao" class="modal-colar-btn-submit">Confirmar Adesão</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1631,9 +1643,11 @@
                 if (modoEdicao) {
                     $('#modalAditivoTitulo').text('Contrato — Re-enviar PDF');
                     $('#modalAditivoSub').text('Substitui o PDF e a data sem avançar etapa');
+                    $('#btnPularTermo').hide();
                 } else {
                     $('#modalAditivoTitulo').text('Contrato — Upload PDF');
                     $('#modalAditivoSub').text('Selecione o arquivo PDF e informe a data do contrato');
+                    $('#btnPularTermo').show();
                 }
                 $('#modalAditivoPdf').show();
             };
@@ -1644,6 +1658,35 @@
 
             $('#fecharModalAditivo, #cancelarModalAditivo').on('click', fecharModalAditivo);
             $('#overlayModalAditivo').on('click', fecharModalAditivo);
+
+            // ── Pular etapa de Contrato (termo de adesão) ──
+            $('#btnPularTermo').on('click', function () {
+                var cid = $('#aditivo_contrato_id').val();
+                Swal.fire({
+                    title: 'Pular o termo de adesão?',
+                    html: 'O contrato avançará <strong>sem termo anexado</strong> e a etapa de Adesão será liberada.<br><br>Se o termo chegar depois, use a canetinha da coluna Contrato para anexá-lo.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, pular',
+                    cancelButtonText: 'Cancelar'
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+                    $.post(urlPularTermoContrato, {
+                        contrato_id: cid,
+                        _token: $('#formAditivoPdf input[name="_token"]').val()
+                    }).done(function () {
+                        if (window.transicaoEtapa) {
+                            window.transicaoEtapa(2, cid, fecharModalAditivo);
+                        } else {
+                            fecharModalAditivo();
+                            tableempresarial && tableempresarial.ajax.reload(null, false);
+                        }
+                    }).fail(function (xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Erro ao pular a etapa.';
+                        $('#aditivoMsgErro').text(msg).show();
+                    });
+                });
+            });
 
             // ── Modal Adesão (Etapa 3) ──
             var temDiferencaAdesao = false;
@@ -1679,9 +1722,11 @@
                 if (modoEdicao) {
                     $('#modalAdesaoTitulo').text('Adesão — Re-enviar Boleto');
                     $('#modalAdesaoSub').text('Substitui o PDF e a data sem avançar etapa');
+                    $('#btnPularAdesao').hide();
                 } else {
                     $('#modalAdesaoTitulo').text('Adesão');
                     $('#modalAdesaoSub').text('O valor do boleto será lido automaticamente do PDF');
+                    $('#btnPularAdesao').show();
                 }
                 $('#modalAdesao').show();
             };
@@ -1690,6 +1735,35 @@
 
             $('#fecharModalAdesao, #cancelarModalAdesao').on('click', fecharModalAdesao);
             $('#overlayModalAdesao').on('click', fecharModalAdesao);
+
+            // ── Pular etapa de Adesão (boleto de adesão) ──
+            $('#btnPularAdesao').on('click', function () {
+                var cid = $('#adesao_contrato_id').val();
+                Swal.fire({
+                    title: 'Pular a adesão?',
+                    html: 'O contrato avançará <strong>sem boleto de adesão</strong> e o PG Boleto será liberado.<br><br>Se o boleto chegar depois, use a canetinha da coluna Adesão para anexá-lo.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, pular',
+                    cancelButtonText: 'Cancelar'
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+                    $.post(urlPularAdesaoContrato, {
+                        contrato_id: cid,
+                        _token: $('#formAdesao input[name="_token"]').val()
+                    }).done(function () {
+                        if (window.transicaoEtapa) {
+                            window.transicaoEtapa(3, cid, fecharModalAdesao);
+                        } else {
+                            fecharModalAdesao();
+                            tableempresarial && tableempresarial.ajax.reload(null, false);
+                        }
+                    }).fail(function (xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Erro ao pular a etapa.';
+                        $('#adesaoMsgErro').text(msg).show();
+                    });
+                });
+            });
 
             function mostrarCampoManual() {
                 $('#adesaoValorManualWrap').show();

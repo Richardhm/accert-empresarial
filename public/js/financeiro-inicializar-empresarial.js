@@ -73,12 +73,12 @@ function renderEtapa3Descontinuada(data, type, row) {
     return '<div class="etapa-cell" title="Adesão (etapa descontinuada)" style="opacity:.35;">—</div>';
 }
 
-// ── Etapa 4 (PG Boleto) — disponível após o Aditivo (etapa 2) ou Adesão legada (3) ──
+// ── Etapa 4 (PG Boleto) — disponível após a Adesão (etapa 3, registrada ou pulada) ──
 function renderEtapa4Coluna(data, type, row) {
     if (type !== 'display') return data;
     var etapa = parseInt(row.etapa_atual) || 0;
     if (etapa >= 4) return renderEtapa4Done(data, row);
-    if (etapa === 2 || etapa === 3) {
+    if (etapa === 3) {
         return '<div class="etapa-cell etapa-avail" data-id="' + data + '" data-step="4" data-label="PG Boleto" title="PG Boleto">' + SVG_RECEIPT + '</div>';
     }
     return '<div class="etapa-cell etapa-lock" title="PG Boleto (bloqueada)">' + SVG_LOCK + '</div>';
@@ -179,10 +179,15 @@ function renderEtapa3Done(id, row) {
         warn = '<span class="etapa3-warn-icon" data-justificativa="' + just + '" data-boleto-valor="' + bval + '" data-planilha-valor="' + pval + '" title="Diferença de valor — clique para ver justificativa">' + SVG_WARNING + '</span>';
     }
     var date = row.data_adesao ? '<span class="etapa-date">' + row.data_adesao + '</span>' : '';
-    return '<div class="etapa-cell etapa-done etapa2-done" title="Adesão ✓">'
+    // Etapa pulada (ou era descontinuada): sem boleto e sem data — indica "Sem boleto"
+    var pulado = (!row.boleto_adesao_path && !row.data_adesao)
+        ? '<div style="margin-top:2px;text-align:center;"><span class="etapa-date" style="color:#fbbf24;">Sem boleto</span></div>'
+        : '';
+    return '<div class="etapa-cell etapa-done etapa2-done" title="' + (pulado ? 'Etapa pulada — sem boleto de adesão' : 'Adesão ✓') + '">'
         + '<div class="etapa2-icons">' + SVG_CHECK + editar + '</div>'
         + (dl || warn ? '<div class="etapa2-icons" style="margin-top:2px;">' + dl + warn + '</div>' : '')
         + (date ? '<div style="margin-top:2px;text-align:center;">' + date + '</div>' : '')
+        + pulado
         + '</div>';
 }
 
@@ -194,10 +199,15 @@ function renderEtapa2Done(id, row) {
         dl = '<a href="' + url + '" target="_blank" title="Baixar aditivo PDF" style="line-height:0;">' + SVG_PDF_DL + '</a>';
     }
     var date = row.data_aditivo ? '<span class="etapa-date">' + row.data_aditivo + '</span>' : '';
-    return '<div class="etapa-cell etapa-done etapa2-done" title="Aditivo enviado ✓">'
+    // Etapa pulada: sem PDF e sem data — indica "Sem termo" e mantém a canetinha para anexar depois
+    var pulado = (!row.aditivo_path && !row.data_aditivo)
+        ? '<div style="margin-top:2px;text-align:center;"><span class="etapa-date" style="color:#fbbf24;">Sem termo</span></div>'
+        : '';
+    return '<div class="etapa-cell etapa-done etapa2-done" title="' + (pulado ? 'Etapa pulada — sem termo de adesão' : 'Aditivo enviado ✓') + '">'
         + '<div class="etapa2-icons">' + SVG_CHECK + editar + '</div>'
         + (dl ? '<div class="etapa2-icons" style="margin-top:2px;">' + dl + '</div>' : '')
         + (date ? '<div style="margin-top:2px;text-align:center;">' + date + '</div>' : '')
+        + pulado
         + '</div>';
 }
 
@@ -344,7 +354,7 @@ function inicializarEmpresarial(corretora_id) {
             // ── Etapas (data: "id" → usado como data-id no render) ────────
             { data: "id", name: "etapa1", orderable: false, className: "dt-center", width: "4%", render: criarRenderEtapa(1, "Importar Planilha", SVG_UPLOAD, renderEtapa1Done) }, // 11
             { data: "id", name: "etapa2", orderable: false, className: "dt-center", width: "6%", render: criarRenderEtapa(2, "Aditivo PDF",        SVG_PDF,    renderEtapa2Done) }, // 12
-            { data: "id", name: "etapa3", orderable: false, className: "dt-center", width: "5%", render: renderEtapa3Descontinuada }, // 13
+            { data: "id", name: "etapa3", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(3, "Adesão", SVG_RECEIPT, renderEtapa3Done) }, // 13
             { data: "id", name: "etapa4", orderable: false, className: "dt-center", width: "8%", render: renderEtapa4Coluna }, // 14
             { data: "id", name: "etapa5", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(5, "Vigência",           SVG_CALENDAR, renderEtapa5Done) }, // 15
             { data: "id", name: "etapa6", orderable: false, className: "dt-center", width: "5%", render: criarRenderEtapa(6, "Carteirinha",        SVG_CARD, renderEtapa6Done) }, // 16
@@ -965,12 +975,14 @@ function abrirProximaEtapa(etapaConc, contratoId) {
             if (window.abrirModalAditivo) window.abrirModalAditivo(contratoId);
             break;
         case 2:
-            // Etapa de adesão descontinuada: após o aditivo, vai direto ao PG Boleto
+            // Etapa de adesão reativada: após o aditivo, abre a Adesão
             var row2 = buscarRowData(contratoId);
-            if (window.abrirEtapa4Boleto) window.abrirEtapa4Boleto(contratoId, false, row2);
+            var valorPlanilha2 = row2 ? (parseFloat(row2.valor_plano) || 0) : 0;
+            if (window.abrirModalAdesao) window.abrirModalAdesao(contratoId, valorPlanilha2);
             break;
         case 3:
-            if (window.abrirEtapa4Boleto) window.abrirEtapa4Boleto(contratoId);
+            var row3 = buscarRowData(contratoId);
+            if (window.abrirEtapa4Boleto) window.abrirEtapa4Boleto(contratoId, false, row3);
             break;
         case 4:
             var row4 = buscarRowData(contratoId);
@@ -1003,8 +1015,7 @@ window.transicaoEtapa = function (etapaConc, contratoId, fecharFn) {
     if (fecharFn) fecharFn();
 
     var nomeConc = ETAPA_NOMES[etapaConc] || ('Etapa ' + etapaConc);
-    // Etapa de adesão descontinuada: após o Aditivo (2) a próxima é o PG Boleto (4)
-    var proxIdx  = etapaConc === 2 ? 4 : etapaConc + 1;
+    var proxIdx  = etapaConc + 1;
     var nomeProx = etapaConc < 8 ? ETAPA_NOMES[proxIdx] : null;
 
     $('#et-nome-conc').text(nomeConc);
