@@ -13,7 +13,7 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            align-items: flex-start;
+            align-items: stretch;
         }
         .perfil-card {
             flex: 1;
