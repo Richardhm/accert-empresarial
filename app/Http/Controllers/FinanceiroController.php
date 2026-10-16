@@ -475,7 +475,10 @@ class FinanceiroController extends Controller
             $temOdonto  = !empty($codigoOdonto);
             $planoKey   = mb_strtolower($planoNome);
             $planoKey   = $planoAliases[$planoKey] ?? $planoKey;
-            $planoId    = $planosMap->get($planoKey);
+            // Fallback: planilha traz o nome puro ("Sindipão"), banco tem "Sindipão - Saúde"
+            $planoId    = $planosMap->get($planoKey)
+                       ?? $planosMap->get($planoKey . ' - saúde')
+                       ?? $planosMap->get($planoKey . ' - saude');
             $userId     = $findUserId($vendedorNome) ?? auth()->id();
 
             if (!$planoId) {
